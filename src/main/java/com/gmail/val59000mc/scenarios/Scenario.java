@@ -7,6 +7,7 @@ import com.gmail.val59000mc.utils.UniversalMaterial;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.Material;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -60,7 +61,13 @@ public enum Scenario{
     MONSTERSINC(UniversalMaterial.IRON_DOOR, MonstersIncListener.class),
     ACHIEVEMENTHUNTER(UniversalMaterial.BOOK, AchievementHunter.class),
     NINESLOTS(UniversalMaterial.BARRIER, NineSlotsListener.class),
-    NETHERSTART(UniversalMaterial.LAVA_BUCKET, NetherStartListener.class);
+    NETHERSTART(UniversalMaterial.LAVA_BUCKET, NetherStartListener.class),
+
+    // NEW ONES
+    LAGWORLD(UniversalMaterial.DIRT, LagWorldListener.class),
+    LILCHEAT(UniversalMaterial.DIAMOND_BLOCK, LilCheatListener.class),
+    SWAP(UniversalMaterial.RAW_PORK, SwapListener.class),
+    COMPANION(UniversalMaterial.BONE, CompanionListener.class);
 
     private String name;
     private UniversalMaterial material;

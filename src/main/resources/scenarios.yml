@@ -31,3 +31,9 @@ achievementhunter:
   health-at-start: 10
   # Amount of health added per achievement.
   health-added: 1
+flyhigh:
+  height: 500
+lilcheat:
+  time: 60
+swap:
+  time: 300

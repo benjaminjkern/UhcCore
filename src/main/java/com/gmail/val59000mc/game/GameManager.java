@@ -30,6 +30,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.event.Listener;
+import com.gmail.val59000mc.scenarios.DogNameGenerator;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -54,6 +55,7 @@ public class GameManager{
 	private int episodeNumber;
 	private long remainingTime;
 	private long elapsedTime;
+	private DogNameGenerator dogNames;
 
 	private static GameManager gameManager;
 
@@ -66,6 +68,7 @@ public class GameManager{
 		playerManager = new PlayersManager();
 		scoreboardManager = new ScoreboardManager();
 		scenarioManager = new ScenarioManager();
+		dogNames = new DogNameGenerator();
 
 		episodeNumber = 0;
 		elapsedTime = 0;
@@ -362,6 +365,10 @@ public class GameManager{
 
 	public void broadcastInfoMessage(String message){
 		broadcastMessage(Lang.DISPLAY_MESSAGE_PREFIX+" "+message);
+	}
+
+	public DogNameGenerator getDogNameGenerator() {
+		return dogNames;
 	}
 
 	public void loadConfig(){

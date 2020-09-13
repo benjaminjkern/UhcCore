@@ -143,7 +143,7 @@ public class ScenarioManager {
     public Inventory getScenarioVoteInventory(UhcPlayer uhcPlayer){
         Set<Scenario> playerVotes = uhcPlayer.getScenarioVotes();
         Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
-        Inventory inv = Bukkit.createInventory(null,5*ROW, Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
+        Inventory inv = Bukkit.createInventory(null,6*ROW, Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
 
         for (Scenario scenario : Scenario.values()){
             // Don't add to menu when blacklisted / not compatible / already enabled.
@@ -183,6 +183,7 @@ public class ScenarioManager {
 
     public void countVotes(){
         Map<Scenario, Integer> votes = new HashMap<>();
+        int totalScenarios = 0;
 
         Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
         for (Scenario scenario : Scenario.values()){
@@ -193,12 +194,14 @@ public class ScenarioManager {
 
         for (UhcPlayer uhcPlayer : GameManager.getGameManager().getPlayersManager().getPlayersList()){
             for (Scenario scenario : uhcPlayer.getScenarioVotes()){
+                if (votes.get(scenario) == 0) totalScenarios++;
                 int totalVotes = votes.get(scenario) + 1;
                 votes.put(scenario, totalVotes);
             }
         }
+        if (totalScenarios == 0) totalScenarios = Integer.MAX_VALUE;
 
-        int scenarioCount = GameManager.getGameManager().getConfiguration().getElectedScenaroCount();
+        int scenarioCount = Math.min(GameManager.getGameManager().getConfiguration().getElectedScenaroCount(),totalScenarios);
         while (scenarioCount > 0){
             // get scenario with most votes
             Scenario scenario = null;

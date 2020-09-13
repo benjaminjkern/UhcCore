@@ -95,6 +95,13 @@ public enum UniversalMaterial{
     LIGHT_GRAY_STAINED_GLASS_PANE("STAINED_GLASS_PANE", "LIGHT_GRAY_STAINED_GLASS_PANE", (short) 8),
     ANVIL,
 
+    DIAMOND_BLOCK,
+    IRON_BLOCK,
+    GOLD_BLOCK,
+    EMERALD_BLOCK,
+    BONE,
+    DIRT,
+
     // Flowers
     POPPY("RED_ROSE", "POPPY", (short) 0),
     BLUE_ORCHID("RED_ROSE", "BLUE_ORCHID", (short) 1),
