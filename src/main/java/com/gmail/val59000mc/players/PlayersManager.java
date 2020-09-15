@@ -742,7 +742,7 @@ public class PlayersManager{
 				gm.startEndGameThread();
 			}
 		}
-		else if(playingPlayers>0 && playingPlayersOnline > 0 && playingTeamsOnline == 1 && playingTeams == 1 && !cfg.getOnePlayerMode()){
+		else if(playingPlayers>0 && playingPlayersOnline > 0 && playingTeamsOnline == 1 && playingTeams == 1 && gm.getStartPlayers() > 1){
 			// Check if one playing team remains
 			gm.endGame();
 		}

@@ -56,6 +56,7 @@ public class GameManager{
 	private long remainingTime;
 	private long elapsedTime;
 	private DogNameGenerator dogNames;
+	private int startPlayers;
 
 	private static GameManager gameManager;
 
@@ -326,6 +327,8 @@ public class GameManager{
 		broadcastInfoMessage(Lang.GAME_PLEASE_WAIT_TELEPORTING);
 		getPlayersManager().randomTeleportTeams();
 		gameIsEnding = false;
+
+		startPlayers = getPlayersManager().getAllPlayingPlayers().size();
 	}
 
 	public void startWatchingEndOfGame(){
@@ -373,6 +376,10 @@ public class GameManager{
 
 	public DogNameGenerator getDogNameGenerator() {
 		return dogNames;
+	}
+
+	public int getStartPlayers() {
+		return startPlayers;
 	}
 
 	public void loadConfig(){

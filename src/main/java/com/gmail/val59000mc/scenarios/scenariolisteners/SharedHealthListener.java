@@ -15,14 +15,10 @@ import java.util.List;
 
 public class SharedHealthListener extends ScenarioListener{
 
-    @EventHandler (priority = EventPriority.HIGH)
+    @EventHandler
     public void onPlayerDamage(EntityDamageEvent e){
         // Check if entity is player
         if (e.getEntityType() != EntityType.PLAYER){
-            return;
-        }
-
-        if (e.isCancelled()){
             return;
         }
 
@@ -54,7 +50,9 @@ public class SharedHealthListener extends ScenarioListener{
             }
 
             try {
-                uhcMember.getPlayer().damage(damage);
+                Player thisPlayer = uhcMember.getPlayer();
+                double health = thisPlayer.getHealth();
+                uhcMember.getPlayer().setHealth(health - damage);
             }catch (UhcPlayerNotOnlineException ex){
                 ex.printStackTrace();
             }

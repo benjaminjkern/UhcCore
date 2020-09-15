@@ -17,10 +17,6 @@ public class LagWorldListener extends ScenarioListener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
 
-        if (isActivated(Scenario.VEINMINER) || isActivated(Scenario.DOUBLEORES)) {
-            return;
-        }
-
         final Block block = e.getBlock();
         final Material material = block.getType();
 

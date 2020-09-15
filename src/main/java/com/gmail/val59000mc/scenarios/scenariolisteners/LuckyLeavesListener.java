@@ -11,7 +11,17 @@ public class LuckyLeavesListener extends ScenarioListener{
 
     @EventHandler
     public void onLeaveDecay(LeavesDecayEvent e){
-        int random = RandomUtils.randomInteger(0, 200);
+
+        int random = RandomUtils.randomInteger(0, 20);
+
+        if (random > 1){
+            return;
+        }
+
+        // add gapple
+        e.getBlock().getWorld().dropItem(e.getBlock().getLocation().add(.5,0,.5),new ItemStack(Material.APPLE));
+
+        random = RandomUtils.randomInteger(0, 200);
 
         if (random > 1){
             return;
@@ -19,6 +29,16 @@ public class LuckyLeavesListener extends ScenarioListener{
 
         // add gapple
         e.getBlock().getWorld().dropItem(e.getBlock().getLocation().add(.5,0,.5),new ItemStack(Material.GOLDEN_APPLE));
+
+
+        random = RandomUtils.randomInteger(0, 2000);
+
+        if (random > 1){
+            return;
+        }
+
+        // add gapple
+        e.getBlock().getWorld().dropItem(e.getBlock().getLocation().add(.5,0,.5),new ItemStack(Material.ENCHANTED_GOLDEN_APPLE));
     }
 
 }

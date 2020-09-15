@@ -26,6 +26,12 @@
             "Fishing rods are not craftable."
         ]
     },
+    "SHAREDHEALTH": {
+        "name": "Shared Health",
+        "description": [
+            "Everyone on your team shares damage taken."
+        ]
+    },
     "SHIELDLESS": {
         "name": "Shieldless",
         "description": [
@@ -106,7 +112,10 @@
     "LUCKYLEAVES": {
         "name": "Lucky Leaves",
         "description": [
-            "Trees have a 0.5% chance of dropping a Golden Apple."
+            "Leaves have a 5% chance of dropping an Apple. (Normally 0.5%)",
+            "Leaves have a 0.5% chance of dropping a Golden Apple.",
+            "Leaves have a 0.05% chance of dropping an Enchanted Golden Apple.",
+            "These are not mutually exclusive."
         ]
     },
     "BLEEDINGSWEETS": {
@@ -253,7 +262,8 @@
         "name": "Fly High",
         "description": [
             "Players spawn with a elytra.",
-            "You also will spawn 300 blocks up in the sky, and you can drop down to a position! Make sure to glide!"
+            "Players will spawn 300 blocks up in the sky, so that you can glide down.",
+            "Fall damage is negated."
         ]
     },
     "RANDOMIZEDDROPS": {
@@ -321,6 +331,18 @@
         "name": "Companion",
         "description": [
             "Every player begins the game with a best friend."
+        ]
+    },
+    "DONTWASTETIME": {
+        "name": "Don't waste your time!",
+        "description": [
+            "Everything you enchant gets fully enchanted instantly!"
+        ]
+    },
+    "POLITICS": {
+        "name": "Politics",
+        "description": [
+            "When you are killed by another team, you respawn on their team."
         ]
     }
 }

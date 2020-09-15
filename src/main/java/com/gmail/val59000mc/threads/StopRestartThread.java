@@ -3,6 +3,8 @@ package com.gmail.val59000mc.threads;
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
+import com.gmail.val59000mc.configuration.MainConfiguration;
+import com.gmail.val59000mc.maploader.MapLoader;
 import org.bukkit.Bukkit;
 
 public class StopRestartThread implements Runnable{
@@ -20,8 +22,19 @@ public class StopRestartThread implements Runnable{
 		}
 
 		GameManager gm = GameManager.getGameManager();
+		MapLoader mapLoader = gm.getMapLoader();
+		MainConfiguration configuration = gm.getConfiguration();
 			
 		if(timeBeforeStop == 0){
+			
+			Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getOverworldUuid()), false);
+			Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getNetherUuid()), false);
+			Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getTheEndUuid()), false);
+
+			mapLoader.deleteLastWorld(configuration.getOverworldUuid());
+			mapLoader.deleteLastWorld(configuration.getNetherUuid());
+			mapLoader.deleteLastWorld(configuration.getTheEndUuid());
+
 			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
 			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stop");
 		}else{
