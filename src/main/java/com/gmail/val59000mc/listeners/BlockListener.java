@@ -8,6 +8,8 @@ import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.utils.RandomUtils;
 import com.gmail.val59000mc.utils.UniversalMaterial;
+import com.gmail.val59000mc.scenarios.Scenario;
+import com.gmail.val59000mc.scenarios.ScenarioListener;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -94,7 +96,7 @@ public class BlockListener implements Listener{
 		Material type = block.getType();
 		boolean isOak;
 
-		if (cfg.getAppleDropsFromAllTrees()){
+		if (cfg.getAppleDropsFromAllTrees() || GameManager.getGameManager().getScenarioManager().isActivated(Scenario.LUCKYLEAVES)){
 			if (type != UniversalMaterial.OAK_LEAVES.getType()) {
 				e.getBlock().setType(UniversalMaterial.OAK_LEAVES.getType());
 			}
