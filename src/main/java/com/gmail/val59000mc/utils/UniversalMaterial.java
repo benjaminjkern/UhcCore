@@ -101,6 +101,8 @@ public enum UniversalMaterial{
     EMERALD_BLOCK,
     BONE,
     DIRT,
+    HONEYCOMB_BLOCK,
+    GOLD_NUGGET,
 
     // Flowers
     POPPY("RED_ROSE", "POPPY", (short) 0),

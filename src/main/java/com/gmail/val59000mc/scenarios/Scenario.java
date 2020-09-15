@@ -40,8 +40,8 @@ public enum Scenario{
     DRAGONRUSH(UniversalMaterial.DRAGON_EGG, DragonRushListener.class),
     LOVEATFIRSTSIGHT(UniversalMaterial.POPPY, LoveAtFirstSightListener.class),
     SKYHIGH(UniversalMaterial.FEATHER, SkyHighListener.class),
-    FASTLEAVESDECAY(UniversalMaterial.ACACIA_LEAVES, FastLeavesDecayListener.class),
-    FASTSMELTING(UniversalMaterial.FURNACE, FastSmeltingListener.class),
+    // FASTLEAVESDECAY(UniversalMaterial.ACACIA_LEAVES, FastLeavesDecayListener.class),
+    // FASTSMELTING(UniversalMaterial.FURNACE, FastSmeltingListener.class),
     SUPERHEROES(UniversalMaterial.NETHER_STAR, SuperHeroesListener.class),
     ANONYMOUS(UniversalMaterial.NAME_TAG, AnonymousListener.class),
     // GONEFISHING(UniversalMaterial.FISHING_ROD, GoneFishingListener.class),
@@ -56,7 +56,7 @@ public enum Scenario{
     DOUBLEDATES(UniversalMaterial.RED_BANNER, DoubleDatesListener.class),
     FLYHIGH(UniversalMaterial.ELYTRA, FlyHighListener.class, 9),
     RANDOMIZEDDROPS(UniversalMaterial.EXPERIENCE_BOTTLE, RandomizedDropsListener.class),
-    UPSIDEDOWNCRAFTING(UniversalMaterial.CRAFTING_TABLE, UpsideDownCraftsListener.class, 13),
+    // UPSIDEDOWNCRAFTING(UniversalMaterial.CRAFTING_TABLE, UpsideDownCraftsListener.class, 13),
     RANDOMIZEDCRAFTS(UniversalMaterial.CRAFTING_TABLE, RandomizedCraftsListener.class, 13),
     MONSTERSINC(UniversalMaterial.IRON_DOOR, MonstersIncListener.class),
     ACHIEVEMENTHUNTER(UniversalMaterial.BOOK, AchievementHunter.class),
@@ -69,7 +69,10 @@ public enum Scenario{
     SWAP(UniversalMaterial.RAW_PORK, SwapListener.class),
     COMPANION(UniversalMaterial.BONE, CompanionListener.class),
     DONTWASTETIME(UniversalMaterial.DIAMOND_PICKAXE, DontWasteTimeListener.class),
-    POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class);
+    POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class),
+    FAST(UniversalMaterial.FEATHER, FastListener.class),
+    NOCRAFT(UniversalMaterial.HONEYCOMB_BLOCK, NoCraftListener.class),
+    KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class);
 
     private String name;
     private UniversalMaterial material;

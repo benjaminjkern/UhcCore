@@ -27,13 +27,14 @@ public class StopRestartThread implements Runnable{
 			
 		if(timeBeforeStop == 0){
 			
-			Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getOverworldUuid()), false);
-			Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getNetherUuid()), false);
-			Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getTheEndUuid()), false);
+			// supposed to unload and delete the world before stopping it but bukkit didnt like it, I'll fix it later maybe
+			// Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getOverworldUuid()), false);
+			// Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getNetherUuid()), false);
+			// Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getTheEndUuid()), false);
 
-			mapLoader.deleteLastWorld(configuration.getOverworldUuid());
-			mapLoader.deleteLastWorld(configuration.getNetherUuid());
-			mapLoader.deleteLastWorld(configuration.getTheEndUuid());
+			// mapLoader.deleteLastWorld(configuration.getOverworldUuid());
+			// mapLoader.deleteLastWorld(configuration.getNetherUuid());
+			// mapLoader.deleteLastWorld(configuration.getTheEndUuid());
 
 			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
 			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stop");

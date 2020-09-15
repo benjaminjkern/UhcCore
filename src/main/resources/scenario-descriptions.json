@@ -344,5 +344,26 @@
         "description": [
             "When you are killed by another team, you respawn on their team."
         ]
+    },
+    "FAST": {
+        "name": "Fast World",
+        "description": [
+            "Furnaces cook 10 times faster.",
+            "Leaves decay 100 times faster.",
+            "Plants grow 100 times faster."
+        ]
+    },
+    "NOCRAFT": {
+        "name": "No Crafting",
+        "description": [
+            "NO CRAFTING"
+        ]
+    },
+    "KINGMIDAS": {
+        "name": "King Midas",
+        "description": [
+            "All ores drop gold.",
+            "All mobs drop gold."
+        ]
     }
 }
