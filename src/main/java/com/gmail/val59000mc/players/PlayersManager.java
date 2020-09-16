@@ -263,6 +263,9 @@ public class PlayersManager{
 					// Teleport player
 					player.teleport(uhcPlayer.getStartingLocation());
 					uhcPlayer.setHasBeenTeleportedToLocation(true);
+					
+					// reset Hunger
+					player.setFoodLevel(20);
 
 					// Remove lobby potion effects.
 					player.removePotionEffect(PotionEffectType.BLINDNESS);

@@ -38,41 +38,17 @@ public class PoliticsListener extends ScenarioListener{
         // check if it was friendlyfire
         if (uhcKiller.getTeam() == uhcKilled.getTeam()) return;
 
-        boolean result = addPlayerToTeam(uhcKilled, uhcKiller.getTeam());
+        getGameManager().broadcastMessage(uhcKilled.getName() + " was killed by "+uhcKiller.getName()+"!");
 
-        if (result) {
-            killed.setHealth(10);
-            e.setCancelled(true);
-        }
-    }
+        uhcKilled.setTeam(uhcKiller.getTeam());
+        uhcKiller.getTeam().getMembers().add(uhcKilled);
 
-    private boolean addPlayerToTeam(UhcPlayer player, UhcTeam team){
-        Inventory teamInventory = team.getTeamInventory();
-
-        for (ItemStack item : player.getTeam().getTeamInventory().getContents()){
-            if (item == null || item.getType() == Material.AIR){
-                continue;
-            }
-
-            if (teamInventory.getContents().length < teamInventory.getSize()){
-                teamInventory.addItem(item);
-            }else {
-                try {
-                    Player bukkitPlayer = player.getPlayer();
-                    bukkitPlayer.getWorld().dropItem(bukkitPlayer.getLocation(), item);
-                }catch (UhcPlayerNotOnlineException ex){
-                    ex.printStackTrace();
-                }
-            }
-        }
-
-        player.setTeam(team);
-        team.getMembers().add(player);
-
-        team.sendMessage(Lang.TEAM_MESSAGE_PLAYER_JOINS.replace("%player%", player.getName()));
+        uhcKiller.getTeam().sendMessage(Lang.TEAM_MESSAGE_PLAYER_JOINS.replace("%player%", uhcKilled.getName()));
         GameManager gm = GameManager.getGameManager();
-        gm.getScoreboardManager().updatePlayerTab(player);
-        return true;
+        gm.getScoreboardManager().updatePlayerTab(uhcKilled);
+
+        killed.setHealth(10);
+        e.setCancelled(true);
     }
 
 }

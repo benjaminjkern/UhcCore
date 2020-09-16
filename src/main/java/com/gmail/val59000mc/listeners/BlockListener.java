@@ -116,7 +116,7 @@ public class BlockListener implements Listener{
 		}
 
 		// Number 0-100
-		double random = RandomUtils.randomInteger(0, 200)/2D;
+		double random = Math.random()*100;
 
 		if (random > percentage){
 			return; // Number above percentage so no extra apples.

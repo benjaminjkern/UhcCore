@@ -26,18 +26,11 @@ public class StopRestartThread implements Runnable{
 		MainConfiguration configuration = gm.getConfiguration();
 			
 		if(timeBeforeStop == 0){
-			
-			// supposed to unload and delete the world before stopping it but bukkit didnt like it, I'll fix it later maybe
-			// Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getOverworldUuid()), false);
-			// Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getNetherUuid()), false);
-			// Bukkit.unloadWorld(Bukkit.getServer().getWorld(configuration.getTheEndUuid()), false);
-
-			// mapLoader.deleteLastWorld(configuration.getOverworldUuid());
-			// mapLoader.deleteLastWorld(configuration.getNetherUuid());
-			// mapLoader.deleteLastWorld(configuration.getTheEndUuid());
 
 			// Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
 			// Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stop");
+
+			// if you do it this way, it will just reload the plugin and not have to turn off and back on the server
 			Bukkit.getServer().getOnlinePlayers().forEach(player->{
 				player.kickPlayer("Server Restarting");
 			});
