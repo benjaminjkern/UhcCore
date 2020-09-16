@@ -72,7 +72,8 @@ public enum Scenario{
     POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class),
     FAST(UniversalMaterial.FEATHER, FastListener.class),
     NOCRAFT(UniversalMaterial.HONEYCOMB_BLOCK, NoCraftListener.class),
-    KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class);
+    KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class),
+    WHATSMINE(UniversalMaterial.DIRT, WhatsMineListener.class);
 
     private String name;
     private UniversalMaterial material;
