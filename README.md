@@ -10,7 +10,7 @@ More info can be found on the [wiki](https://github.com/Mezy/UhcCore/wiki)
 
 I (Ben Kern) forked this from Mezy because I wanted to run my own private server with custom scenarios.
 # Changes
-- Fly high now spawns you high
+- Fly high now spawns you high and also negates fall damage.
 - 9 slots & Nether start actually show when you are on the vote screen
 - Lucky Leaves now sets apples to spawn at 5%, golden apples at 0.5%, and enchanted golden apples at 0.05%, not mutually exclusive. Also it sets the ability for all trees to drop apples. This is an option in the config
 - Voting works different, will only pick randomly if nobody votes at all, otherwise it will pick from what people did vote for
