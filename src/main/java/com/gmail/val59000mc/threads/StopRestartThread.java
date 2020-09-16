@@ -36,8 +36,12 @@ public class StopRestartThread implements Runnable{
 			// mapLoader.deleteLastWorld(configuration.getNetherUuid());
 			// mapLoader.deleteLastWorld(configuration.getTheEndUuid());
 
-			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
-			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stop");
+			// Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "restart");
+			// Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stop");
+			Bukkit.getServer().getOnlinePlayers().forEach(player->{
+				player.kickPlayer("Server Restarting");
+			});
+			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "reload");
 		}else{
 			if(timeBeforeStop<5 || timeBeforeStop%10 == 0){
 				Bukkit.getLogger().info("[UhcCore] Server will shutdown in "+timeBeforeStop+"s");
