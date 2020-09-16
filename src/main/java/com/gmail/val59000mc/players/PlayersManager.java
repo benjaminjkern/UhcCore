@@ -263,9 +263,6 @@ public class PlayersManager{
 					// Teleport player
 					player.teleport(uhcPlayer.getStartingLocation());
 					uhcPlayer.setHasBeenTeleportedToLocation(true);
-					
-					// reset Hunger
-					player.setFoodLevel(20);
 
 					// Remove lobby potion effects.
 					player.removePotionEffect(PotionEffectType.BLINDNESS);
@@ -357,6 +354,12 @@ public class PlayersManager{
 					VersionUtils.getVersionUtils().setPlayerMaxHealth(player, 20+((double) cfg.getExtraHalfHearts()));
 					player.setHealth(20+((double) cfg.getExtraHalfHearts()));
 				}
+
+				// default world hunger levels
+				player.setExhaustion(0);
+				player.setSaturation(5);
+				player.setFoodLevel(20);
+
 				UhcItems.giveGameItemTo(player, GameItem.COMPASS_ITEM);
 				UhcItems.giveGameItemTo(player, GameItem.CUSTOM_CRAFT_BOOK);
 				KitsManager.giveKitTo(player);

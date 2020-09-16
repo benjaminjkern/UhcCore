@@ -1,15 +1,15 @@
 ![Java CI with Gradle](https://github.com/Mezy/UhcCore/workflows/Java%20CI%20with%20Gradle/badge.svg)
 
 # UhcCore
+
 Automates UHC games on a dedicated 1.8 - 1.16 server.
 
 More info can be found on the [wiki](https://github.com/Mezy/UhcCore/wiki)
 
-
-
-
 I (Ben Kern) forked this from Mezy because I wanted to run my own private server with custom scenarios.
+
 # Changes
+
 - Fly high now spawns you high and also negates fall damage.
 - 9 slots & Nether start actually show when you are on the vote screen
 - Lucky Leaves now sets apples to spawn at 5%, golden apples at 0.5%, and enchanted golden apples at 0.05%, not mutually exclusive. Also it sets the ability for all trees to drop apples. This is an option in the config
@@ -17,7 +17,12 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - Disabled: Bowless, Rodless, Horseless, Fireless, Goldless, Shieldless, Double Ores, Gone Fishing, Infinite Enchants, Permakill, Fast Smelting, Fast Leaves Decay, Hastey Boys, Nofall, and Upsidedown Crafting (I realize I could have just put these on the blacklist in the config file but whatever)
 - If the game starts with only one player, it will not end unless that player dies. This was easier for me to debug things than having to remember to go into the config file and change the single player end game option back.
 - When the game ends, rather than stopping/restarting the server, all players and kicked out and the plugin is simply reloaded. This saves A LOT of downtime, since the server no longer has to save the regular worlds (Which arent even accessible while this plugin is on), and the old uhc world (which gets deleted when the plugin turns back on anyways).
+- Hunger, exhaustion, and saturation are now set to how they would be in a default world.
+- Force starting a game starts it in 5 seconds, rather than listening to however long you have the countdown set to. Makes it easier to debug stuff when playing solo.
+- Achievement Hunter was printing a lot to console
+
 ### New Scenarios
+
 - Lag world: Blocks drop what they are supposed to but are immediately replaced, giving the effect that the world is lagging.
 - Lil Cheat: All players get a set amount of time of creative mode at the beginning of the game. Default is 30 seconds.
 - Swap Meet: All players swap positions every 5 minutes.

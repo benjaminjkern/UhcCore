@@ -59,11 +59,13 @@ public class PreStartThread implements Runnable{
 		double percentageReadyTeams = 100*readyTeams/teamsNumber;
 		int playersNumber = Bukkit.getOnlinePlayers().size();
 
+		if (force && remainingTime > 5) remainingTime = 5;
+
 		if(
 				force ||
 				(!pause && (remainingTime < 5 || (playersNumber >= minPlayers && readyTeams >= gm.getConfiguration().getMinimalReadyTeamsToStart() && percentageReadyTeams >= gm.getConfiguration().getMinimalReadyTeamsPercentageToStart())))
 		){
-			if(remainingTime == timeBeforeStart+1){
+			if(remainingTime == timeBeforeStart){
 				gm.broadcastInfoMessage(Lang.GAME_ENOUGH_TEAMS_READY);
 				gm.broadcastInfoMessage(Lang.GAME_STARTING_IN.replace("%time%", String.valueOf(remainingTime)));
 				gm.getPlayersManager().playSoundToAll(UniversalSound.CLICK);
@@ -81,10 +83,10 @@ public class PreStartThread implements Runnable{
 				Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), task, 20);
 			}
 		}else{
-			if(!pause && remainingTime < timeBeforeStart+1){
+			if(!pause && remainingTime < timeBeforeStart){
 				gm.broadcastInfoMessage(Lang.GAME_STARTING_CANCELLED);
 			}
-			remainingTime = timeBeforeStart+1;
+			remainingTime = timeBeforeStart;
 			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), task,20);
 		}
 	}
