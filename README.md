@@ -16,6 +16,7 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - Voting works different, will only pick randomly if nobody votes at all, otherwise it will pick from what people did vote for
 - Disabled: Bowless, Rodless, Horseless, Fireless, Goldless, Shieldless, Double Ores, Gone Fishing, Infinite Enchants, Permakill, Fast Smelting, Fast Leaves Decay, Hastey Boys, Nofall, and Upsidedown Crafting (I realize I could have just put these on the blacklist in the config file but whatever)
 - If the game starts with only one player, it will not end unless that player dies. This was easier for me to debug things than having to remember to go into the config file and change the single player end game option back.
+- When the game ends, rather than stopping/restarting the server, all players and kicked out and the plugin is simply reloaded. This saves A LOT of downtime, since the server no longer has to save the regular worlds (Which arent even accessible while this plugin is on), and the old uhc world (which gets deleted when the plugin turns back on anyways).
 ### New Scenarios
 - Lag world: Blocks drop what they are supposed to but are immediately replaced, giving the effect that the world is lagging.
 - Lil Cheat: All players get a set amount of time of creative mode at the beginning of the game. Default is 30 seconds.
