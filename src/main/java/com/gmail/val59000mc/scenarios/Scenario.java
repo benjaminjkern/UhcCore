@@ -73,7 +73,7 @@ public enum Scenario{
     FAST(UniversalMaterial.FEATHER, FastListener.class),
     NOCRAFT(UniversalMaterial.HONEYCOMB_BLOCK, NoCraftListener.class),
     KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class),
-    WHATSMINE(UniversalMaterial.DIRT, WhatsMineListener.class);
+    WHATSMINE(UniversalMaterial.ENDER_CHEST, WhatsMineListener.class);
 
     private String name;
     private UniversalMaterial material;
