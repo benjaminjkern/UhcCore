@@ -27,3 +27,4 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - Dont Waste Time: Replaces Hastey Boys, every time you craft something it attempts to enchant that item with every possible enchantment in the game. You can set an enchantment blacklist to avoid items being given curses, or tools being stuck with silk touch (Preventing you from ever getting cobblestone)
 - No Craft: All crafting recipes are disabled.
 - Shared Health: Actually was in the original code, but it was disabled by Mezzy. I imagine it was because the player taking damage event would call itself recursively and cause the server to crash. This was fixed by changing it to sethealth instead of take damage
+- What's Mine is Yours: All players share the same inventory.
