@@ -104,6 +104,8 @@ public enum UniversalMaterial{
     HONEYCOMB_BLOCK,
     GOLD_NUGGET,
     ENDER_CHEST,
+    SCAFFOLDING,
+    BEETROOT_SOUP,
 
     // Flowers
     POPPY("RED_ROSE", "POPPY", (short) 0),

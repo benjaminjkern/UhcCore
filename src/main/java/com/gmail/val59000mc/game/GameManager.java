@@ -496,7 +496,7 @@ public class GameManager{
 			theEnd.setDifficulty(configuration.getGameDifficulty());
 		}
 
-		lobby = new Lobby(new Location(overworld, 0.5, 200, 0.5), Material.GLASS);
+		lobby = new Lobby(new Location(overworld, 0.5, 200, 0.5), Material.BARRIER);
 		lobby.build();
 		lobby.loadLobbyChunks();
 

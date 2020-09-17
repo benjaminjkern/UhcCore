@@ -9,18 +9,17 @@ Big todos:
 Small changes:
 
 - Bleeding sweets should drop a random thing from an assortment of items instead of the same thing every time
-- Delete permakill or change it to something that makes more sense
-- Get rid of children left unattended ?
 - Use one of your votes to downvote
 - Make best PVE give better benefits
 - Make the paper tell you to click to vote, and how many votes you have left
 - Politics doesn’t always end game when one team is alive
-- Triple ores smelts ores for you also smelts glass
-- The dog names are a little incomprehensible sometimes but also its kinda funny
+- Triple ores smelts ores for you also smelts glass and always gives flint those should be cut clean things
+- Cut clean should be more like easy mode and should be compatible with triple ores and vein miner
 - Spectators shouldnt be able to fly through stuff
 - Doesnt show scenarios when youre spectating
 - Votes should show how many votes there are for specific one
 - Replacing the oceans doesnt work
+- Consider switching to paper spigot
 
 New scenarios:
 
@@ -47,3 +46,4 @@ Far down the line:
 - Make a discord
 - New Banner
 - A way to keep track of which scenarios are popular
+- Website to tell you status of server

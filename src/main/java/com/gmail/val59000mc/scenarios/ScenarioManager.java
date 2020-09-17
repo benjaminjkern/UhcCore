@@ -143,7 +143,7 @@ public class ScenarioManager {
     public Inventory getScenarioVoteInventory(UhcPlayer uhcPlayer){
         Set<Scenario> playerVotes = uhcPlayer.getScenarioVotes();
         Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
-        Inventory inv = Bukkit.createInventory(null,(Scenario.values().length / ROW + 1)*ROW, Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
+        Inventory inv = Bukkit.createInventory(null,(int)Math.ceil((Scenario.values().length - blacklist.size())/ROW)*ROW, Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
 
         for (Scenario scenario : Scenario.values()){
             // Don't add to menu when blacklisted / not compatible / already enabled.
