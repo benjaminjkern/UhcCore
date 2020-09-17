@@ -106,6 +106,7 @@ public enum UniversalMaterial{
     ENDER_CHEST,
     SCAFFOLDING,
     BEETROOT_SOUP,
+    ARMOR_STAND,
 
     // Flowers
     POPPY("RED_ROSE", "POPPY", (short) 0),
