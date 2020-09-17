@@ -19,8 +19,9 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - When the game ends, rather than stopping/restarting the server, all players and kicked out and the plugin is simply reloaded. This saves A LOT of downtime, since the server no longer has to save the regular worlds (Which arent even accessible while this plugin is on), and the old uhc world (which gets deleted when the plugin turns back on anyways).
 - Hunger, exhaustion, and saturation are now set to how they would be in a default world.
 - Force starting a game starts it in 5 seconds, rather than listening to however long you have the countdown set to. Makes it easier to debug stuff when playing solo.
-- Made the scenario voting screen variable height.
-- Achievement Hunter was printing a lot to console
+- Made the scenario voting screen variable height, depending on how many scenarios are allowed to be voted on.
+- Achievement Hunter was printing a lot to console.
+- Overhauled bleeding sweets to give a random enchantment to a random item whenever you kill a player.
 
 ### New Scenarios
 

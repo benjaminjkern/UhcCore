@@ -29,7 +29,6 @@ public class KingMidasListener extends ScenarioListener {
         ores.add(Material.GOLD_ORE);
         ores.add(Material.LAPIS_ORE);
         ores.add(Material.EMERALD_ORE);
-        ores.add(Material.DIAMOND_ORE);
         ores.add(Material.NETHER_GOLD_ORE);
         ores.add(Material.NETHER_QUARTZ_ORE);
         ores.add(Material.REDSTONE_ORE);
@@ -41,10 +40,9 @@ public class KingMidasListener extends ScenarioListener {
 
         Block block = e.getBlock();
         Location loc = e.getBlock().getLocation().add(0.5, 0, 0.5);
-        // TODO: Make work with other scenarios and fortune enchantment
         if (ores.contains(block.getType())) {
             block.setType(Material.AIR);
-            loc.getWorld().dropItem(loc, new ItemStack(Material.GOLD_INGOT,1));
+            loc.getWorld().dropItem(loc, new ItemStack(isActivated(Scenario.CUTCLEAN) ? Material.GOLD_INGOT : Material.GOLD_ORE,isActivated(Scenario.TRIPLEORES) ? 3 : 1));
             UhcItems.spawnExtraXp(loc,3);
         }
 
