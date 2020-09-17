@@ -371,5 +371,12 @@
         "description": [
             "All players share the same inventory."
         ]
+    },
+    "DUOS": {
+        "name": "Duos",
+        "description": [
+            "Players get paired up randomly.",
+            "If there are an odd number of players, the odd man out gets a totem of undying."
+        ]
     }
 }
