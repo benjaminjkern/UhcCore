@@ -1,6 +1,7 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
 import com.gmail.val59000mc.events.UhcStartingEvent;
+import com.gmail.val59000mc.events.UhcStartedEvent;
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.players.UhcTeam;
 import com.gmail.val59000mc.players.UhcPlayer;
@@ -15,9 +16,29 @@ import java.util.*;
 public class DuosListener extends ScenarioListener{
 
     @EventHandler
+    public void onGameStart(UhcStartedEvent e) {
+        List<UhcPlayer> players = new ArrayList<>(getPlayersManager().getOnlinePlayingPlayers());
+        
+        if (players.size() <= 2) return;
+
+        if (players.size() % 2 == 1) {
+            players.forEach(uhcPlayer->{
+                if (uhcPlayer.getTeam().getMembers().size() < 2) {
+                    try {
+                        uhcPlayer.getPlayer().getInventory().addItem(new ItemStack(Material.TOTEM_OF_UNDYING));
+                    } catch (UhcPlayerNotOnlineException u) {}
+                }
+            });
+        }
+    }
+
+    @EventHandler
     public void onGameStateChange(UhcStartingEvent e){
         List<UhcTeam> teams = getPlayersManager().listUhcTeams();
         List<UhcPlayer> players = new ArrayList<>(getPlayersManager().getOnlinePlayingPlayers());
+
+        // dont do it if its only 2 players, although this should never happen naturally
+        if (players.size() <= 2) return;
 
         while (players.size() > 1) {
             int r = (int)(Math.random()*players.size());
@@ -30,13 +51,6 @@ public class DuosListener extends ScenarioListener{
 
             player2.setTeam(player1.getTeam());
             player1.getTeam().getMembers().add(player2);
-        }
-
-        // solo player gets a totem of undying
-        if (players.size() == 1) {
-            try {
-                players.get(0).getPlayer().getInventory().addItem(new ItemStack(Material.TOTEM_OF_UNDYING));
-            } catch (UhcPlayerNotOnlineException u) {}
         }
     }
 

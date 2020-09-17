@@ -4,6 +4,7 @@ import com.gmail.val59000mc.customitems.UhcItems;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 import com.gmail.val59000mc.utils.RandomUtils;
+import com.gmail.val59000mc.utils.UniversalMaterial;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -41,8 +42,11 @@ public class KingMidasListener extends ScenarioListener {
     public void onBlockBreak(BlockBreakEvent e) {
 
         Block block = e.getBlock();
+        ItemStack hand = e.getPlayer().getItemInHand();
+
+        if (!UniversalMaterial.isCorrectTool(block.getType(), hand.getType())) return;
+
         Location loc = e.getBlock().getLocation().add(0.5, 0, 0.5);
-        ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
 
         if (ores.contains(block.getType())) {
             block.setType(Material.AIR);

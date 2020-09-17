@@ -4,6 +4,7 @@ import com.gmail.val59000mc.customitems.UhcItems;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 import com.gmail.val59000mc.utils.RandomUtils;
+import com.gmail.val59000mc.utils.UniversalMaterial;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -46,11 +47,14 @@ public class TripleOresListener extends ScenarioListener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
         // handles it on its own
-        if (isActivated(Scenario.KINGMIDAS)) return;
+        if (isActivated(Scenario.KINGMIDAS) || (isActivated(Scenario.VEINMINER) && e.getPlayer().isSneaking())) return;
 
         Block block = e.getBlock();
+        ItemStack hand = e.getPlayer().getItemInHand();
+
+        if (!UniversalMaterial.isCorrectTool(block.getType(), hand.getType())) return;
+
         Location loc = e.getBlock().getLocation().add(0.5, 0, 0.5);
-        ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
         boolean silkTouch = hand.containsEnchantment(Enchantment.SILK_TOUCH);
         int fortuneLevel = hand.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
 
