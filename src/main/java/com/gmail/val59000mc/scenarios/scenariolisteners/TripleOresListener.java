@@ -39,12 +39,13 @@ public class TripleOresListener extends ScenarioListener {
         Block block = e.getBlock();
         if (ores.containsKey(block.getType())) {
             e.setCancelled(true);
-            e.getPlayer().sendMessage("[Tiple Ores] You can't place that while Triple Ores is on!");
+            e.getPlayer().sendMessage("[Triple Ores] You can't place that while Triple Ores is on!");
         }
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
+        // handles it on its own
         if (isActivated(Scenario.KINGMIDAS)) return;
 
         Block block = e.getBlock();

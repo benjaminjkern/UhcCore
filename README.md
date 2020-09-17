@@ -22,6 +22,7 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - Made the scenario voting screen variable height, depending on how many scenarios are allowed to be voted on.
 - Achievement Hunter was printing a lot to console.
 - Overhauled bleeding sweets to give a random enchantment to a random item whenever you kill a player.
+- Overhauled Triple Ores to work with all ores, stop from placing and duping, as well as work with fortune and silk touch enchantments.
 
 ### New Scenarios
 
@@ -36,3 +37,4 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - No Craft: All crafting recipes are disabled.
 - Shared Health: Actually was in the original code, but it was disabled by Mezzy. I imagine it was because the player taking damage event would call itself recursively and cause the server to crash. This was fixed by changing it to sethealth instead of take damage
 - What's Mine is Yours: All players share the same inventory.
+- Duos: Random duos are chosen, odd man out gets a totem of undying.

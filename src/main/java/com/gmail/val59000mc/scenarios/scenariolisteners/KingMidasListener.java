@@ -3,6 +3,7 @@ package com.gmail.val59000mc.scenarios.scenariolisteners;
 import com.gmail.val59000mc.customitems.UhcItems;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
+import com.gmail.val59000mc.utils.RandomUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -13,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
+import org.bukkit.enchantments.Enchantment;
 
 import java.util.*;
 
@@ -40,12 +42,29 @@ public class KingMidasListener extends ScenarioListener {
 
         Block block = e.getBlock();
         Location loc = e.getBlock().getLocation().add(0.5, 0, 0.5);
+        ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
+
         if (ores.contains(block.getType())) {
             block.setType(Material.AIR);
-            loc.getWorld().dropItem(loc, new ItemStack(isActivated(Scenario.CUTCLEAN) ? Material.GOLD_INGOT : Material.GOLD_ORE,isActivated(Scenario.TRIPLEORES) ? 3 : 1));
-            UhcItems.spawnExtraXp(loc,3);
+            loc.getWorld().dropItem(loc, new ItemStack(isActivated(Scenario.CUTCLEAN) ? Material.GOLD_INGOT : Material.GOLD_ORE,(isActivated(Scenario.TRIPLEORES) ? 3 : 1)*getFortune(hand)));
+            UhcItems.spawnExtraXp(loc,RandomUtils.randomInteger(2, 5));
         }
+    }
 
+    private int getFortune(ItemStack hand) {
+        if (!isActivated(Scenario.CUTCLEAN) || hand.containsEnchantment(Enchantment.SILK_TOUCH)) return 1;
+
+        double r = Math.random() * 60;
+        switch (hand.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS)) {
+            case 1:
+                return r < 40 ? 1 : 2;
+            case 2:
+                return r < 30 ? 1 : r < 45 ? 2 : 3;
+            case 3:
+                return r < 24 ? 1 : r < 36 ? 2 : r < 48 ? 3 : 4;
+            default:
+                return 1;
+        }
     }
 
     @EventHandler

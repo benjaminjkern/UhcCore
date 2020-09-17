@@ -72,7 +72,8 @@ public class CutCleanListener extends ScenarioListener{
     @EventHandler (priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent e){
 
-        if (isActivated(Scenario.TRIPLEORES) || (isActivated(Scenario.VEINMINER) && e.getPlayer().isSneaking())){
+        // handled elsewhere
+        if (isActivated(Scenario.KINGMIDAS) || isActivated(Scenario.TRIPLEORES) || (isActivated(Scenario.VEINMINER) && e.getPlayer().isSneaking())){
             return;
         }
 
