@@ -7,6 +7,7 @@ timebomb:
 bestpve:
   # Time between healing players on best PvE list.
   delay: 600
+  healAmount: 2
 noclean:
   # Time players are invulnerable for.
   duration: 30

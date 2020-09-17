@@ -30,6 +30,9 @@ public class BestPvEListener extends ScenarioListener implements Runnable{
     @Option
     private long delay = 600;
 
+    @Option
+    private long healAmount = 1;
+
     public BestPvEListener(){
         taskId = -1;
         pveList = new HashMap<>();
@@ -87,6 +90,7 @@ public class BestPvEListener extends ScenarioListener implements Runnable{
             uhcPlayer.sendMessage(Lang.SCENARIO_BESTPVE_REMOVED);
         }
 
+        // Shrink player's max health until it aligns with max health?
         if (p.getMaxHealth() > maxHealth){
             double hp = p.getHealth();
 
@@ -132,11 +136,11 @@ public class BestPvEListener extends ScenarioListener implements Runnable{
 
             if (player.getGameMode().equals(GameMode.SURVIVAL) && pveList.get(uhcPlayer)){
                 // heal player
-                if (player.getHealth() + 2 > player.getMaxHealth()){
-                    player.setMaxHealth(player.getMaxHealth() + 2);
-                }
+                // if (player.getHealth() + 2 > player.getMaxHealth()){
+                //     player.setMaxHealth(player.getMaxHealth() + 2);
+                // }
 
-                player.setHealth(player.getHealth() + 2);
+                player.setHealth(Math.min(player.getHealth() + healAmount, maxHealth));
             }
         }
 
