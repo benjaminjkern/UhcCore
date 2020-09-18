@@ -18,7 +18,7 @@ import java.util.*;
 
 public class TripleOresListener extends ScenarioListener {
 
-    Map<Material, Ore> ores;
+    public static Map<Material, Ore> ores;
 
     public TripleOresListener() {
         ores = new HashMap<>();
@@ -48,15 +48,11 @@ public class TripleOresListener extends ScenarioListener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
         // handles it on its own
-        if (isActivated(Scenario.KINGMIDAS) || (isActivated(Scenario.VEINMINER) && e.getPlayer().isSneaking()))
+        if (isActivated(Scenario.KINGMIDAS) || isActivated(Scenario.CUTCLEAN)
+                || (isActivated(Scenario.VEINMINER) && e.getPlayer().isSneaking()))
             return;
 
         Block block = e.getBlock();
-
-        List<Material> cutOres = Arrays
-                .asList(new Material[] { Material.IRON_ORE, Material.GOLD_ORE, Material.ANCIENT_DEBRIS });
-        if (cutOres.contains(block.getType()) && isActivated(Scenario.CUTCLEAN))
-            return;
 
         ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
 

@@ -53,7 +53,8 @@ public class KingMidasListener extends ScenarioListener {
             block.setType(Material.AIR);
             loc.getWorld().dropItem(loc,
                     new ItemStack(isActivated(Scenario.CUTCLEAN) ? Material.GOLD_INGOT : Material.GOLD_ORE,
-                            (isActivated(Scenario.TRIPLEORES) ? 3 : 1) * getFortune(hand)));
+                            (isActivated(Scenario.TRIPLEORES) ? 3 : 1) * (isActivated(Scenario.DOUBLEGOLD) ? 3 : 1)
+                                    * getFortune(hand)));
             if (isActivated(Scenario.CUTCLEAN))
                 UhcItems.spawnExtraXp(loc, 1);
         }

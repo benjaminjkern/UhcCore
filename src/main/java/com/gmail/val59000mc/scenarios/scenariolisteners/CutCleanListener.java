@@ -16,6 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,11 +36,12 @@ public class CutCleanListener extends ScenarioListener {
 
     private final ItemStack lapis;
     @Option(key = "unlimited-lapis")
-    private final boolean unlimitedLapis = true;
+    private boolean unlimitedLapis = true;
     @Option(key = "check-correct-tool")
-    private final boolean checkTool = false;
+    private boolean checkTool = false;
 
     private final Map<Material, FurnaceRecipe> furnaceRecipes;
+    private final Set<Material> banList;
 
     public CutCleanListener() {
         lapis = UniversalMaterial.LAPIS_LAZULI.getStack(64);
@@ -54,6 +56,9 @@ public class CutCleanListener extends ScenarioListener {
             final FurnaceRecipe newRecipe = (FurnaceRecipe) recipe;
             furnaceRecipes.put(newRecipe.getInput().getType(), newRecipe);
         }
+
+        banList = new HashSet<>();
+        banList.add(Material.STONE);
     }
 
     @EventHandler
@@ -64,6 +69,9 @@ public class CutCleanListener extends ScenarioListener {
 
         // doesnt check if killer is sneaking because thats not easily accessible, but
         // it should
+
+        // also this should check for looting but I do NOT wanna deal with that, silk
+        // touch and fortune are annoying enough
 
         for (int i = 0; i < e.getDrops().size(); i++) {
             final ItemStack drop = e.getDrops().get(i);
@@ -83,9 +91,9 @@ public class CutCleanListener extends ScenarioListener {
             return;
 
         Block block = e.getBlock();
+        ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
 
-        if (checkTool && !UniversalMaterial.isCorrectTool(block.getType(),
-                e.getPlayer().getInventory().getItemInMainHand().getType()))
+        if (checkTool && !UniversalMaterial.isCorrectTool(block.getType(), hand.getType()))
             return;
 
         Location loc = block.getLocation().add(0.5, 0, 0.5);
@@ -94,12 +102,22 @@ public class CutCleanListener extends ScenarioListener {
         int exp = e.getExpToDrop();
 
         for (ItemStack drop : block.getDrops()) {
-
-            if (furnaceRecipes.containsKey(drop.getType())) {
-                toDrop.add(furnaceRecipes.get(drop.getType()).getResult());
+            ItemStack cookedDrop = drop;
+            if (!banList.contains(drop.getType()) && furnaceRecipes.containsKey(drop.getType())) {
+                cookedDrop = furnaceRecipes.get(drop.getType()).getResult();
                 exp += furnaceRecipes.get(drop.getType()).getExperience();
-            } else
-                toDrop.add(drop);
+            }
+
+            int amount = TripleOresListener.ores.containsKey(drop.getType()) ? getFortune(hand) : 1;
+            if (isActivated(Scenario.TRIPLEORES) && TripleOresListener.ores.containsKey(drop.getType())) {
+                amount *= 3;
+            }
+            if (isActivated(Scenario.DOUBLEGOLD) && drop.getType() == Material.GOLD_ORE) {
+                amount *= 2;
+            }
+
+            for (int i = 0; i < amount; i++)
+                toDrop.add(cookedDrop);
         }
 
         for (ItemStack drop : toDrop) {
@@ -107,6 +125,20 @@ public class CutCleanListener extends ScenarioListener {
         }
         UhcItems.spawnExtraXp(loc, exp);
         e.setCancelled(true);
+    }
+
+    private int getFortune(ItemStack hand) {
+        double r = Math.random() * 60;
+        switch (hand.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS)) {
+            case 1:
+                return r < 40 ? 1 : 2;
+            case 2:
+                return r < 30 ? 1 : r < 45 ? 2 : 3;
+            case 3:
+                return r < 24 ? 1 : r < 36 ? 2 : r < 48 ? 3 : 4;
+            default:
+                return 1;
+        }
     }
 
     @EventHandler
