@@ -35,28 +35,33 @@ public class KingMidasListener extends ScenarioListener {
         ores.add(Material.NETHER_GOLD_ORE);
         ores.add(Material.NETHER_QUARTZ_ORE);
         ores.add(Material.REDSTONE_ORE);
+        ores.add(Material.ANCIENT_DEBRIS);
     }
-
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
 
         Block block = e.getBlock();
-        ItemStack hand = e.getPlayer().getItemInHand();
+        ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
 
-        if (!UniversalMaterial.isCorrectTool(block.getType(), hand.getType())) return;
+        if (!UniversalMaterial.isCorrectTool(block.getType(), hand.getType()))
+            return;
 
         Location loc = e.getBlock().getLocation().add(0.5, 0, 0.5);
 
         if (ores.contains(block.getType())) {
             block.setType(Material.AIR);
-            loc.getWorld().dropItem(loc, new ItemStack(isActivated(Scenario.CUTCLEAN) ? Material.GOLD_INGOT : Material.GOLD_ORE,(isActivated(Scenario.TRIPLEORES) ? 3 : 1)*getFortune(hand)));
-            UhcItems.spawnExtraXp(loc,RandomUtils.randomInteger(2, 5));
+            loc.getWorld().dropItem(loc,
+                    new ItemStack(isActivated(Scenario.CUTCLEAN) ? Material.GOLD_INGOT : Material.GOLD_ORE,
+                            (isActivated(Scenario.TRIPLEORES) ? 3 : 1) * getFortune(hand)));
+            if (isActivated(Scenario.CUTCLEAN))
+                UhcItems.spawnExtraXp(loc, 1);
         }
     }
 
     private int getFortune(ItemStack hand) {
-        if (!isActivated(Scenario.CUTCLEAN) || hand.containsEnchantment(Enchantment.SILK_TOUCH)) return 1;
+        if (!isActivated(Scenario.CUTCLEAN) || hand.containsEnchantment(Enchantment.SILK_TOUCH))
+            return 1;
 
         double r = Math.random() * 60;
         switch (hand.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS)) {
@@ -74,11 +79,14 @@ public class KingMidasListener extends ScenarioListener {
     @EventHandler
     public void onEntityKilled(EntityDeathEvent e) {
         Entity entity = e.getEntity();
-        if (entity instanceof Player) return;
+        if (entity instanceof Player)
+            return;
 
         e.getDrops().clear();
         Location loc = entity.getLocation();
-        loc.getWorld().dropItem(loc, new ItemStack(entity instanceof Monster ? Material.GOLD_INGOT : Material.GOLD_NUGGET,1));
+        loc.getWorld().dropItem(loc,
+                new ItemStack(entity instanceof Monster ? Material.GOLD_INGOT : Material.GOLD_NUGGET,
+                        entity instanceof Monster ? 1 : RandomUtils.randomInteger(2, 6)));
     }
 
 }

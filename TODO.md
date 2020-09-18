@@ -27,6 +27,9 @@ Need to Test:
 - Updated Bleeding Sweets
 - Whether duos gives totem
 - Whether midas, triple, and cutclean all check for the proper tool
+- Skyhigh
+- Weakest Link
+- PVE
 
 New scenarios:
 
