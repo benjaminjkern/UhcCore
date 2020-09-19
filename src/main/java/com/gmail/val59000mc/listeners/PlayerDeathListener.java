@@ -30,17 +30,17 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.List;
 
-public class PlayerDeathListener implements Listener{
-	
+public class PlayerDeathListener implements Listener {
+
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerDeath(PlayerDeathEvent event){
+	public void onPlayerDeath(PlayerDeathEvent event) {
 		Player player = event.getEntity();
 		GameManager gm = GameManager.getGameManager();
 		PlayersManager pm = gm.getPlayersManager();
 		MainConfiguration cfg = gm.getConfiguration();
 		UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
 
-		if (uhcPlayer.getState() != PlayerState.PLAYING){
+		if (uhcPlayer.getState() != PlayerState.PLAYING) {
 			Bukkit.getLogger().warning("[UhcCore] " + player.getName() + " died while already in 'DEAD' mode!");
 			player.kickPlayer("Don't cheat!");
 			return;
@@ -50,16 +50,18 @@ public class PlayerDeathListener implements Listener{
 
 		// kill event
 		Player killer = player.getKiller();
-		if(killer != null){
+		if (killer != null) {
 			UhcPlayer uhcKiller = pm.getUhcPlayer(killer);
 
 			uhcKiller.kills++;
+
+			pm.getScoreKeeper().updateScores(uhcKiller, uhcPlayer);
 
 			// Call Bukkit event
 			UhcPlayerKillEvent killEvent = new UhcPlayerKillEvent(uhcPlayer, uhcKiller);
 			Bukkit.getServer().getPluginManager().callEvent(killEvent);
 
-			if(cfg.getEnableKillEvent()){
+			if (cfg.getEnableKillEvent()) {
 				double reward = cfg.getRewardKillEvent();
 				List<String> killCommands = cfg.getKillCommands();
 				if (reward > 0) {
@@ -71,8 +73,9 @@ public class PlayerDeathListener implements Listener{
 				// If the list is empty, this will never execute
 				killCommands.forEach(cmd -> {
 					try {
-						Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%name%", uhcKiller.getRealName()));
-					} catch (CommandException exception){
+						Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+								cmd.replace("%name%", uhcKiller.getRealName()));
+					} catch (CommandException exception) {
 						Bukkit.getLogger().warning("[UhcCore] Failed to execute kill reward command: " + cmd);
 						exception.printStackTrace();
 					}
@@ -86,18 +89,19 @@ public class PlayerDeathListener implements Listener{
 
 		// eliminations
 		ScenarioManager sm = gm.getScenarioManager();
-		if (!sm.isActivated(Scenario.SILENTNIGHT) || !((SilentNightListener) sm.getScenarioListener(Scenario.SILENTNIGHT)).isNightMode()) {
+		if (!sm.isActivated(Scenario.SILENTNIGHT)
+				|| !((SilentNightListener) sm.getScenarioListener(Scenario.SILENTNIGHT)).isNightMode()) {
 			gm.broadcastInfoMessage(Lang.PLAYERS_ELIMINATED.replace("%player%", player.getName()));
 		}
 
-		if(cfg.getRegenHeadDropOnPlayerDeath()){
+		if (cfg.getRegenHeadDropOnPlayerDeath()) {
 			event.getDrops().add(UhcItems.createRegenHead(uhcPlayer));
 		}
 
-		if(cfg.getEnableGoldenHeads()){
-			if (cfg.getPlaceHeadOnFence() && !gm.getScenarioManager().isActivated(Scenario.TIMEBOMB)){
+		if (cfg.getEnableGoldenHeads()) {
+			if (cfg.getPlaceHeadOnFence() && !gm.getScenarioManager().isActivated(Scenario.TIMEBOMB)) {
 				// place head on fence
-				Location loc = player.getLocation().clone().add(1,0,0);
+				Location loc = player.getLocation().clone().add(1, 0, 0);
 				loc.getBlock().setType(UniversalMaterial.OAK_FENCE.getType());
 				loc.add(0, 1, 0);
 				loc.getBlock().setType(UniversalMaterial.PLAYER_HEAD_BLOCK.getType());
@@ -106,12 +110,12 @@ public class PlayerDeathListener implements Listener{
 				VersionUtils.getVersionUtils().setSkullOwner(skull, uhcPlayer);
 				skull.setRotation(BlockFace.NORTH);
 				skull.update();
-			}else{
+			} else {
 				event.getDrops().add(UhcItems.createGoldenHeadPlayerSkull(player.getName(), player.getUniqueId()));
 			}
 		}
 
-		if(cfg.getEnableExpDropOnDeath()){
+		if (cfg.getEnableExpDropOnDeath()) {
 			UhcItems.spawnExtraXp(player.getLocation(), cfg.getExpDropOnDeath());
 		}
 
@@ -125,7 +129,8 @@ public class PlayerDeathListener implements Listener{
 
 		if (!canContinueToSpectate) {
 			if (cfg.getEnableBungeeSupport()) {
-				Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new TimeBeforeSendBungeeThread(uhcPlayer, cfg.getTimeBeforeSendBungeeAfterDeath()));
+				Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(),
+						new TimeBeforeSendBungeeThread(uhcPlayer, cfg.getTimeBeforeSendBungeeAfterDeath()));
 			} else {
 				player.kickPlayer(Lang.DISPLAY_MESSAGE_PREFIX + " " + Lang.KICK_DEAD);
 			}
@@ -133,15 +138,15 @@ public class PlayerDeathListener implements Listener{
 
 		pm.checkIfRemainingPlayers();
 	}
-	
+
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onPlayerRespawn(PlayerRespawnEvent event){
+	public void onPlayerRespawn(PlayerRespawnEvent event) {
 		PlayersManager pm = GameManager.getGameManager().getPlayersManager();
 		UhcPlayer uhcPlayer = pm.getUhcPlayer(event.getPlayer());
 
-		if(uhcPlayer.getState().equals(PlayerState.DEAD)){
+		if (uhcPlayer.getState().equals(PlayerState.DEAD)) {
 			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> pm.setPlayerSpectateAtLobby(uhcPlayer), 1);
 		}
 	}
-	
+
 }

@@ -10,19 +10,11 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 
 # Changes
 
-- Fly high now spawns you high and also negates fall damage.
-- 9 slots & Nether start actually show when you are on the vote screen
-- Lucky Leaves now sets apples to spawn at 5%, golden apples at 0.5%, and enchanted golden apples at 0.05%, not mutually exclusive. Also it sets the ability for all trees to drop apples. This is an option in the config
-- Voting works different, will only pick randomly if nobody votes at all, otherwise it will pick from what people did vote for
-- Disabled: Bowless, Rodless, Horseless, Fireless, Goldless, Shieldless, Double Ores, Gone Fishing, Infinite Enchants, Permakill, Fast Smelting, Fast Leaves Decay, Hastey Boys, Nofall, and Upsidedown Crafting (I realize I could have just put these on the blacklist in the config file but whatever)
 - If the game starts with only one player, it will not end unless that player dies. This was easier for me to debug things than having to remember to go into the config file and change the single player end game option back.
 - When the game ends, rather than stopping/restarting the server, all players and kicked out and the plugin is simply reloaded. This saves A LOT of downtime, since the server no longer has to save the regular worlds (Which arent even accessible while this plugin is on), and the old uhc world (which gets deleted when the plugin turns back on anyways).
 - Hunger, exhaustion, and saturation are now set to how they would be in a default world.
 - Force starting a game starts it in 5 seconds, rather than listening to however long you have the countdown set to. Makes it easier to debug stuff when playing solo.
 - Made the scenario voting screen variable height, depending on how many scenarios are allowed to be voted on.
-- Achievement Hunter was printing a lot to console.
-- Overhauled bleeding sweets to give a random enchantment to a random item whenever you kill a player.
-- Overhauled Triple Ores to work with all ores, stop from placing and duping, as well as work with fortune and silk touch enchantments.
 
 ### New Scenarios
 
@@ -38,3 +30,13 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - Shared Health: Actually was in the original code, but it was disabled by Mezzy. I imagine it was because the player taking damage event would call itself recursively and cause the server to crash. This was fixed by changing it to sethealth instead of take damage
 - What's Mine is Yours: All players share the same inventory.
 - Duos: Random duos are chosen, odd man out gets a totem of undying.
+
+### Changed Scenarios
+
+- Overhauled bleeding sweets to give a random enchantment to a random item whenever you kill a player.
+- Overhauled Triple Ores to work with all ores, stop from placing and duping, as well as work with fortune and silk touch enchantments.
+- CutClean: Tries to smelt everything when a block is broken or an entity is killed, unless the player is sneaking. (Does not check if player is sneaking for killing entity)
+  - There is a ban list so it doesnt try to smelt stone, for example
+- Fly high now spawns you high and also negates fall damage.
+- Lucky Leaves now sets apples to spawn at 5%, golden apples at 0.5%, and enchanted golden apples at 0.05%, not mutually exclusive. Also it sets the ability for all trees to drop apples. This is an option in the config
+- Achievement Hunter was printing a lot to console.

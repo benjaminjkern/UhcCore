@@ -1,8 +1,10 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,7 +60,15 @@ public class CutCleanListener extends ScenarioListener {
         }
 
         banList = new HashSet<>();
+        // dont want stone
         banList.add(Material.STONE);
+        // dont want charcoal
+        banList.add(Material.OAK_LOG);
+        banList.add(Material.BIRCH_LOG);
+        banList.add(Material.DARK_OAK_LOG);
+        banList.add(Material.ACACIA_LOG);
+        banList.add(Material.SPRUCE_LOG);
+        banList.add(Material.JUNGLE_LOG);
     }
 
     @EventHandler
@@ -98,7 +108,7 @@ public class CutCleanListener extends ScenarioListener {
 
         Location loc = block.getLocation().add(0.5, 0, 0.5);
 
-        Set<ItemStack> toDrop = new HashSet<>();
+        List<ItemStack> toDrop = new ArrayList<>();
         int exp = e.getExpToDrop();
 
         for (ItemStack drop : block.getDrops()) {
@@ -107,7 +117,6 @@ public class CutCleanListener extends ScenarioListener {
                 cookedDrop = furnaceRecipes.get(drop.getType()).getResult();
                 exp += furnaceRecipes.get(drop.getType()).getExperience();
             }
-
             int amount = TripleOresListener.ores.containsKey(drop.getType()) ? getFortune(hand) : 1;
             if (isActivated(Scenario.TRIPLEORES) && TripleOresListener.ores.containsKey(drop.getType())) {
                 amount *= 3;
@@ -120,6 +129,7 @@ public class CutCleanListener extends ScenarioListener {
                 toDrop.add(cookedDrop);
         }
 
+        block.setType(Material.AIR);
         for (ItemStack drop : toDrop) {
             loc.getWorld().dropItem(loc, drop);
         }

@@ -17,21 +17,32 @@ Small changes:
 - Replacing the oceans doesnt work
 - Consider switching to paper spigot
 - Make sure Vein works with lagworld and midas and cutclean and lagworld works with timber
+- One of those may have spawned me really high up, I'm not sure how
 - I wrote down something about gold, I dont remember what it was though.
 - They also all still apply when in creative mode, not that that matters
-- One of those three ^ may have spawned me really high up, I'm not sure how
-- Randomzied drops also does the same thing
+- Randomzied drops doesnt check tool
+- Cutclean doesnt give experience but it also doesnt take away so thats not a huge deal
+- Triple ores gives experience when mining blocks that return ores
+- Shared inventory throws exceptions that lag the server
+- Make enderchest consistent between games but disabled on:
+  - Flower Power
+  - Lil Cheat
+  - Dont waste your time
+  - Triple ores
+  - King Midas
+- Achievements show in the nether
+- On nether start put a nether portal in the middle of the map
+- Make Spiderman one of the superpowers you can get
 
 Need to Test:
 
 - Updated Bleeding Sweets
 - Whether duos gives totem
-- Whether midas, triple, and cutclean all check for the proper tool
 - Skyhigh
 - Weakest Link
 - PVE
 
-New scenarios:
+Potential New scenarios:
 
 - Random: Pick a random scenario for the rest of the vote counts (If a scenario is picked before random, that one stays in)
 - None: Everything here and below gets negated (If a scenario is picked before random, that one stays in)
@@ -49,10 +60,47 @@ New scenarios:
 - Buy teammates back with gold
 - Buy dead players not on your team back
 - Being on fire or in lava heals you
+- Your max health is 1 heart for the whole game.
+- Juggernaut
+- Wither Rush: A wither is spawned in the middle of the map. Kill it to win.
 
 Far down the line:
 
+- Voting:
+  - For 30 minutes (compounded if voting on multiple services):
+    - You get to downvote
+    - Your votes count as double
+  - +1 rank
 - Donor Ranks (Aesthetic/More votes on which gametype or maybe multiple votes for same thing/can downvote, guranteed spot on server, trump vote (if you choose to vote once that one scenario is going in regardless))
+  - Level 1: \$2 a month
+    - Guaranteed spot on the server
+    - Can always downvote without voting
+    - Discord bits
+    - +50 rank per month
+  - Level 2: \$5 a month
+    - +150 rank per month
+    - Discord bits
+    - Your votes always count as double
+    - You get 5 votes
+    - /hat
+    - Can nickname yourself
+    - Fun particles in game that follow you, always assigned to whatever the current color is
+    - Particles when you kill people
+  - Level 3: \$12 a month
+    - Discord bits
+    - Can force-start games
+    - Your votes count as triple
+    - +400 rank per month
+    - /ec (ender chest is always consistent between games, but is disabled on certain scenarios)
+    - /craft
+    - /j (1 minute cool down)
+    - /top (1 minute cool down)
+    - /smite
+    - Customize your particle colors
+    - Customize the music thats played when players are near you (Certain sounds will be outside of minecraft's regular resource pack and will require the server resource pack to be able to hear it)
+    - Customize the music thats played when you kill a player
+- Auction: once a week we give stuff away outside of the game and you can put in tickets for 1 rank each
+
 - Upgrade Server infrastructure - this was done but can always be added to
 - Easy suggestion box
 - Change Lobby

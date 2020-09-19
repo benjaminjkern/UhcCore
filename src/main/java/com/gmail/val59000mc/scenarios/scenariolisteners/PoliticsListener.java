@@ -18,27 +18,32 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-public class PoliticsListener extends ScenarioListener{
+public class PoliticsListener extends ScenarioListener {
 
     @EventHandler
-    public void onPlayerDamage(EntityDamageByEntityEvent e){
-        if (e.getEntityType() != EntityType.PLAYER || !(e.getDamager() instanceof Player)) return;
+    public void onPlayerDamage(EntityDamageByEntityEvent e) {
+        if (e.getEntityType() != EntityType.PLAYER || !(e.getDamager() instanceof Player))
+            return;
 
-        if (getGameManager().getGameState() != GameState.PLAYING)return;
+        if (getGameManager().getGameState() != GameState.PLAYING)
+            return;
 
         Player killed = (Player) e.getEntity();
         Player killer = (Player) e.getDamager();
 
-        if (e.getDamage() < killed.getHealth()) return;
+        if (e.getDamage() < killed.getHealth())
+            return;
 
         PlayersManager pm = getPlayersManager();
         UhcPlayer uhcKilled = pm.getUhcPlayer(killed);
         UhcPlayer uhcKiller = pm.getUhcPlayer(killer);
 
         // check if it was friendlyfire
-        if (uhcKiller.getTeam() == uhcKilled.getTeam()) return;
+        if (uhcKiller.getTeam() == uhcKilled.getTeam())
+            return;
 
-        getGameManager().broadcastMessage(uhcKilled.getName() + " was killed by "+uhcKiller.getName()+"!");
+        getGameManager().broadcastMessage(uhcKilled.getName() + " was killed by " + uhcKiller.getName() + "!");
+        getPlayersManager().getScoreKeeper().updateScores(uhcKiller, uhcKilled);
 
         uhcKilled.setTeam(uhcKiller.getTeam());
         uhcKiller.getTeam().getMembers().add(uhcKilled);
