@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
-public enum Scenario{
+public enum Scenario {
     CUTCLEAN(UniversalMaterial.IRON_INGOT, CutCleanListener.class),
     // FIRELESS(UniversalMaterial.LAVA_BUCKET, FirelessListener.class),
     // BOWLESS(UniversalMaterial.BOW, BowlessListener.class),
@@ -27,8 +27,7 @@ public enum Scenario{
     BESTPVE(UniversalMaterial.REDSTONE, BestPvEListener.class),
     TRIPLEORES(UniversalMaterial.REDSTONE_ORE, TripleOresListener.class),
     // DOUBLEORES(UniversalMaterial.REDSTONE_ORE, DoubleOresListener.class),
-    TEAMINVENTORY(UniversalMaterial.CHEST),
-    NOCLEAN(UniversalMaterial.QUARTZ, NoCleanListener.class),
+    TEAMINVENTORY(UniversalMaterial.CHEST), NOCLEAN(UniversalMaterial.QUARTZ, NoCleanListener.class),
     // HASTEYBOYS(UniversalMaterial.DIAMOND_PICKAXE, HasteyBoysListener.class),
     LUCKYLEAVES(UniversalMaterial.OAK_LEAVES, LuckyLeavesListener.class),
     BLEEDINGSWEETS(UniversalMaterial.BEETROOT_SOUP, BleedingSweetsListener.class),
@@ -40,18 +39,20 @@ public enum Scenario{
     DRAGONRUSH(UniversalMaterial.DRAGON_EGG, DragonRushListener.class),
     LOVEATFIRSTSIGHT(UniversalMaterial.POPPY, LoveAtFirstSightListener.class),
     SKYHIGH(UniversalMaterial.ANVIL, SkyHighListener.class),
-    // FASTLEAVESDECAY(UniversalMaterial.ACACIA_LEAVES, FastLeavesDecayListener.class),
+    // FASTLEAVESDECAY(UniversalMaterial.ACACIA_LEAVES,
+    // FastLeavesDecayListener.class),
     // FASTSMELTING(UniversalMaterial.FURNACE, FastSmeltingListener.class),
     SUPERHEROES(UniversalMaterial.NETHER_STAR, SuperHeroesListener.class),
     ANONYMOUS(UniversalMaterial.NAME_TAG, AnonymousListener.class),
     // GONEFISHING(UniversalMaterial.FISHING_ROD, GoneFishingListener.class),
-    // INFINITEENCHANTS(UniversalMaterial.ENCHANTING_TABLE, InfiniteEnchantsListener.class),
-    // CHILDRENLEFTUNATTENDED(UniversalMaterial.WOLF_SPAWN_EGG, ChildrenLeftUnattended.class),
+    // INFINITEENCHANTS(UniversalMaterial.ENCHANTING_TABLE,
+    // InfiniteEnchantsListener.class),
+    // CHILDRENLEFTUNATTENDED(UniversalMaterial.WOLF_SPAWN_EGG,
+    // ChildrenLeftUnattended.class),
     SILENTNIGHT(UniversalMaterial.CLOCK, SilentNightListener.class),
     // PERMAKILL(UniversalMaterial.IRON_SWORD, PermaKillListener.class),
     WEAKESTLINK(UniversalMaterial.DIAMOND_SWORD, WeakestLinkListener.class),
-    EGGS(UniversalMaterial.EGG, EggsScenarioListener.class),
-    NOGOINGBACK(UniversalMaterial.NETHER_BRICK),
+    EGGS(UniversalMaterial.EGG, EggsScenarioListener.class), NOGOINGBACK(UniversalMaterial.NETHER_BRICK),
     // DOUBLEDATES(UniversalMaterial.RED_BANNER, DoubleDatesListener.class),
     DUOS(UniversalMaterial.ARMOR_STAND, DuosListener.class),
     FLYHIGH(UniversalMaterial.ELYTRA, FlyHighListener.class, 9),
@@ -66,12 +67,10 @@ public enum Scenario{
     // NEW ONES
     LAGWORLD(UniversalMaterial.DIRT, LagWorldListener.class),
     LILCHEAT(UniversalMaterial.DIAMOND_BLOCK, LilCheatListener.class),
-    SWAP(UniversalMaterial.RAW_PORK, SwapListener.class),
-    COMPANION(UniversalMaterial.BONE, CompanionListener.class),
+    SWAP(UniversalMaterial.RAW_PORK, SwapListener.class), COMPANION(UniversalMaterial.BONE, CompanionListener.class),
     // SHAREDHEALTH(UniversalMaterial.RED_DYE, SharedHealthListener.class),
     DONTWASTETIME(UniversalMaterial.DIAMOND_PICKAXE, DontWasteTimeListener.class),
-    POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class),
-    FAST(UniversalMaterial.FEATHER, FastListener.class),
+    POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class), FAST(UniversalMaterial.FEATHER, FastListener.class),
     NOCRAFT(UniversalMaterial.HONEYCOMB_BLOCK, NoCraftListener.class),
     KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class),
     WHATSMINE(UniversalMaterial.ENDER_CHEST, WhatsMineListener.class);
@@ -82,64 +81,42 @@ public enum Scenario{
     private int fromVersion;
     private List<String> description;
 
-    Scenario(UniversalMaterial material){
-        this(material, null);
-    }
+    Scenario(UniversalMaterial material) { this(material, null); }
 
-    Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener){
-        this(material, listener, 8);
-    }
+    Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener) { this(material, listener, 8); }
 
-    Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener, int fromVersion){
+    Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener, int fromVersion) {
         this.material = material;
         this.listener = listener;
         this.fromVersion = fromVersion;
     }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public void setName(String name) { this.name = name; }
 
-    public List<String> getDescription() {
-        return description;
-    }
+    public List<String> getDescription() { return description; }
 
-    public void setDescription(List<String> description) {
-        this.description = description;
-    }
+    public void setDescription(List<String> description) { this.description = description; }
 
-    public String getLowerCase(){
-        return name().toLowerCase();
-    }
+    public String getLowerCase() { return name().toLowerCase(); }
 
-    public UniversalMaterial getMaterial() {
-        return material;
-    }
+    public UniversalMaterial getMaterial() { return material; }
 
     @Nullable
-    public Class<? extends ScenarioListener> getListener() {
-        return listener;
-    }
+    public Class<? extends ScenarioListener> getListener() { return listener; }
 
-    public boolean equals(String name){
+    public boolean equals(String name) {
         return name.contains(getName()) || name.replace(" ", "").toLowerCase().equals(name().toLowerCase());
     }
 
-    public static Scenario getScenario(String s){
+    public static Scenario getScenario(String s) {
 
-        for (Scenario scenario : values()){
-            if (scenario.equals(s)){
-                return scenario;
-            }
-        }
+        for (Scenario scenario : values()) { if (scenario.equals(s)) { return scenario; } }
         return null;
     }
 
-    public ItemStack getScenarioItem(){
+    public ItemStack getScenarioItem() {
         ItemStack item = material.getStack();
         ItemMeta meta = item.getItemMeta();
 
@@ -151,8 +128,6 @@ public enum Scenario{
         return item;
     }
 
-    public boolean isCompatibleWithVersion(){
-        return fromVersion <= UhcCore.getVersion();
-    }
+    public boolean isCompatibleWithVersion() { return fromVersion <= UhcCore.getVersion(); }
 
 }

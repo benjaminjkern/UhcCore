@@ -81,6 +81,8 @@ public class PlayerDeathListener implements Listener {
 					}
 				});
 			}
+		} else {
+			pm.getScoreKeeper().envDie(uhcPlayer);
 		}
 
 		// Store drops in case player gets re-spawned.
@@ -94,9 +96,7 @@ public class PlayerDeathListener implements Listener {
 			gm.broadcastInfoMessage(Lang.PLAYERS_ELIMINATED.replace("%player%", player.getName()));
 		}
 
-		if (cfg.getRegenHeadDropOnPlayerDeath()) {
-			event.getDrops().add(UhcItems.createRegenHead(uhcPlayer));
-		}
+		if (cfg.getRegenHeadDropOnPlayerDeath()) { event.getDrops().add(UhcItems.createRegenHead(uhcPlayer)); }
 
 		if (cfg.getEnableGoldenHeads()) {
 			if (cfg.getPlaceHeadOnFence() && !gm.getScenarioManager().isActivated(Scenario.TIMEBOMB)) {
@@ -115,9 +115,7 @@ public class PlayerDeathListener implements Listener {
 			}
 		}
 
-		if (cfg.getEnableExpDropOnDeath()) {
-			UhcItems.spawnExtraXp(player.getLocation(), cfg.getExpDropOnDeath());
-		}
+		if (cfg.getEnableExpDropOnDeath()) { UhcItems.spawnExtraXp(player.getLocation(), cfg.getExpDropOnDeath()); }
 
 		uhcPlayer.setState(PlayerState.DEAD);
 		pm.strikeLightning(uhcPlayer);

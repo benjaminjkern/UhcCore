@@ -37,19 +37,19 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameManager{
+public class GameManager {
 	private Lobby lobby;
 	private DeathmatchArena arena;
 
-    private MapLoader mapLoader;
-    private UhcWorldBorder worldBorder;
+	private MapLoader mapLoader;
+	private UhcWorldBorder worldBorder;
 	private PlayersManager playerManager;
 	private TeamManager teamManager;
 	private ScoreboardManager scoreboardManager;
 	private ScenarioManager scenarioManager;
-    private MainConfiguration configuration;
+	private MainConfiguration configuration;
 
-    private GameState gameState;
+	private GameState gameState;
 	private boolean pvp;
 	private boolean gameIsEnding;
 	private int episodeNumber;
@@ -60,9 +60,9 @@ public class GameManager{
 
 	private static GameManager gameManager;
 
-	static{
-	    gameManager = null;
-    }
+	static {
+		gameManager = null;
+	}
 
 	public GameManager() {
 		gameManager = this;
@@ -75,154 +75,112 @@ public class GameManager{
 		elapsedTime = 0;
 	}
 
-	public MainConfiguration getConfiguration() {
-		return configuration;
-	}
+	public MainConfiguration getConfiguration() { return configuration; }
 
-	public UhcWorldBorder getWorldBorder() {
-		return worldBorder;
-	}
+	public UhcWorldBorder getWorldBorder() { return worldBorder; }
 
-	public ScoreboardManager getScoreboardManager() {
-		return scoreboardManager;
-	}
+	public ScoreboardManager getScoreboardManager() { return scoreboardManager; }
 
-	public ScenarioManager getScenarioManager() {
-		return scenarioManager;
-	}
+	public ScenarioManager getScenarioManager() { return scenarioManager; }
 
-	public static GameManager getGameManager(){
-		return gameManager;
-	}
+	public static GameManager getGameManager() { return gameManager; }
 
-	public synchronized GameState getGameState(){
-		return gameState;
-	}
+	public synchronized GameState getGameState() { return gameState; }
 
-	public PlayersManager getPlayersManager(){
-		return playerManager;
-	}
+	public PlayersManager getPlayersManager() { return playerManager; }
 
-	public TeamManager getTeamManager() {
-		return teamManager;
-	}
+	public TeamManager getTeamManager() { return teamManager; }
 
-	public MapLoader getMapLoader(){
-		return mapLoader;
-	}
+	public MapLoader getMapLoader() { return mapLoader; }
 
-	public Lobby getLobby() {
-		return lobby;
-	}
+	public Lobby getLobby() { return lobby; }
 
-	public DeathmatchArena getArena() {
-		return arena;
-	}
+	public DeathmatchArena getArena() { return arena; }
 
-	public boolean getGameIsEnding() {
-		return gameIsEnding;
-	}
+	public boolean getGameIsEnding() { return gameIsEnding; }
 
-	public synchronized long getRemainingTime(){
-		return remainingTime;
-	}
+	public synchronized long getRemainingTime() { return remainingTime; }
 
-	public synchronized long getElapsedTime(){
-		return elapsedTime;
-	}
+	public synchronized long getElapsedTime() { return elapsedTime; }
 
-	public int getEpisodeNumber(){
-		return episodeNumber;
-	}
+	public int getEpisodeNumber() { return episodeNumber; }
 
-	public void setEpisodeNumber(int episodeNumber){
-		this.episodeNumber = episodeNumber;
-	}
+	public void setEpisodeNumber(int episodeNumber) { this.episodeNumber = episodeNumber; }
 
-	public long getTimeUntilNextEpisode(){
+	public long getTimeUntilNextEpisode() {
 		return episodeNumber * configuration.getEpisodeMarkersDelay() - getElapsedTime();
 	}
 
-	public String getFormatedRemainingTime() {
-		return TimeUtils.getFormattedTime(getRemainingTime());
-	}
+	public String getFormatedRemainingTime() { return TimeUtils.getFormattedTime(getRemainingTime()); }
 
-	public synchronized void setRemainingTime(long time){
-		remainingTime = time;
-	}
+	public synchronized void setRemainingTime(long time) { remainingTime = time; }
 
-	public synchronized void setElapsedTime(long time){
-		elapsedTime = time;
-	}
+	public synchronized void setElapsedTime(long time) { elapsedTime = time; }
 
-	public boolean getPvp() {
-		return pvp;
-	}
+	public boolean getPvp() { return pvp; }
 
-	public void setPvp(boolean state) {
-		pvp = state;
-	}
+	public void setPvp(boolean state) { pvp = state; }
 
-    public void setGameState(GameState gameState){
-        Validate.notNull(gameState);
+	public void setGameState(GameState gameState) {
+		Validate.notNull(gameState);
 
-        if (this.gameState == gameState){
-            return; // Don't change the game state when the same.
-        }
-
-        GameState oldGameState = this.gameState;
-        this.gameState = gameState;
-
-        // Call UhcGameStateChangedEvent
-        Bukkit.getPluginManager().callEvent(new UhcGameStateChangedEvent(oldGameState, gameState));
-
-        // Update MOTD
-        switch(gameState){
-            case ENDED:
-                setMotd(Lang.DISPLAY_MOTD_ENDED);
-                break;
-            case LOADING:
-                setMotd(Lang.DISPLAY_MOTD_LOADING);
-                break;
-            case DEATHMATCH:
-                setMotd(Lang.DISPLAY_MOTD_PLAYING);
-                break;
-            case PLAYING:
-                setMotd(Lang.DISPLAY_MOTD_PLAYING);
-                break;
-            case STARTING:
-                setMotd(Lang.DISPLAY_MOTD_STARTING);
-                break;
-            case WAITING:
-                setMotd(Lang.DISPLAY_MOTD_WAITING);
-                break;
-            default:
-                setMotd(Lang.DISPLAY_MOTD_ENDED);
-                break;
-        }
-    }
-
-    private void setMotd(String motd){
-        if (getConfiguration().getDisableMotd()){
-            return; // No motd support
-        }
-
-        if (motd == null){
-        	return; // Failed to load lang.yml so motd is null.
+		if (this.gameState == gameState) {
+			return; // Don't change the game state when the same.
 		}
 
-        try {
-            Class craftServerClass = NMSUtils.getNMSClass("CraftServer");
-            Object craftServer = craftServerClass.cast(Bukkit.getServer());
-            Object dedicatedPlayerList = NMSUtils.getHandle(craftServer);
-            Object dedicatedServer = NMSUtils.getServer(dedicatedPlayerList);
+		GameState oldGameState = this.gameState;
+		this.gameState = gameState;
 
-            Method setMotd = NMSUtils.getMethod(dedicatedServer.getClass(), "setMotd");
-            setMotd.invoke(dedicatedServer, motd);
-        }catch (ReflectiveOperationException | NullPointerException ex){
-            ex.printStackTrace();
-        }
-    }
+		// Call UhcGameStateChangedEvent
+		Bukkit.getPluginManager().callEvent(new UhcGameStateChangedEvent(oldGameState, gameState));
+
+		// Update MOTD
+		switch (gameState) {
+			case ENDED:
+				setMotd(Lang.DISPLAY_MOTD_ENDED);
+				break;
+			case LOADING:
+				setMotd(Lang.DISPLAY_MOTD_LOADING);
+				break;
+			case DEATHMATCH:
+				setMotd(Lang.DISPLAY_MOTD_PLAYING);
+				break;
+			case PLAYING:
+				setMotd(Lang.DISPLAY_MOTD_PLAYING);
+				break;
+			case STARTING:
+				setMotd(Lang.DISPLAY_MOTD_STARTING);
+				break;
+			case WAITING:
+				setMotd(Lang.DISPLAY_MOTD_WAITING);
+				break;
+			default:
+				setMotd(Lang.DISPLAY_MOTD_ENDED);
+				break;
+		}
+	}
+
+	private void setMotd(String motd) {
+		if (getConfiguration().getDisableMotd()) {
+			return; // No motd support
+		}
+
+		if (motd == null) {
+			return; // Failed to load lang.yml so motd is null.
+		}
+
+		try {
+			Class craftServerClass = NMSUtils.getNMSClass("CraftServer");
+			Object craftServer = craftServerClass.cast(Bukkit.getServer());
+			Object dedicatedPlayerList = NMSUtils.getHandle(craftServer);
+			Object dedicatedServer = NMSUtils.getServer(dedicatedPlayerList);
+
+			Method setMotd = NMSUtils.getMethod(dedicatedServer.getClass(), "setMotd");
+			setMotd.invoke(dedicatedServer, motd);
+		} catch (ReflectiveOperationException | NullPointerException ex) {
+			ex.printStackTrace();
+		}
+	}
 
 	public void loadNewGame() {
 		deleteOldPlayersFiles();
@@ -234,92 +192,77 @@ public class GameManager{
 
 		registerListeners();
 
-		if (configuration.getReplaceOceanBiomes()){
-            VersionUtils.getVersionUtils().replaceOceanBiomes();
-        }
+		if (configuration.getReplaceOceanBiomes()) { VersionUtils.getVersionUtils().replaceOceanBiomes(); }
 
 		mapLoader = new MapLoader();
-		if(getConfiguration().getDebug()){
-			mapLoader.loadOldWorld(configuration.getOverworldUuid(),Environment.NORMAL);
+		if (getConfiguration().getDebug()) {
+			mapLoader.loadOldWorld(configuration.getOverworldUuid(), Environment.NORMAL);
 			if (configuration.getEnableNether()) {
 				mapLoader.loadOldWorld(configuration.getNetherUuid(), Environment.NETHER);
 			}
 			if (configuration.getEnableTheEnd()) {
 				mapLoader.loadOldWorld(configuration.getNetherUuid(), Environment.THE_END);
 			}
-		}else{
+		} else {
 			mapLoader.deleteLastWorld(configuration.getOverworldUuid());
 			mapLoader.deleteLastWorld(configuration.getNetherUuid());
 			mapLoader.deleteLastWorld(configuration.getTheEndUuid());
 			mapLoader.createNewWorld(Environment.NORMAL);
-			if (configuration.getEnableNether()) {
-				mapLoader.createNewWorld(Environment.NETHER);
-			}
-			if (configuration.getEnableTheEnd()) {
-				mapLoader.createNewWorld(Environment.THE_END);
-			}
+			if (configuration.getEnableNether()) { mapLoader.createNewWorld(Environment.NETHER); }
+			if (configuration.getEnableTheEnd()) { mapLoader.createNewWorld(Environment.THE_END); }
 		}
 
-		if(getConfiguration().getEnableBungeeSupport())
-			UhcCore.getPlugin().getServer().getMessenger().registerOutgoingPluginChannel(UhcCore.getPlugin(), "BungeeCord");
+		if (getConfiguration().getEnableBungeeSupport()) UhcCore.getPlugin().getServer().getMessenger()
+				.registerOutgoingPluginChannel(UhcCore.getPlugin(), "BungeeCord");
 
-		if(getConfiguration().getEnablePregenerateWorld() && !getConfiguration().getDebug())
+		if (getConfiguration().getEnablePregenerateWorld() && !getConfiguration().getDebug())
 			mapLoader.generateChunks(Environment.NORMAL);
-		else
-			GameManager.getGameManager().startWaitingPlayers();
+		else GameManager.getGameManager().startWaitingPlayers();
 	}
 
 	private void deleteOldPlayersFiles() {
 
-		if(Bukkit.getServer().getWorlds().size()>0){
+		if (Bukkit.getServer().getWorlds().size() > 0) {
 			// Deleting old players files
-			File playerdata = new File(Bukkit.getServer().getWorlds().get(0).getName()+"/playerdata");
-			if(playerdata.exists() && playerdata.isDirectory()){
-				for(File playerFile : playerdata.listFiles()){
-					playerFile.delete();
-				}
+			File playerdata = new File(Bukkit.getServer().getWorlds().get(0).getName() + "/playerdata");
+			if (playerdata.exists() && playerdata.isDirectory()) {
+				for (File playerFile : playerdata.listFiles()) { playerFile.delete(); }
 			}
 
 			// Deleting old players stats
-			File stats = new File(Bukkit.getServer().getWorlds().get(0).getName()+"/stats");
-			if(stats.exists() && stats.isDirectory()){
-				for(File statFile : stats.listFiles()){
-					statFile.delete();
-				}
+			File stats = new File(Bukkit.getServer().getWorlds().get(0).getName() + "/stats");
+			if (stats.exists() && stats.isDirectory()) {
+				for (File statFile : stats.listFiles()) { statFile.delete(); }
 			}
 
 			// Deleting old players advancements
-			File advancements = new File(Bukkit.getServer().getWorlds().get(0).getName()+"/advancements");
-			if(advancements.exists() && advancements.isDirectory()){
-				for(File advancementFile : advancements.listFiles()){
-					advancementFile.delete();
-				}
+			File advancements = new File(Bukkit.getServer().getWorlds().get(0).getName() + "/advancements");
+			if (advancements.exists() && advancements.isDirectory()) {
+				for (File advancementFile : advancements.listFiles()) { advancementFile.delete(); }
 			}
 		}
 
 	}
 
-	public void startWaitingPlayers(){
+	public void startWaitingPlayers() {
 		loadWorlds();
 		registerCommands();
 		setGameState(GameState.WAITING);
-		Bukkit.getLogger().info(Lang.DISPLAY_MESSAGE_PREFIX+" Players are now allowed to join");
-		Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new PreStartThread(),0);
+		Bukkit.getLogger().info(Lang.DISPLAY_MESSAGE_PREFIX + " Players are now allowed to join");
+		Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new PreStartThread(), 0);
 	}
 
-	public void startGame(){
+	public void startGame() {
 		setGameState(GameState.STARTING);
 
-		if(getConfiguration().getEnableDayNightCycle()) {
+		if (getConfiguration().getEnableDayNightCycle()) {
 			World overworld = Bukkit.getWorld(configuration.getOverworldUuid());
 			VersionUtils.getVersionUtils().setGameRuleValue(overworld, "doDaylightCycle", true);
 			overworld.setTime(0);
 		}
 
 		// scenario voting
-		if (getConfiguration().getEnableScenarioVoting()) {
-			getScenarioManager().countVotes();
-		}
+		if (getConfiguration().getEnableScenarioVoting()) { getScenarioManager().countVotes(); }
 
 		Bukkit.getPluginManager().callEvent(new UhcStartingEvent());
 
@@ -331,7 +274,7 @@ public class GameManager{
 		startPlayers = getPlayersManager().getAllPlayingPlayers().size();
 	}
 
-	public void startWatchingEndOfGame(){
+	public void startWatchingEndOfGame() {
 		setGameState(GameState.PLAYING);
 
 		World overworld = Bukkit.getWorld(configuration.getOverworldUuid());
@@ -342,21 +285,23 @@ public class GameManager{
 		Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new ElapsedTimeThread());
 		Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new EnablePVPThread());
 
-		if (getConfiguration().getEnableEpisodeMarkers()){
+		if (getConfiguration().getEnableEpisodeMarkers()) {
 			Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new EpisodeMarkersThread());
 		}
 
-		if(getConfiguration().getEnableTimeLimit()){
+		if (getConfiguration().getEnableTimeLimit()) {
 			Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new TimeBeforeEndThread());
 		}
 
-		if (getConfiguration().getEnableDayNightCycle() && getConfiguration().getTimeBeforePermanentDay() != -1){
-			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new EnablePermanentDayThread(), getConfiguration().getTimeBeforePermanentDay()*20);
+		if (getConfiguration().getEnableDayNightCycle() && getConfiguration().getTimeBeforePermanentDay() != -1) {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new EnablePermanentDayThread(),
+					getConfiguration().getTimeBeforePermanentDay() * 20);
 		}
 
-		if (getConfiguration().getEnableFinalHeal()){
-            Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new FinalHealThread(), getConfiguration().getFinalHealDelay()*20);
-        }
+		if (getConfiguration().getEnableFinalHeal()) {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new FinalHealThread(),
+					getConfiguration().getFinalHealDelay() * 20);
+		}
 
 		worldBorder.startBorderThread();
 
@@ -364,34 +309,26 @@ public class GameManager{
 		UhcCore.getPlugin().addGameToStatistics();
 	}
 
-	public void broadcastMessage(String message){
-		for(UhcPlayer player : getPlayersManager().getPlayersList()){
-			player.sendMessage(message);
-		}
+	public void broadcastMessage(String message) {
+		for (UhcPlayer player : getPlayersManager().getPlayersList()) { player.sendMessage(message); }
 	}
 
-	public void broadcastInfoMessage(String message){
-		broadcastMessage(Lang.DISPLAY_MESSAGE_PREFIX+" "+message);
-	}
+	public void broadcastInfoMessage(String message) { broadcastMessage(Lang.DISPLAY_MESSAGE_PREFIX + " " + message); }
 
-	public DogNameGenerator getDogNameGenerator() {
-		return dogNames;
-	}
+	public DogNameGenerator getDogNameGenerator() { return dogNames; }
 
-	public int getStartPlayers() {
-		return startPlayers;
-	}
+	public int getStartPlayers() { return startPlayers; }
 
-	public void loadConfig(){
+	public void loadConfig() {
 		new Lang();
 
 		YamlFile cfg;
 		YamlFile storage;
 
-		try{
+		try {
 			cfg = FileUtils.saveResourceIfNotAvailable("config.yml");
 			storage = FileUtils.saveResourceIfNotAvailable("storage.yml");
-		}catch (InvalidConfigurationException ex){
+		} catch (InvalidConfigurationException ex) {
 			ex.printStackTrace();
 			return;
 		}
@@ -413,13 +350,13 @@ public class GameManager{
 		// Load crafts
 		CraftsManager.loadBannedCrafts();
 		CraftsManager.loadCrafts();
-		
+
 		VaultManager.setupEconomy();
 
-		if (configuration.getProtocolLibLoaded()){
+		if (configuration.getProtocolLibLoaded()) {
 			try {
 				ProtocolUtils.register();
-			}catch (Exception ex){
+			} catch (Exception ex) {
 				configuration.setProtocolLibLoaded(false);
 				Bukkit.getLogger().severe("[UhcCore] Failed to load ProtocolLib, are you using the right version?");
 				ex.printStackTrace();
@@ -427,7 +364,7 @@ public class GameManager{
 		}
 	}
 
-	private void registerListeners(){
+	private void registerListeners() {
 		// Registers Listeners
 		List<Listener> listeners = new ArrayList<Listener>();
 		listeners.add(new PlayerConnectionListener());
@@ -443,18 +380,18 @@ public class GameManager{
 		listeners.add(new WorldListener());
 		listeners.add(new PlayerMovementListener(getPlayersManager()));
 		listeners.add(new EntityDamageListener());
-		for(Listener listener : listeners){
+		for (Listener listener : listeners) {
 			Bukkit.getServer().getPluginManager().registerEvents(listener, UhcCore.getPlugin());
 		}
 	}
 
-	private void loadWorlds(){
+	private void loadWorlds() {
 		World overworld = Bukkit.getWorld(configuration.getOverworldUuid());
 		overworld.save();
-		if (!configuration.getEnableHealthRegen()){
+		if (!configuration.getEnableHealthRegen()) {
 			VersionUtils.getVersionUtils().setGameRuleValue(overworld, "naturalRegeneration", false);
 		}
-		if (!configuration.getAnnounceAdvancements() && UhcCore.getVersion() >= 12){
+		if (!configuration.getAnnounceAdvancements() && UhcCore.getVersion() >= 12) {
 			VersionUtils.getVersionUtils().setGameRuleValue(overworld, "announceAdvancements", false);
 		}
 		VersionUtils.getVersionUtils().setGameRuleValue(overworld, "doDaylightCycle", false);
@@ -466,13 +403,13 @@ public class GameManager{
 		overworld.setDifficulty(configuration.getGameDifficulty());
 		overworld.setWeatherDuration(999999999);
 
-		if (configuration.getEnableNether()){
+		if (configuration.getEnableNether()) {
 			World nether = Bukkit.getWorld(configuration.getNetherUuid());
 			nether.save();
-			if (!configuration.getEnableHealthRegen()){
+			if (!configuration.getEnableHealthRegen()) {
 				VersionUtils.getVersionUtils().setGameRuleValue(nether, "naturalRegeneration", false);
 			}
-			if (!configuration.getAnnounceAdvancements() && UhcCore.getVersion() >= 12){
+			if (!configuration.getAnnounceAdvancements() && UhcCore.getVersion() >= 12) {
 				VersionUtils.getVersionUtils().setGameRuleValue(overworld, "announceAdvancements", false);
 			}
 			VersionUtils.getVersionUtils().setGameRuleValue(nether, "commandBlockOutput", false);
@@ -481,13 +418,13 @@ public class GameManager{
 			nether.setDifficulty(configuration.getGameDifficulty());
 		}
 
-		if (configuration.getEnableTheEnd()){
+		if (configuration.getEnableTheEnd()) {
 			World theEnd = Bukkit.getWorld(configuration.getTheEndUuid());
 			theEnd.save();
-			if (!configuration.getEnableHealthRegen()){
+			if (!configuration.getEnableHealthRegen()) {
 				VersionUtils.getVersionUtils().setGameRuleValue(theEnd, "naturalRegeneration", false);
 			}
-			if (!configuration.getAnnounceAdvancements() && UhcCore.getVersion() >= 12){
+			if (!configuration.getAnnounceAdvancements() && UhcCore.getVersion() >= 12) {
 				VersionUtils.getVersionUtils().setGameRuleValue(overworld, "announceAdvancements", false);
 			}
 			VersionUtils.getVersionUtils().setGameRuleValue(theEnd, "commandBlockOutput", false);
@@ -512,7 +449,7 @@ public class GameManager{
 		setPvp(false);
 	}
 
-	private void registerCommands(){
+	private void registerCommands() {
 		// Registers CommandExecutor
 		registerCommand("uhccore", new UhcCommandExecutor());
 		registerCommand("chat", new ChatCommandExecutor());
@@ -532,9 +469,9 @@ public class GameManager{
 		registerCommand("team", new TeamCommandExecutor());
 	}
 
-	private void registerCommand(String commandName, CommandExecutor executor){
+	private void registerCommand(String commandName, CommandExecutor executor) {
 		PluginCommand command = UhcCore.getPlugin().getCommand(commandName);
-		if (command == null){
+		if (command == null) {
 			Bukkit.getLogger().warning("[UhcCore] Failed to register " + commandName + " command!");
 			return;
 		}
@@ -543,22 +480,22 @@ public class GameManager{
 	}
 
 	public void endGame() {
-		if(gameState.equals(GameState.PLAYING) || gameState.equals(GameState.DEATHMATCH)){
+		if (gameState.equals(GameState.PLAYING) || gameState.equals(GameState.DEATHMATCH)) {
 			setGameState(GameState.ENDED);
 			pvp = false;
 			gameIsEnding = true;
 			broadcastInfoMessage(Lang.GAME_FINISHED);
 			getPlayersManager().playSoundToAll(UniversalSound.ENDERDRAGON_GROWL, 1, 2);
 			getPlayersManager().setAllPlayersEndGame();
-			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new StopRestartThread(),20);
+			getPlayersManager().getOnlinePlayingPlayers()
+					.forEach(uhcPlayer -> { getPlayersManager().getScoreKeeper().envWin(uhcPlayer); });
+			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new StopRestartThread(), 20);
 		}
 	}
 
-	public void startDeathmatch(){
+	public void startDeathmatch() {
 		// DeathMatch can only be stated while GameState = Playing
-		if (gameState != GameState.PLAYING){
-			return;
-		}
+		if (gameState != GameState.PLAYING) { return; }
 
 		setGameState(GameState.DEATHMATCH);
 		pvp = false;
@@ -569,30 +506,34 @@ public class GameManager{
 		if (getArena().isUsed()) {
 			Location arenaLocation = getArena().getLoc();
 
-			//Set big border size to avoid hurting players
-			getWorldBorder().setBukkitWorldBorderSize(arenaLocation.getWorld(), arenaLocation.getBlockX(), arenaLocation.getBlockZ(), 50000);
+			// Set big border size to avoid hurting players
+			getWorldBorder().setBukkitWorldBorderSize(arenaLocation.getWorld(), arenaLocation.getBlockX(),
+					arenaLocation.getBlockZ(), 50000);
 
 			// Teleport players
 			getPlayersManager().setAllPlayersStartDeathmatch();
 
 			// Shrink border to arena size
-			getWorldBorder().setBukkitWorldBorderSize(arenaLocation.getWorld(), arenaLocation.getBlockX(), arenaLocation.getBlockZ(), getArena().getMaxSize());
+			getWorldBorder().setBukkitWorldBorderSize(arenaLocation.getWorld(), arenaLocation.getBlockX(),
+					arenaLocation.getBlockZ(), getArena().getMaxSize());
 
 			// Start Enable pvp thread
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new StartDeathmatchThread(false), 20);
 		}
 		// 0 0 DeathMach
-		else{
+		else {
 			Location deathmatchLocation = getLobby().getLoc();
 
-			//Set big border size to avoid hurting players
-			getWorldBorder().setBukkitWorldBorderSize(deathmatchLocation.getWorld(), deathmatchLocation.getBlockX(), deathmatchLocation.getBlockZ(), 50000);
+			// Set big border size to avoid hurting players
+			getWorldBorder().setBukkitWorldBorderSize(deathmatchLocation.getWorld(), deathmatchLocation.getBlockX(),
+					deathmatchLocation.getBlockZ(), 50000);
 
 			// Teleport players
 			getPlayersManager().setAllPlayersStartDeathmatch();
 
 			// Shrink border to arena size
-			getWorldBorder().setBukkitWorldBorderSize(deathmatchLocation.getWorld(), deathmatchLocation.getBlockX(), deathmatchLocation.getBlockZ(), getConfiguration().getDeathmatchStartSize()*2);
+			getWorldBorder().setBukkitWorldBorderSize(deathmatchLocation.getWorld(), deathmatchLocation.getBlockX(),
+					deathmatchLocation.getBlockZ(), getConfiguration().getDeathmatchStartSize() * 2);
 
 			// Start Enable pvp thread
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new StartDeathmatchThread(true), 20);
@@ -600,14 +541,14 @@ public class GameManager{
 	}
 
 	public void startEndGameThread() {
-		if(!gameIsEnding && (gameState.equals(GameState.DEATHMATCH) || gameState.equals(GameState.PLAYING))){
+		if (!gameIsEnding && (gameState.equals(GameState.DEATHMATCH) || gameState.equals(GameState.PLAYING))) {
 			gameIsEnding = true;
 			EndThread.start();
 		}
 	}
 
-	public void stopEndGameThread(){
-		if(gameIsEnding && (gameState.equals(GameState.DEATHMATCH) || gameState.equals(GameState.PLAYING))){
+	public void stopEndGameThread() {
+		if (gameIsEnding && (gameState.equals(GameState.DEATHMATCH) || gameState.equals(GameState.PLAYING))) {
 			gameIsEnding = false;
 			EndThread.stop();
 		}

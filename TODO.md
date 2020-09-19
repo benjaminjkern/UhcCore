@@ -33,6 +33,8 @@ Small changes:
 - Achievements show in the nether
 - On nether start put a nether portal in the middle of the map
 - Make Spiderman one of the superpowers you can get
+- Add a bigger warning on getting close to UHC wall
+- Duos should pick another one if there are less than 2 players active
 
 Need to Test:
 
@@ -70,6 +72,7 @@ Far down the line:
   - For 30 minutes (compounded if voting on multiple services):
     - You get to downvote
     - Your votes count as double
+    - When you join a game, you can call a care package. But others can see the care package too
   - +1 rank
 - Donor Ranks (Aesthetic/More votes on which gametype or maybe multiple votes for same thing/can downvote, guranteed spot on server, trump vote (if you choose to vote once that one scenario is going in regardless))
   - Level 1: \$2 a month
@@ -86,11 +89,13 @@ Far down the line:
     - Can nickname yourself
     - Fun particles in game that follow you, always assigned to whatever the current color is
     - Particles when you kill people
+    - Vote for scenarios that aren't on the list
   - Level 3: \$12 a month
     - Discord bits
     - Can force-start games
     - Your votes count as triple
     - +400 rank per month
+    - Can fly through walls on spectate
     - /ec (ender chest is always consistent between games, but is disabled on certain scenarios)
     - /craft
     - /j (1 minute cool down)

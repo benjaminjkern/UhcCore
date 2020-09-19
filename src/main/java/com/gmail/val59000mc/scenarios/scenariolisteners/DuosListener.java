@@ -7,6 +7,7 @@ import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
 import java.util.*;
@@ -17,6 +18,7 @@ public class DuosListener extends ScenarioListener {
     public void onGameStart(UhcStartedEvent e) {
         List<UhcPlayer> players = new ArrayList<>(getPlayersManager().getOnlinePlayingPlayers());
 
+        Bukkit.getLogger().info(players.size() + " STARTED");
         if (players.size() <= 2)
             return;
 
@@ -34,8 +36,9 @@ public class DuosListener extends ScenarioListener {
 
     @EventHandler
     public void onGameStateChange(UhcStartingEvent e) {
-        List<UhcPlayer> players = new ArrayList<>(getPlayersManager().getOnlinePlayingPlayers());
+        List<UhcPlayer> players = new ArrayList<>(getPlayersManager().getPlayersList());
 
+        Bukkit.getLogger().info(players.size() + " STARTING");
         // dont do it if its only 2 players, although this should never happen naturally
         if (players.size() <= 2)
             return;
