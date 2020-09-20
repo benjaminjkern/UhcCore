@@ -12,53 +12,37 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Arrays;
 import java.util.Collections;
 
-public enum GameItem{
+public enum GameItem {
     // Lobby Items
-    TEAM_LIST(UniversalMaterial.PLAYER_HEAD),
-    TEAM_SELECTION(UniversalMaterial.IRON_SWORD),
-    KIT_SELECTION(UniversalMaterial.IRON_PICKAXE),
-    SCENARIO_VIEWER(UniversalMaterial.PAPER),
+    TEAM_LIST(UniversalMaterial.PLAYER_HEAD), TEAM_SELECTION(UniversalMaterial.IRON_SWORD),
+    KIT_SELECTION(UniversalMaterial.IRON_PICKAXE), SCENARIO_VIEWER(UniversalMaterial.WRITABLE_BOOK),
     BUNGEE_ITEM(UniversalMaterial.BARRIER),
 
     // Team Setting Items
-    TEAM_SETTINGS(UniversalMaterial.ANVIL),
-    TEAM_COLOR_SELECTION(UniversalMaterial.LAPIS_LAZULI),
-    TEAM_RENAME(UniversalMaterial.NAME_TAG),
-    TEAM_READY(UniversalMaterial.LIME_WOOL),
+    TEAM_SETTINGS(UniversalMaterial.ANVIL), TEAM_COLOR_SELECTION(UniversalMaterial.LAPIS_LAZULI),
+    TEAM_RENAME(UniversalMaterial.NAME_TAG), TEAM_READY(UniversalMaterial.LIME_WOOL),
     TEAM_NOT_READY(UniversalMaterial.RED_WOOL),
 
     // Team Items
-    TEAM_LEAVE(UniversalMaterial.BARRIER),
-    TEAM_VIEW_INVITES(UniversalMaterial.BOOK),
-    TEAM_INVITE_PLAYER(UniversalMaterial.PAPER),
-    TEAM_INVITE_PLAYER_SEARCH(UniversalMaterial.NAME_TAG),
-    TEAM_INVITE_ACCEPT(UniversalMaterial.LIME_WOOL),
-    TEAM_INVITE_DENY(UniversalMaterial.RED_WOOL),
+    TEAM_LEAVE(UniversalMaterial.BARRIER), TEAM_VIEW_INVITES(UniversalMaterial.BOOK),
+    TEAM_INVITE_PLAYER(UniversalMaterial.PAPER), TEAM_INVITE_PLAYER_SEARCH(UniversalMaterial.NAME_TAG),
+    TEAM_INVITE_ACCEPT(UniversalMaterial.LIME_WOOL), TEAM_INVITE_DENY(UniversalMaterial.RED_WOOL),
     TEAM_FILL_BLACK(UniversalMaterial.BLACK_STAINED_GLASS_PANE),
 
     // Game Items
-    CUSTOM_CRAFT_BOOK(UniversalMaterial.ENCHANTED_BOOK),
-    COMPASS_ITEM(UniversalMaterial.COMPASS),
+    CUSTOM_CRAFT_BOOK(UniversalMaterial.ENCHANTED_BOOK), COMPASS_ITEM(UniversalMaterial.COMPASS),
 
     UNKNOWN(UniversalMaterial.AIR);
 
     private static final String LORE_PREFIX = ChatColor.DARK_GRAY + "UHC Item";
-    public static final GameItem[] LOBBY_ITEMS = new GameItem[]{
-            TEAM_LIST,
-            TEAM_SELECTION,
-            KIT_SELECTION,
-            CUSTOM_CRAFT_BOOK,
-            SCENARIO_VIEWER,
-            BUNGEE_ITEM
-    };
+    public static final GameItem[] LOBBY_ITEMS = new GameItem[] { TEAM_LIST, TEAM_SELECTION, KIT_SELECTION,
+            CUSTOM_CRAFT_BOOK, SCENARIO_VIEWER, BUNGEE_ITEM };
 
     private UniversalMaterial type;
 
-    GameItem(UniversalMaterial type){
-        this.type = type;
-    }
+    GameItem(UniversalMaterial type) { this.type = type; }
 
-    public ItemStack getItem(){
+    public ItemStack getItem() {
         ItemStack item = type.getStack();
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(getItemName());
@@ -67,7 +51,7 @@ public enum GameItem{
         return item;
     }
 
-    public ItemStack getItem(String addedLore){
+    public ItemStack getItem(String addedLore) {
         ItemStack item = type.getStack();
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(getItemName());
@@ -76,20 +60,18 @@ public enum GameItem{
         return item;
     }
 
-    public boolean equals(ItemStack item){
+    public boolean equals(ItemStack item) {
         Validate.notNull(item);
-        if (item.getType() != type.getType()){
-            return false;
-        }
+        if (item.getType() != type.getType()) { return false; }
         ItemMeta meta = item.getItemMeta();
         Validate.notNull(meta);
         return meta.getDisplayName().equals(getItemName());
     }
 
-    public boolean meetsUsageRequirements(){
+    public boolean meetsUsageRequirements() {
         GameManager gm = GameManager.getGameManager();
         MainConfiguration cfg = gm.getConfiguration();
-        switch (this){
+        switch (this) {
             case TEAM_SELECTION:
                 return cfg.getMaxPlayersPerTeam() > 1 || !cfg.getTeamAlwaysReady();
             case TEAM_LIST:
@@ -112,8 +94,8 @@ public enum GameItem{
         return true;
     }
 
-    private String getItemName(){
-        switch (this){
+    private String getItemName() {
+        switch (this) {
             case TEAM_SELECTION:
                 return Lang.ITEMS_SWORD;
             case KIT_SELECTION:
@@ -156,23 +138,15 @@ public enum GameItem{
         return "Unknown item!";
     }
 
-    public static boolean isGameItem(ItemStack item){
-        if (!item.hasItemMeta()){
-            return false;
-        }
+    public static boolean isGameItem(ItemStack item) {
+        if (!item.hasItemMeta()) { return false; }
         ItemMeta meta = item.getItemMeta();
-        if (!meta.hasDisplayName() || !meta.hasLore()){
-            return false;
-        }
+        if (!meta.hasDisplayName() || !meta.hasLore()) { return false; }
         return meta.getLore().contains(LORE_PREFIX);
     }
 
-    public static GameItem getGameItem(ItemStack item){
-        for (GameItem lobbyItem : GameItem.values()){
-            if (lobbyItem.equals(item)){
-                return lobbyItem;
-            }
-        }
+    public static GameItem getGameItem(ItemStack item) {
+        for (GameItem lobbyItem : GameItem.values()) { if (lobbyItem.equals(item)) { return lobbyItem; } }
         return UNKNOWN;
     }
 

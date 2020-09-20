@@ -71,24 +71,36 @@ public enum Scenario {
     // SHAREDHEALTH(UniversalMaterial.RED_DYE, SharedHealthListener.class),
     DONTWASTETIME(UniversalMaterial.DIAMOND_PICKAXE, DontWasteTimeListener.class),
     POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class), FAST(UniversalMaterial.FEATHER, FastListener.class),
-    NOCRAFT(UniversalMaterial.HONEYCOMB_BLOCK, NoCraftListener.class),
-    KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class),
-    WHATSMINE(UniversalMaterial.ENDER_CHEST, WhatsMineListener.class);
+    NOCRAFT(UniversalMaterial.HONEYCOMB_BLOCK, NoCraftListener.class, true),
+    KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class, true),
+    WHATSMINE(UniversalMaterial.ENDER_CHEST, WhatsMineListener.class, true);
 
     private String name;
     private UniversalMaterial material;
     private Class<? extends ScenarioListener> listener;
     private int fromVersion;
+    private boolean isNew;
     private List<String> description;
 
-    Scenario(UniversalMaterial material) { this(material, null); }
+    Scenario(UniversalMaterial material) { this(material, null, 8, false); }
 
-    Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener) { this(material, listener, 8); }
+    Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener) {
+        this(material, listener, 8, false);
+    }
 
     Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener, int fromVersion) {
+        this(material, listener, fromVersion, false);
+    }
+
+    Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener, boolean isNew) {
+        this(material, listener, 8, isNew);
+    }
+
+    Scenario(UniversalMaterial material, Class<? extends ScenarioListener> listener, int fromVersion, boolean isNew) {
         this.material = material;
         this.listener = listener;
         this.fromVersion = fromVersion;
+        this.isNew = isNew;
     }
 
     public String getName() { return name; }
@@ -120,7 +132,7 @@ public enum Scenario {
         ItemStack item = material.getStack();
         ItemMeta meta = item.getItemMeta();
 
-        meta.setDisplayName(Lang.SCENARIO_GLOBAL_ITEM_COLOR + name);
+        meta.setDisplayName((isNew ? ("\u00a76NEW: ") : Lang.SCENARIO_GLOBAL_ITEM_COLOR) + name);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         meta.setLore(Collections.singletonList(Lang.SCENARIO_GLOBAL_ITEM_INFO));
 

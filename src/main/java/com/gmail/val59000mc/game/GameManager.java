@@ -35,6 +35,7 @@ import com.gmail.val59000mc.scenarios.DogNameGenerator;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GameManager {
@@ -182,7 +183,28 @@ public class GameManager {
 		}
 	}
 
-	public void loadNewGame() {
+	private GameState getOldGameState() {
+		YamlFile storage;
+
+		try {
+			storage = FileUtils.saveResourceIfNotAvailable("storage.yml");
+		} catch (InvalidConfigurationException ex) {
+			ex.printStackTrace();
+			return GameState.DEATHMATCH;
+		}
+
+		String gameStateName = (String) storage.get("gameState");
+		if (gameStateName == null) {
+			Bukkit.getLogger().warning("Last game state was null, starting with new map");
+			return GameState.DEATHMATCH;
+		}
+		return GameState.valueOf(gameStateName);
+	}
+
+	// force new map
+	public void loadNewGame() { loadNewGame(getOldGameState()); }
+
+	public void loadNewGame(GameState oldGameState) {
 		deleteOldPlayersFiles();
 		loadConfig();
 		setGameState(GameState.LOADING);
@@ -194,14 +216,17 @@ public class GameManager {
 
 		if (configuration.getReplaceOceanBiomes()) { VersionUtils.getVersionUtils().replaceOceanBiomes(); }
 
+		List<GameState> validGameStates = Arrays.asList(new GameState[] { GameState.WAITING, GameState.STARTING });
+
 		mapLoader = new MapLoader();
-		if (getConfiguration().getDebug()) {
+		// dont reload map if the game was never run
+		if (getConfiguration().getDebug() || validGameStates.contains(oldGameState)) {
 			mapLoader.loadOldWorld(configuration.getOverworldUuid(), Environment.NORMAL);
 			if (configuration.getEnableNether()) {
 				mapLoader.loadOldWorld(configuration.getNetherUuid(), Environment.NETHER);
 			}
 			if (configuration.getEnableTheEnd()) {
-				mapLoader.loadOldWorld(configuration.getNetherUuid(), Environment.THE_END);
+				mapLoader.loadOldWorld(configuration.getTheEndUuid(), Environment.THE_END);
 			}
 		} else {
 			mapLoader.deleteLastWorld(configuration.getOverworldUuid());

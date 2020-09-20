@@ -7,6 +7,8 @@ import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.utils.FileUtils;
 import com.gmail.val59000mc.utils.NMSUtils;
+import com.gmail.val59000mc.utils.RandomUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -25,22 +27,16 @@ public class ScenarioManager {
     private static final int ROW = 9;
     private Map<Scenario, ScenarioListener> activeScenarios;
 
-    public ScenarioManager() {
-        activeScenarios = new HashMap<>();
-    }
+    public ScenarioManager() { activeScenarios = new HashMap<>(); }
 
     public void addScenario(Scenario scenario) {
-        if (isActivated(scenario)) {
-            return;
-        }
+        if (isActivated(scenario)) { return; }
 
         Class<? extends ScenarioListener> listenerClass = scenario.getListener();
 
         try {
             ScenarioListener scenarioListener = null;
-            if (listenerClass != null) {
-                scenarioListener = listenerClass.newInstance();
-            }
+            if (listenerClass != null) { scenarioListener = listenerClass.newInstance(); }
 
             activeScenarios.put(scenario, scenarioListener);
 
@@ -78,26 +74,18 @@ public class ScenarioManager {
         return true;
     }
 
-    public synchronized Set<Scenario> getActiveScenarios() {
-        return activeScenarios.keySet();
-    }
+    public synchronized Set<Scenario> getActiveScenarios() { return activeScenarios.keySet(); }
 
-    public boolean isActivated(Scenario scenario) {
-        return activeScenarios.containsKey(scenario);
-    }
+    public boolean isActivated(Scenario scenario) { return activeScenarios.containsKey(scenario); }
 
-    public ScenarioListener getScenarioListener(Scenario scenario) {
-        return activeScenarios.get(scenario);
-    }
+    public ScenarioListener getScenarioListener(Scenario scenario) { return activeScenarios.get(scenario); }
 
     public Inventory getScenarioMainInventory(boolean editItem) {
 
         Inventory inv = Bukkit.createInventory(null, 3 * ROW, Lang.SCENARIO_GLOBAL_INVENTORY);
 
         for (Scenario scenario : getActiveScenarios()) {
-            if (scenario.isCompatibleWithVersion()) {
-                inv.addItem(scenario.getScenarioItem());
-            }
+            if (scenario.isCompatibleWithVersion()) { inv.addItem(scenario.getScenarioItem()); }
         }
 
         if (editItem) {
@@ -124,9 +112,7 @@ public class ScenarioManager {
         inv.setItem(5 * ROW + 8, back);
 
         for (Scenario scenario : Scenario.values()) {
-            if (!scenario.isCompatibleWithVersion()) {
-                continue;
-            }
+            if (!scenario.isCompatibleWithVersion()) { continue; }
 
             ItemStack scenarioItem = scenario.getScenarioItem();
             if (isActivated(scenario)) {
@@ -144,7 +130,7 @@ public class ScenarioManager {
         Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
         Inventory inv = Bukkit.createInventory(null,
                 (int) Math.ceil((Scenario.values().length - blacklist.size()) / ROW) * ROW,
-                Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
+                RandomUtils.randomTextColor() + Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
 
         for (Scenario scenario : Scenario.values()) {
             // Don't add to menu when blacklisted / not compatible / already enabled.
@@ -177,48 +163,45 @@ public class ScenarioManager {
 
     public void disableAllScenarios() {
         Set<Scenario> active = new HashSet<>(getActiveScenarios());
-        for (Scenario scenario : active) {
-            removeScenario(scenario);
-        }
+        for (Scenario scenario : active) { removeScenario(scenario); }
     }
 
     public void countVotes() {
-        Map<Scenario, Integer> votes = new HashMap<>();
+
+        Map<Scenario, Integer> votesMap = new HashMap<>();
+        List<List<Scenario>> votesList = new ArrayList<>();
+        votesList.add(new ArrayList<>());
 
         Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
         for (Scenario scenario : Scenario.values()) {
             if (!blacklist.contains(scenario)) {
-                votes.put(scenario, 0);
+                votesList.get(0).add(scenario);
+                votesMap.put(scenario, 0);
             }
         }
 
         for (UhcPlayer uhcPlayer : GameManager.getGameManager().getPlayersManager().getPlayersList()) {
             for (Scenario scenario : uhcPlayer.getScenarioVotes()) {
-                int totalVotes = votes.get(scenario) + 1;
-                votes.put(scenario, totalVotes);
+                int currentVotes = votesMap.get(scenario);
+                if (currentVotes + 1 == votesList.size()) { votesList.add(new ArrayList<>()); }
+                votesList.get(currentVotes).remove(scenario);
+                votesList.get(currentVotes + 1).add(scenario);
+                votesMap.put(scenario, currentVotes + 1);
             }
         }
 
         int scenarioCount = GameManager.getGameManager().getConfiguration().getElectedScenaroCount();
+        int maxVotes = votesList.size() - 1;
         while (scenarioCount > 0) {
-            // get scenario with most votes
-            Scenario scenario = null;
-            int scenarioVotes = 0;
-
-            for (Scenario s : votes.keySet()) {
-                // Don't let people vote for scenarios that are enabled by default.
-                if (isActivated(s)) {
-                    continue;
-                }
-
-                if (scenario == null || votes.get(s) > scenarioVotes) {
-                    scenario = s;
-                    scenarioVotes = votes.get(s);
-                }
+            List<Scenario> currentList = votesList.get(maxVotes);
+            if (currentList.isEmpty()) {
+                maxVotes--;
+                continue;
             }
+            Scenario scenario = currentList.get((int) (Math.random() * currentList.size()));
+            currentList.remove(scenario);
 
             addScenario(scenario);
-            votes.remove(scenario);
             scenarioCount--;
         }
     }
@@ -227,9 +210,7 @@ public class ScenarioManager {
             throws ReflectiveOperationException, IOException, InvalidConfigurationException {
         List<Field> optionFields = NMSUtils.getAnnotatedFields(listener.getClass(), Option.class);
 
-        if (optionFields.isEmpty()) {
-            return;
-        }
+        if (optionFields.isEmpty()) { return; }
 
         YamlFile cfg = FileUtils.saveResourceIfNotAvailable("scenarios.yml");
 
@@ -240,9 +221,7 @@ public class ScenarioManager {
             field.set(listener, value);
         }
 
-        if (cfg.addedDefaultValues()) {
-            cfg.saveWithComments();
-        }
+        if (cfg.addedDefaultValues()) { cfg.saveWithComments(); }
     }
 
 }

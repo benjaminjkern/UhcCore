@@ -15,6 +15,8 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - Hunger, exhaustion, and saturation are now set to how they would be in a default world.
 - Force starting a game starts it in 5 seconds, rather than listening to however long you have the countdown set to. Makes it easier to debug stuff when playing solo.
 - Made the scenario voting screen variable height, depending on how many scenarios are allowed to be voted on.
+- Made the player's inventory show what scenarios they voted for.
+- Added a score system
 
 ### New Scenarios
 

@@ -1,6 +1,7 @@
 package com.gmail.val59000mc;
 
 import com.gmail.val59000mc.game.GameManager;
+import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.utils.FileUtils;
 import com.gmail.val59000mc.configuration.YamlFile;
@@ -37,10 +38,13 @@ public class UhcCore extends JavaPlugin {
 
 			@Override
 			public void run() {
-				if (GameManager.getGameManager() != null) {
-					GameManager.getGameManager().getPlayersManager().getScoreKeeper().storeData();
-				}
-				new GameManager().loadNewGame();
+
+				GameManager gm = GameManager.getGameManager();
+				if (gm != null) {
+					gm.getPlayersManager().getScoreKeeper().storeData();
+					GameState oldGameState = gm.getGameState();
+					new GameManager().loadNewGame(oldGameState);
+				} else new GameManager().loadNewGame();
 			}
 
 		}, 1);
@@ -56,11 +60,7 @@ public class UhcCore extends JavaPlugin {
 		String versionString = Bukkit.getBukkitVersion();
 		version = 0;
 
-		for (int i = MIN_VERSION; i <= MAX_VERSION; i++) {
-			if (versionString.contains("1." + i)) {
-				version = i;
-			}
-		}
+		for (int i = MIN_VERSION; i <= MAX_VERSION; i++) { if (versionString.contains("1." + i)) { version = i; } }
 
 		if (version == 0) {
 			version = MIN_VERSION;
@@ -82,10 +82,9 @@ public class UhcCore extends JavaPlugin {
 				List<Long> games = storage.getLongList("games");
 				List<Long> recentGames = new ArrayList<>();
 
+				// only keep games for an hour
 				for (long game : games) {
-					if (game + TimeUtils.HOUR > System.currentTimeMillis()) {
-						recentGames.add(game);
-					}
+					if (game + TimeUtils.HOUR > System.currentTimeMillis()) { recentGames.add(game); }
 				}
 
 				storage.set("games", recentGames);
@@ -138,13 +137,9 @@ public class UhcCore extends JavaPlugin {
 		metrics.addCustomChart(new Metrics.SimplePie("deathmatch", new Callable<String>() {
 			@Override
 			public String call() throws Exception {
-				if (!GameManager.getGameManager().getConfiguration().getEnableTimeLimit()) {
-					return "No deathmatch";
-				}
+				if (!GameManager.getGameManager().getConfiguration().getEnableTimeLimit()) { return "No deathmatch"; }
 
-				if (GameManager.getGameManager().getArena().isUsed()) {
-					return "Arena deathmatch";
-				}
+				if (GameManager.getGameManager().getArena().isUsed()) { return "Arena deathmatch"; }
 
 				return "Center deatchmatch";
 			}
@@ -183,9 +178,7 @@ public class UhcCore extends JavaPlugin {
 			List<Long> recentGames = new ArrayList<>();
 
 			for (long game : games) {
-				if (game + TimeUtils.HOUR > System.currentTimeMillis()) {
-					recentGames.add(game);
-				}
+				if (game + TimeUtils.HOUR > System.currentTimeMillis()) { recentGames.add(game); }
 			}
 
 			recentGames.add(System.currentTimeMillis());
@@ -200,13 +193,9 @@ public class UhcCore extends JavaPlugin {
 		}
 	}
 
-	public static int getVersion() {
-		return version;
-	}
+	public static int getVersion() { return version; }
 
-	public static UhcCore getPlugin() {
-		return pl;
-	}
+	public static UhcCore getPlugin() { return pl; }
 
 	public static boolean isSpigotServer() {
 		try {
@@ -219,11 +208,35 @@ public class UhcCore extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		// kick anyone who might be on
+		Bukkit.getServer().getOnlinePlayers().forEach(player -> { player.kickPlayer("Server Restarting"); });
+
 		GameManager.getGameManager().getPlayersManager().getScoreKeeper().storeData();
 		GameManager.getGameManager().getScenarioManager().disableAllScenarios();
 
+		storeGameRunning();
+
 		updater.runAutoUpdate();
 		Bukkit.getLogger().info("[UhcCore] Plugin disabled");
+	}
+
+	private void storeGameRunning() {
+		YamlFile storage;
+
+		try {
+			storage = FileUtils.saveResourceIfNotAvailable("storage.yml");
+		} catch (InvalidConfigurationException ex) {
+			ex.printStackTrace();
+			return;
+		}
+
+		storage.set("gameState", GameManager.getGameManager().getGameState().name());
+		try {
+			storage.save();
+		} catch (IOException ex) {
+			Bukkit.getLogger().warning("[UhcCore] Failed to save storage.yml file!");
+			ex.printStackTrace();
+		}
 	}
 
 }
