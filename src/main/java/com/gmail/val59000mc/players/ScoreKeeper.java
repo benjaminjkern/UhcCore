@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import com.gmail.val59000mc.UhcCore;
+import com.gmail.val59000mc.exceptions.UhcPlayerDoesntExistException;
 
 import org.bukkit.Bukkit;
 
@@ -35,10 +36,8 @@ public class ScoreKeeper {
         }
     }
 
-    public double getScore(UhcPlayer p) {
-        if (p == null) Bukkit.getLogger().warning("[UhcCore] player is null is null!");
+    public double getScore(String name, boolean create) throws UhcPlayerDoesntExistException {
 
-        String name = p.getName();
         if (cache.containsKey(name)) return cache.get(name);
 
         if (s == null) {
@@ -62,21 +61,72 @@ public class ScoreKeeper {
             }
         }
 
-        Bukkit.getLogger().info("[UhcCore] Creating user score for " + name + ". Default value: " + defaultValue + ".");
-        cache.put(name, defaultValue);
-        return defaultValue;
+        if (create) {
+            Bukkit.getLogger()
+                    .info("[UhcCore] Creating user score for " + name + ". Default value: " + defaultValue + ".");
+            cache.put(name, defaultValue);
+            return defaultValue;
+        }
+        throw new UhcPlayerDoesntExistException(name);
     }
 
-    public void setScore(UhcPlayer p, double score) {
+    public double getScore(UhcPlayer p) {
+        try {
+            return getScore(p.getName(), true);
+        } catch (UhcPlayerDoesntExistException e) {
+            // shouldnt ever happen
+            return -1;
+        }
+    }
+
+    public double getScore(String name) throws UhcPlayerDoesntExistException { return getScore(name, false); }
+
+    public double setScore(String name, double score) throws UhcPlayerDoesntExistException {
         // make sure it's in the cache first
-        getScore(p);
-        String name = p.getName();
-        double filteredScore = Math.max(0, score);
+        getScore(name);
+        double filteredScore = Math.max(0, Math.min(100, score));
 
         cache.put(name, filteredScore);
 
         Bukkit.getLogger().info(name + "'s new score is " + filteredScore);
+        return filteredScore;
     }
+
+    public double setScore(UhcPlayer p, double score) {
+        try {
+            return setScore(p.getName(), score);
+        } catch (UhcPlayerDoesntExistException e) {
+            return -1;
+        }
+    }
+
+    public double addScore(String name, double score) throws UhcPlayerDoesntExistException {
+        return setScore(name, score + getScore(name));
+    }
+
+    public double addScore(UhcPlayer p, double score) {
+        try {
+            return addScore(p.getName(), score);
+        } catch (UhcPlayerDoesntExistException e) {
+            return -1;
+        }
+    }
+
+    public double getScoreI(String name) throws UhcPlayerDoesntExistException { return inverse(getScore(name)); }
+
+    public double getScoreI(UhcPlayer p) { return inverse(getScore(p)); }
+
+    public double setScoreI(String name, double scoreI) throws UhcPlayerDoesntExistException {
+        return setScore(name, forward(scoreI));
+    }
+
+    public double setScoreI(UhcPlayer p, double scoreI) { return setScore(p, forward(scoreI)); }
+
+    public double addScoreI(String name, double scoreI) throws UhcPlayerDoesntExistException {
+        return setScore(name, forward(getScoreI(name) + scoreI));
+    }
+
+    public double addScoreI(UhcPlayer p, double scoreI) { return setScore(p, forward(getScoreI(p) + scoreI)); }
 
     // write back to disk, should really only be done when plugin is disabled
     public void storeData() {
@@ -103,36 +153,28 @@ public class ScoreKeeper {
         cache.clear();
     }
 
-    private double forward(double x) { return 1 / (1 + Math.pow(10, x / 400)); }
+    private double Prob(double x) { return 1 / (1 + Math.pow(10, x / 400)); }
 
-    private double inverse(double x) { return 1000 - 400 * Math.log10(1 / x - 1); }
+    private double forward(double x) { return 100 * Prob(1000 - x); }
+
+    private double inverse(double x) { return 1000 - 400 * Math.log10(100 / x - 1); }
 
     public void updateScores(UhcPlayer winner, UhcPlayer loser) {
-        double A = inverse(getScore(winner) / 100);
-        double B = inverse(getScore(loser) / 100);
+        double A = getScoreI(winner);
+        double B = getScoreI(loser);
 
-        double P = forward(B - A);
+        double P = Prob(B - A);
 
         double diff = scale * (P - 1);
 
-        setScore(winner, forward(1000 - A - diff) * 100);
-        setScore(loser, forward(1000 - B + diff) * 100);
+        setScore(winner, forward(A + diff));
+        setScore(loser, forward(B - diff));
     }
 
-    public void envDie(UhcPlayer loser) {
-        Bukkit.getLogger().info("[UhcCore] " + loser.getName() + " died what a loser");
-        double B = inverse(getScore(loser) / 100);
-        double P = forward(B - 1000);
-        double diff = scale * (P / 100 - 1);
-        setScore(loser, forward(1000 - B - diff) * 100);
-    }
+    public void envDie(UhcPlayer loser) { setScore(loser, forward(getScoreI(loser) - scale * getScore(loser) / 100)); }
 
     public void envWin(UhcPlayer winner) {
-        Bukkit.getLogger().info("[UhcCore] " + winner.getName() + " won the game what a loser");
-        double A = inverse(getScore(winner) / 100);
-        double P = forward(1000 - A);
-        double diff = scale * (P - 1);
-        setScore(winner, forward(1000 - A + diff) * 100);
+        setScore(winner, forward(getScoreI(winner) + scale * getScore(winner) / 100));
     }
 
 }

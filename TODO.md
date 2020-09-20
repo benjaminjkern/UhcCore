@@ -10,11 +10,10 @@ Small changes:
 
 - Use one of your votes to downvote
 - Make the paper tell you how many votes you have left
-- Politics doesn’t always end game when one team is alive
+- Politics doesn’t always end game when one team is alive (Might not be an issue but shold look into it)
 - Spectators shouldnt be able to fly through stuff
 - Doesnt show scenarios when youre spectating
 - Votes should show how many votes there are for specific one
-- Replacing the oceans doesnt work
 - Consider switching to paper spigot
 - Make sure Vein works with lagworld and midas and cutclean and lagworld works with timber
 - One of those may have spawned me really high up, I'm not sure how
@@ -38,11 +37,16 @@ Small changes:
 - Duos should pick another one if there are less than 2 players active
 - Make randomized drops match with triple ores and whatnot
 - Do incompatible ones that just dont select when chosen second
-- Make it obvious which scenarios are new
 - Material/UniversalMaterial have bugs
-- Fix the not finding the world exceptions
+- Fix the not finding the world exceptions and not finding biome exceptions
 - Keep track of stats and let players view stats easily
 - I'm pretty sure shears on lucky leaves gives double apples but I dont wanna deal with that rn
+- Clicking the book opens a book inventory at first
+- Rotating text in vote inventory
+- Item that lets you see your info in an inventory
+- A Shop! (IDK)
+- Fix Spigot taking 20 seconds to load
+- /newmap command force reloads and starts a new map
 
 Need to Test:
 
@@ -133,6 +137,7 @@ Far down the line:
     - Fun particles in game that follow you, always assigned to whatever the current color is
     - Particles when you kill people
     - Vote for scenarios that aren't on the list
+    - Can spectate and fly through walls
   - Level 3: \$12 a month
     - Discord bits
     - Can force-start games
@@ -147,13 +152,18 @@ Far down the line:
     - Customize your particle colors
     - Customize the music thats played when players are near you (Certain sounds will be outside of minecraft's regular resource pack and will require the server resource pack to be able to hear it)
     - Customize the music thats played when you kill a player
+- Admin:
+  - /newmap (restart and force a new map)
+  - luckperms
+  - kick / ban
+  - /reload
+  - /restart
 - Auction: once a week we give stuff away outside of the game and you can put in tickets for 1 rank each
 
 - Upgrade Server infrastructure - this was done but can always be added to
 - Easy suggestion box
-- Change Lobby
+- Fancy Lobby / Hub
 - Add Bungee so they just go back to a bungee server instead of being kicked, also so that if there is a big enough player base people can choose to do duos/quads
 - Make a discord
-- New Banner
 - A way to keep track of which scenarios are popular
 - Website to tell you status of server

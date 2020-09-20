@@ -16,7 +16,9 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - Force starting a game starts it in 5 seconds, rather than listening to however long you have the countdown set to. Makes it easier to debug stuff when playing solo.
 - Made the scenario voting screen variable height, depending on how many scenarios are allowed to be voted on.
 - Made the player's inventory show what scenarios they voted for.
-- Added a score system
+- Added a score system based on a modified version of Chess Elo system. Also included a /rating command
+- Made reloading / stopping the server check if the most recent game even played, and not waste time loading a new map when the current one wasnt even used.
+- Made the scenario voter show you in your hotbar which ones you are currently voting for, also it has a colored title in the GUI now.
 
 ### New Scenarios
 
