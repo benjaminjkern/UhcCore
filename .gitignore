@@ -2,6 +2,7 @@
 /build/
 /bin/
 target/
+/SuperbVote/
  
 # OS Files #
 .DS_Store

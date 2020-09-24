@@ -25,7 +25,7 @@ import java.util.*;
 public class ScenarioManager {
 
     private static final int ROW = 9;
-    private Map<Scenario, ScenarioListener> activeScenarios;
+    private final Map<Scenario, ScenarioListener> activeScenarios;
 
     public ScenarioManager() { activeScenarios = new HashMap<>(); }
 
@@ -147,18 +147,6 @@ public class ScenarioManager {
             inv.addItem(item);
         }
         return inv;
-    }
-
-    public void loadActiveScenarios(List<String> scenarios) {
-        for (String string : scenarios) {
-            try {
-                Scenario scenario = Scenario.valueOf(string);
-                Bukkit.getLogger().info("[UhcCore] Loading " + scenario.getName());
-                addScenario(scenario);
-            } catch (Exception ex) {
-                Bukkit.getLogger().severe("[UhcCore] Invalid scenario: " + string);
-            }
-        }
     }
 
     public void disableAllScenarios() {

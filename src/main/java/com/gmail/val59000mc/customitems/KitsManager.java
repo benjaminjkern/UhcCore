@@ -17,14 +17,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public class KitsManager{
 
-	private static List<Kit> kits;
+	private final static List<Kit> kits;
 
 	static{
 		kits = new ArrayList<>();
@@ -36,7 +35,7 @@ public class KitsManager{
 
 	public static Kit getFirstKitFor(Player player){
 		for (Kit kit : kits){
-			if (kit.canBeUsedBy(player)){
+			if (kit.canBeUsedBy(player, GameManager.getGameManager().getConfiguration())){
 				return kit;
 			}
 		}

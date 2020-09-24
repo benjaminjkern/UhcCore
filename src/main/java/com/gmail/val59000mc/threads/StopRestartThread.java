@@ -1,5 +1,7 @@
 package com.gmail.val59000mc.threads;
 
+import java.io.PrintWriter;
+
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
@@ -30,6 +32,8 @@ public class StopRestartThread implements Runnable {
 
 			// if you do it this way, it will just reload the plugin and not have to turn
 			// off and back on the server
+			PrintWriter out = gm.getLobbyOutputStream();
+			if (out != null) out.println("SHUTTINGDOWN");
 			Bukkit.getServer().getOnlinePlayers().forEach(player -> { player.kickPlayer("Server Restarting"); });
 			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "reload");
 		} else {

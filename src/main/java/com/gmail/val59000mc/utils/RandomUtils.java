@@ -6,9 +6,8 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class RandomUtils {
-	private static final Random r = new Random();
+	private final static Random r = new Random();
 
-	// inclusive
 	public static int randomInteger(int min, int max) {
 		int realMin = Math.min(min, max);
 		int realMax = Math.max(min, max);

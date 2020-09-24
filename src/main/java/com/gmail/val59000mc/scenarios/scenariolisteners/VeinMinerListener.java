@@ -1,7 +1,6 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
 import com.gmail.val59000mc.customitems.UhcItems;
-import com.gmail.val59000mc.scenarios.Option;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 import com.gmail.val59000mc.utils.UniversalMaterial;
@@ -87,13 +86,11 @@ public class VeinMinerListener extends ScenarioListener{
     }
 
     private static class Vein{
-        private Block startBlock;
-        private Material type;
+        private final Block startBlock;
         private int ores;
 
         public Vein(Block startBlock){
             this.startBlock = startBlock;
-            type = startBlock.getType();
             ores = 0;
         }
 
@@ -148,11 +145,11 @@ public class VeinMinerListener extends ScenarioListener{
         }
 
         private Material getDropType(){
-            if (type == UniversalMaterial.NETHER_QUARTZ_ORE.getType()){
+            if (startBlock.getType() == UniversalMaterial.NETHER_QUARTZ_ORE.getType()){
                 return Material.QUARTZ;
             }
 
-            switch (type){
+            switch (startBlock.getType()){
                 case DIAMOND_ORE:
                     return Material.DIAMOND;
                 case GOLD_ORE:
@@ -174,11 +171,11 @@ public class VeinMinerListener extends ScenarioListener{
         }
 
         private int getXpPerBlock(){
-            if (type == UniversalMaterial.NETHER_QUARTZ_ORE.getType()){
+            if (startBlock.getType() == UniversalMaterial.NETHER_QUARTZ_ORE.getType()){
                 return 3;
             }
 
-            switch (type){
+            switch (startBlock.getType()){
                 case DIAMOND_ORE:
                     return 3;
                 case GOLD_ORE:

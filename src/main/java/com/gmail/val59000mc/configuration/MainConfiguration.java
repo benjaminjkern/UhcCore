@@ -1,6 +1,5 @@
 package com.gmail.val59000mc.configuration;
 
-import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.customitems.CraftsManager;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.scenarios.Scenario;
@@ -20,6 +19,8 @@ import java.io.IOException;
 import java.util.*;
 
 public class MainConfiguration {
+
+	private final GameManager gameManager;
 
 	// Config options.
 	private int timeBeforePvp;
@@ -79,7 +80,7 @@ public class MainConfiguration {
 	private String serverBungee;
 	private int timeBeforeSendBungeeAfterDeath;
 	private int timeBeforeSendBungeeAfterEnd;
-	private long timeToShrink;
+	private long borderTimeToShrink;
 	private long timeLimit;
 	private boolean enableTimeLimit;
 	private int maxBuildingHeight;
@@ -89,6 +90,8 @@ public class MainConfiguration {
 	private boolean enableDayNightCycle;
 	private long timeBeforePermanentDay;
 	private boolean borderIsMoving;
+	private int borderStartSize;
+	private int borderEndSize;
 	private long borderTimeBeforeShrink;
 	private boolean deathmatchAdvantureMode;
 	private boolean enableDeathmatchForceEnd;
@@ -166,6 +169,10 @@ public class MainConfiguration {
 	private boolean worldEditLoaded;
 	private boolean vaultLoaded;
 	private boolean protocolLibLoaded;
+
+	public MainConfiguration(GameManager gameManager){
+		this.gameManager = gameManager;
+	}
 
 	public void preLoad(YamlFile cfg){
 		Validate.notNull(cfg);
@@ -254,10 +261,12 @@ public class MainConfiguration {
 		serverBungee = cfg.getString("bungee-support.send-players-to-server-after-end","lobby");
 		timeBeforeSendBungeeAfterDeath = cfg.getInt("bungee-support.time-before-send-after-death",-1);
 		timeBeforeSendBungeeAfterEnd = cfg.getInt("bungee-support.time-before-send-after-end",-1);
-		timeToShrink = cfg.getLong("border.time-to-shrink",3600);
+		borderTimeToShrink = cfg.getLong("border.time-to-shrink",3600);
 		enableTimeLimit = cfg.getBoolean("deathmatch.enable",false);
-		timeLimit = cfg.getLong("deathmatch.delay", timeToShrink);
+		timeLimit = cfg.getLong("deathmatch.delay", borderTimeToShrink);
 		borderIsMoving = cfg.getBoolean("border.moving",false);
+		borderStartSize = cfg.getInt("border.start-size",1000);
+		borderEndSize = cfg.getInt("border.end-size",0);
 		borderTimeBeforeShrink = cfg.getLong("border.time-before-shrink",0);
 		deathmatchAdvantureMode = cfg.getBoolean("deathmatch.deathmatch-adventure-mode",true);
 		enableDeathmatchForceEnd = cfg.getBoolean("deathmatch.force-end.enable",false);
@@ -290,8 +299,8 @@ public class MainConfiguration {
 		timeBeforePermanentDay = cfg.getLong("customize-game-behavior.day-night-cycle.time-before-permanent-day",1200);
 		enablePregenerateWorld = cfg.getBoolean("pre-generate-world.enable",false);
 		restEveryTicks = cfg.getInt("pre-generate-world.rest-every-ticks",20);
-		chunksPerTick = UhcCore.getPlugin().getConfig().getInt("pre-generate-world.chunks-per-tick",10);
-		restDuraton = UhcCore.getPlugin().getConfig().getInt("pre-generate-world.rest-duration",20);
+		chunksPerTick = cfg.getInt("pre-generate-world.chunks-per-tick",10);
+		restDuraton = cfg.getInt("pre-generate-world.rest-duration",20);
 
 		if (storage != null){
 			overworldUuid = storage.getString("worlds.normal","NULL");
@@ -316,7 +325,16 @@ public class MainConfiguration {
 
 		// Scenarios
 		if (cfg.getBoolean("customize-game-behavior.enable-default-scenarios", false)){
-			GameManager.getGameManager().getScenarioManager().loadActiveScenarios(cfg.getStringList("customize-game-behavior.active-scenarios"));
+			List<String> scenariosStrings = cfg.getStringList("customize-game-behavior.active-scenarios");
+			for (String string : scenariosStrings){
+				try {
+					Scenario scenario = Scenario.valueOf(string);
+					Bukkit.getLogger().info("[UhcCore] Loading " + scenario.getName());
+					gameManager.getScenarioManager().addScenario(scenario);
+				}catch (Exception ex){
+					Bukkit.getLogger().severe("[UhcCore] Invalid scenario: " + string);
+				}
+			}
 		}
 
 		// Scenario blacklist
@@ -350,7 +368,7 @@ public class MainConfiguration {
 
 		// Set remaining time
 		if(enableTimeLimit){
-			GameManager.getGameManager().setRemainingTime(timeLimit);
+			gameManager.setRemainingTime(timeLimit);
 		}
 
 		// Potions effects on start
@@ -950,8 +968,8 @@ public class MainConfiguration {
 		return serverBungee;
 	}
 
-	public long getTimeToShrink() {
-		return timeToShrink;
+	public long getBorderTimeToShrink() {
+		return borderTimeToShrink;
 	}
 
 	public long getTimeLimit() {
@@ -964,14 +982,6 @@ public class MainConfiguration {
 
 	public int getMaxBuildingHeight() {
 		return maxBuildingHeight;
-	}
-
-	/**
-	 * @deprecated Replaced by {@link #getEnableNether()}, will be removed soon!
-	 */
-	@Deprecated
-	public boolean getBanNether() {
-		return !getEnableNether();
 	}
 
 	public boolean getEnableNether() {
@@ -996,6 +1006,14 @@ public class MainConfiguration {
 
 	public boolean getBorderIsMoving() {
 		return borderIsMoving;
+	}
+
+	public int getBorderStartSize() {
+		return borderStartSize;
+	}
+
+	public int getBorderEndSize() {
+		return borderEndSize;
 	}
 
 	public long getBorderTimeBeforeShrink() {

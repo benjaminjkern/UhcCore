@@ -38,7 +38,7 @@ public enum GameItem {
     public static final GameItem[] LOBBY_ITEMS = new GameItem[] { TEAM_LIST, TEAM_SELECTION, KIT_SELECTION,
             CUSTOM_CRAFT_BOOK, SCENARIO_VIEWER, BUNGEE_ITEM };
 
-    private UniversalMaterial type;
+    private final UniversalMaterial type;
 
     GameItem(UniversalMaterial type) { this.type = type; }
 

@@ -21,10 +21,9 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
-
 import java.util.List;
 
-public class WhatsMineListener extends ScenarioListener{
+public class WhatsMineListener extends ScenarioListener {
 
     // I'm not entirely sure how to do this
     @EventHandler
@@ -33,7 +32,7 @@ public class WhatsMineListener extends ScenarioListener{
         Player player = (Player) e.getEntity();
         Item item = e.getItem();
 
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer->{
+        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -46,7 +45,7 @@ public class WhatsMineListener extends ScenarioListener{
     @EventHandler
     public void onThrowItem(PlayerDropItemEvent e) {
         Player player = e.getPlayer();
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer->{
+        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -54,9 +53,9 @@ public class WhatsMineListener extends ScenarioListener{
                 int slot = player.getInventory().getHeldItemSlot();
                 ItemStack items = otherPlayer.getInventory().getItem(slot);
                 MaterialData md = items.getData();
-                ItemStack newItems = new ItemStack(items.getType(), items.getAmount()-1);
+                ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
                 newItems.setData(md);
-                otherPlayer.getInventory().setItem​(slot, newItems);
+                otherPlayer.getInventory().setItem(slot, newItems);
             } catch (UhcPlayerNotOnlineException p) {}
         });
     }
@@ -64,7 +63,7 @@ public class WhatsMineListener extends ScenarioListener{
     @EventHandler
     public void onBreakTool(PlayerItemBreakEvent e) {
         Player player = e.getPlayer();
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer->{
+        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -72,9 +71,9 @@ public class WhatsMineListener extends ScenarioListener{
                 int slot = player.getInventory().getHeldItemSlot();
                 ItemStack items = otherPlayer.getInventory().getItem(slot);
                 MaterialData md = items.getData();
-                ItemStack newItems = new ItemStack(items.getType(), items.getAmount()-1);
+                ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
                 newItems.setData(md);
-                otherPlayer.getInventory().setItem​(slot, newItems);
+                otherPlayer.getInventory().setItem(slot, newItems);
             } catch (UhcPlayerNotOnlineException p) {}
         });
     }
@@ -82,7 +81,7 @@ public class WhatsMineListener extends ScenarioListener{
     @EventHandler
     public void onBreakTool(PlayerItemConsumeEvent e) {
         Player player = e.getPlayer();
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer->{
+        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -90,9 +89,9 @@ public class WhatsMineListener extends ScenarioListener{
                 int slot = player.getInventory().getHeldItemSlot();
                 ItemStack items = otherPlayer.getInventory().getItem(slot);
                 MaterialData md = items.getData();
-                ItemStack newItems = new ItemStack(items.getType(), items.getAmount()-1);
+                ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
                 newItems.setData(md);
-                otherPlayer.getInventory().setItem​(slot, newItems);
+                otherPlayer.getInventory().setItem(slot, newItems);
             } catch (UhcPlayerNotOnlineException p) {}
         });
     }
@@ -100,7 +99,7 @@ public class WhatsMineListener extends ScenarioListener{
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
         Player player = e.getPlayer();
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer->{
+        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -108,9 +107,9 @@ public class WhatsMineListener extends ScenarioListener{
                 int slot = player.getInventory().getHeldItemSlot();
                 ItemStack items = otherPlayer.getInventory().getItem(slot);
                 MaterialData md = items.getData();
-                ItemStack newItems = new ItemStack(items.getType(), items.getAmount()-1);
+                ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
                 newItems.setData(md);
-                otherPlayer.getInventory().setItem​(slot, newItems);
+                otherPlayer.getInventory().setItem(slot, newItems);
             } catch (UhcPlayerNotOnlineException p) {}
         });
     }
@@ -124,7 +123,7 @@ public class WhatsMineListener extends ScenarioListener{
             public void run() {
                 final ItemStack[] contents = player.getInventory().getContents();
 
-                getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer->{
+                getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
                     try {
                         Player otherPlayer = uhcPlayer.getPlayer();
                         if (otherPlayer == player) return;
@@ -133,7 +132,7 @@ public class WhatsMineListener extends ScenarioListener{
                     } catch (UhcPlayerNotOnlineException p) {}
                 });
             }
-            
+
         }.runTaskLater(UhcCore.getPlugin(), 1);
     }
 
@@ -146,7 +145,7 @@ public class WhatsMineListener extends ScenarioListener{
             public void run() {
                 final ItemStack[] contents = player.getInventory().getContents();
 
-                getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer->{
+                getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
                     try {
                         Player otherPlayer = uhcPlayer.getPlayer();
                         if (otherPlayer == player) return;
@@ -155,7 +154,7 @@ public class WhatsMineListener extends ScenarioListener{
                     } catch (UhcPlayerNotOnlineException p) {}
                 });
             }
-            
+
         }.runTaskLater(UhcCore.getPlugin(), 1);
     }
 
@@ -168,7 +167,7 @@ public class WhatsMineListener extends ScenarioListener{
             public void run() {
                 final ItemStack[] contents = player.getInventory().getContents();
 
-                getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer->{
+                getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
                     try {
                         Player otherPlayer = uhcPlayer.getPlayer();
                         if (otherPlayer == player) return;
@@ -177,7 +176,7 @@ public class WhatsMineListener extends ScenarioListener{
                     } catch (UhcPlayerNotOnlineException p) {}
                 });
             }
-            
+
         }.runTaskLater(UhcCore.getPlugin(), 1);
     }
 

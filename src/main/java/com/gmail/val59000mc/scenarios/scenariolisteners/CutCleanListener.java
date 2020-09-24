@@ -53,8 +53,7 @@ public class CutCleanListener extends ScenarioListener {
         final Iterator<Recipe> iter = Bukkit.recipeIterator();
         while (iter.hasNext()) {
             final Recipe recipe = iter.next();
-            if (!(recipe instanceof FurnaceRecipe))
-                continue;
+            if (!(recipe instanceof FurnaceRecipe)) continue;
             final FurnaceRecipe newRecipe = (FurnaceRecipe) recipe;
             furnaceRecipes.put(newRecipe.getInput().getType(), newRecipe);
         }
@@ -74,8 +73,7 @@ public class CutCleanListener extends ScenarioListener {
     @EventHandler
     public void onEntityDeath(final EntityDeathEvent e) {
         // don't bother cooking other people's stuff
-        if (e.getEntityType() == EntityType.PLAYER)
-            return;
+        if (e.getEntityType() == EntityType.PLAYER) return;
 
         // doesnt check if killer is sneaking because thats not easily accessible, but
         // it should
@@ -97,14 +95,12 @@ public class CutCleanListener extends ScenarioListener {
 
         // technically hsould check for veinminer as well but its redundant since that
         // only triggers when the player is sneaking
-        if (isActivated(Scenario.KINGMIDAS) || e.getPlayer().isSneaking())
-            return;
+        if (isActivated(Scenario.KINGMIDAS) || e.getPlayer().isSneaking()) return;
 
         Block block = e.getBlock();
         ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
 
-        if (checkTool && !UniversalMaterial.isCorrectTool(block.getType(), hand.getType()))
-            return;
+        if (checkTool && !UniversalMaterial.isCorrectTool(block.getType(), hand.getType())) return;
 
         Location loc = block.getLocation().add(0.5, 0, 0.5);
 
@@ -121,18 +117,13 @@ public class CutCleanListener extends ScenarioListener {
             if (isActivated(Scenario.TRIPLEORES) && TripleOresListener.ores.containsKey(drop.getType())) {
                 amount *= 3;
             }
-            if (isActivated(Scenario.DOUBLEGOLD) && drop.getType() == Material.GOLD_ORE) {
-                amount *= 2;
-            }
+            if (isActivated(Scenario.DOUBLEGOLD) && drop.getType() == Material.GOLD_ORE) { amount *= 2; }
 
-            for (int i = 0; i < amount; i++)
-                toDrop.add(cookedDrop);
+            for (int i = 0; i < amount; i++) toDrop.add(cookedDrop);
         }
 
         block.setType(Material.AIR);
-        for (ItemStack drop : toDrop) {
-            loc.getWorld().dropItem(loc, drop);
-        }
+        for (ItemStack drop : toDrop) { loc.getWorld().dropItem(loc, drop); }
         UhcItems.spawnExtraXp(loc, exp);
         e.setCancelled(true);
     }
@@ -153,35 +144,28 @@ public class CutCleanListener extends ScenarioListener {
 
     @EventHandler
     public void openInventoryEvent(final InventoryOpenEvent e) {
-        if (!unlimitedLapis)
-            return;
+        if (!unlimitedLapis) return;
 
         ((Player) e.getPlayer()).setTotalExperience(Integer.MAX_VALUE);
 
-        if (e.getInventory() instanceof EnchantingInventory) {
-            e.getInventory().setItem(1, lapis);
-        }
+        if (e.getInventory() instanceof EnchantingInventory) { e.getInventory().setItem(1, lapis); }
     }
 
     @EventHandler
     public void closeInventoryEvent(final InventoryCloseEvent e) {
-        if (!unlimitedLapis)
-            return;
+        if (!unlimitedLapis) return;
 
         ((Player) e.getPlayer()).setTotalExperience(0);
 
-        if (e.getInventory() instanceof EnchantingInventory)
-            e.getInventory().setItem(1, null);
+        if (e.getInventory() instanceof EnchantingInventory) e.getInventory().setItem(1, null);
     }
 
     @EventHandler
     public void onInventoryClick(final InventoryClickEvent e) {
         final Inventory inv = e.getInventory();
         final ItemStack item = e.getCurrentItem();
-        if (!unlimitedLapis)
-            return;
-        if (inv == null || item == null)
-            return;
+        if (!unlimitedLapis) return;
+        if (inv == null || item == null) return;
 
         if (inv instanceof EnchantingInventory) {
 

@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.exceptions.UhcPlayerDoesntExistException;
+import com.gmail.val59000mc.game.GameManager;
 
 import org.bukkit.Bukkit;
 
@@ -88,6 +89,8 @@ public class ScoreKeeper {
 
         cache.put(name, filteredScore);
 
+        GameManager.getGameManager().getPlayersManager().getUhcPlayer(name)
+                .sendMessage("Your Player Rating has been updated to \u00a76" + String.format("%.2f", filteredScore));
         Bukkit.getLogger().info(name + "'s new score is " + filteredScore);
         return filteredScore;
     }
@@ -143,10 +146,12 @@ public class ScoreKeeper {
         // write everything in the cache
         try {
             FileWriter myWriter = new FileWriter(f, false);
-            for (Entry<String, Double> e : cache.entrySet()) { myWriter.write(e.getKey() + ":" + e.getValue() + "\n"); }
+            for (Entry<String, Double> e : cache.entrySet()) {
+                if (e.getValue() != defaultValue) myWriter.write(e.getKey() + ":" + e.getValue() + "\n");
+            }
             myWriter.close();
         } catch (IOException e) {
-            Bukkit.getLogger().warning("[UhcCore] Something went wrong when opening userScores.txt!");
+            Bukkit.getLogger().warning("[UhcCore] Something went wrong when writing to userScores.txt!");
         }
 
         resetScanner();

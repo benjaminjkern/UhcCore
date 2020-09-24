@@ -7,78 +7,83 @@ import com.gmail.val59000mc.utils.UniversalMaterial;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.Material;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
 public enum Scenario {
+    // CURRENTLY IN
     CUTCLEAN(UniversalMaterial.IRON_INGOT, CutCleanListener.class),
-    // FIRELESS(UniversalMaterial.LAVA_BUCKET, FirelessListener.class),
-    // BOWLESS(UniversalMaterial.BOW, BowlessListener.class),
-    // RODLESS(UniversalMaterial.FISHING_ROD, RodlessListener.class),
-    // SHIELDLESS(UniversalMaterial.SHIELD, ShieldlessListener.class, 9),
-    BLOODDIAMONDS(UniversalMaterial.DIAMOND_ORE, BloodDiamondsListener.class),
     TIMBER(UniversalMaterial.OAK_LOG, TimberListener.class),
-    // HORSELESS(UniversalMaterial.SADDLE, HorselessListener.class),
     TIMEBOMB(UniversalMaterial.TRAPPED_CHEST, TimebombListener.class),
-    // NOFALL(UniversalMaterial.FEATHER, NoFallListener.class),
-    BESTPVE(UniversalMaterial.REDSTONE, BestPvEListener.class),
     TRIPLEORES(UniversalMaterial.REDSTONE_ORE, TripleOresListener.class),
-    // DOUBLEORES(UniversalMaterial.REDSTONE_ORE, DoubleOresListener.class),
-    TEAMINVENTORY(UniversalMaterial.CHEST), NOCLEAN(UniversalMaterial.QUARTZ, NoCleanListener.class),
-    // HASTEYBOYS(UniversalMaterial.DIAMOND_PICKAXE, HasteyBoysListener.class),
     LUCKYLEAVES(UniversalMaterial.OAK_LEAVES, LuckyLeavesListener.class),
-    BLEEDINGSWEETS(UniversalMaterial.BEETROOT_SOUP, BleedingSweetsListener.class),
-    DOUBLEGOLD(UniversalMaterial.GOLD_INGOT, DoubleGoldListener.class),
-    // GOLDLESS(UniversalMaterial.GOLD_ORE, GoldLessListener.class),
     FLOWERPOWER(UniversalMaterial.SUNFLOWER, FlowerPowerListener.class),
     SWITCHEROO(UniversalMaterial.ARROW, SwitcherooListener.class),
-    VEINMINER(UniversalMaterial.COAL_ORE, VeinMinerListener.class),
-    DRAGONRUSH(UniversalMaterial.DRAGON_EGG, DragonRushListener.class),
-    LOVEATFIRSTSIGHT(UniversalMaterial.POPPY, LoveAtFirstSightListener.class),
     SKYHIGH(UniversalMaterial.ANVIL, SkyHighListener.class),
-    // FASTLEAVESDECAY(UniversalMaterial.ACACIA_LEAVES,
-    // FastLeavesDecayListener.class),
-    // FASTSMELTING(UniversalMaterial.FURNACE, FastSmeltingListener.class),
     SUPERHEROES(UniversalMaterial.NETHER_STAR, SuperHeroesListener.class),
-    ANONYMOUS(UniversalMaterial.NAME_TAG, AnonymousListener.class),
-    // GONEFISHING(UniversalMaterial.FISHING_ROD, GoneFishingListener.class),
-    // INFINITEENCHANTS(UniversalMaterial.ENCHANTING_TABLE,
-    // InfiniteEnchantsListener.class),
-    // CHILDRENLEFTUNATTENDED(UniversalMaterial.WOLF_SPAWN_EGG,
-    // ChildrenLeftUnattended.class),
-    SILENTNIGHT(UniversalMaterial.CLOCK, SilentNightListener.class),
-    // PERMAKILL(UniversalMaterial.IRON_SWORD, PermaKillListener.class),
-    WEAKESTLINK(UniversalMaterial.DIAMOND_SWORD, WeakestLinkListener.class),
     EGGS(UniversalMaterial.EGG, EggsScenarioListener.class), NOGOINGBACK(UniversalMaterial.NETHER_BRICK),
-    // DOUBLEDATES(UniversalMaterial.RED_BANNER, DoubleDatesListener.class),
     DUOS(UniversalMaterial.ARMOR_STAND, DuosListener.class),
     FLYHIGH(UniversalMaterial.ELYTRA, FlyHighListener.class, 9),
     RANDOMIZEDDROPS(UniversalMaterial.EXPERIENCE_BOTTLE, RandomizedDropsListener.class),
     UPSIDEDOWNCRAFTING(UniversalMaterial.SCAFFOLDING, UpsideDownCraftsListener.class, 13),
-    RANDOMIZEDCRAFTS(UniversalMaterial.CRAFTING_TABLE, RandomizedCraftsListener.class, 13),
-    MONSTERSINC(UniversalMaterial.IRON_DOOR, MonstersIncListener.class),
     ACHIEVEMENTHUNTER(UniversalMaterial.BOOK, AchievementHunter.class),
     NINESLOTS(UniversalMaterial.BARRIER, NineSlotsListener.class),
     NETHERSTART(UniversalMaterial.LAVA_BUCKET, NetherStartListener.class),
-
-    // NEW ONES
     LAGWORLD(UniversalMaterial.DIRT, LagWorldListener.class),
     LILCHEAT(UniversalMaterial.DIAMOND_BLOCK, LilCheatListener.class),
     SWAP(UniversalMaterial.RAW_PORK, SwapListener.class), COMPANION(UniversalMaterial.BONE, CompanionListener.class),
-    // SHAREDHEALTH(UniversalMaterial.RED_DYE, SharedHealthListener.class),
     DONTWASTETIME(UniversalMaterial.DIAMOND_PICKAXE, DontWasteTimeListener.class),
     POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class), FAST(UniversalMaterial.FEATHER, FastListener.class),
     NOCRAFT(UniversalMaterial.HONEYCOMB_BLOCK, NoCraftListener.class, true),
     KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class, true),
-    WHATSMINE(UniversalMaterial.ENDER_CHEST, WhatsMineListener.class, true);
+    WHATSMINE(UniversalMaterial.ENDER_CHEST, WhatsMineListener.class, true),
+
+    // ONES THAT ARENT ENTIRELY LAME AND CAN BE USED (DISABLED IN CONFIG)
+    GOLDLESS(UniversalMaterial.GOLD_ORE, GoldLessListener.class),
+    DOUBLEORES(UniversalMaterial.REDSTONE_ORE, DoubleOresListener.class),
+    NOCLEAN(UniversalMaterial.QUARTZ, NoCleanListener.class),
+    BLOODDIAMONDS(UniversalMaterial.DIAMOND_ORE, BloodDiamondsListener.class),
+    BESTPVE(UniversalMaterial.REDSTONE, BestPvEListener.class),
+    BLEEDINGSWEETS(UniversalMaterial.BEETROOT_SOUP, BleedingSweetsListener.class),
+    DOUBLEGOLD(UniversalMaterial.GOLD_INGOT, DoubleGoldListener.class),
+    VEINMINER(UniversalMaterial.COAL_ORE, VeinMinerListener.class),
+    DRAGONRUSH(UniversalMaterial.DRAGON_EGG, DragonRushListener.class),
+    LOVEATFIRSTSIGHT(UniversalMaterial.POPPY, LoveAtFirstSightListener.class),
+    WEAKESTLINK(UniversalMaterial.DIAMOND_SWORD, WeakestLinkListener.class),
+    RANDOMIZEDCRAFTS(UniversalMaterial.CRAFTING_TABLE, RandomizedCraftsListener.class, 13),
+    MONSTERSINC(UniversalMaterial.IRON_DOOR, MonstersIncListener.class),
+
+    // LAME/USELESS ONES
+    // PERMAKILL(UniversalMaterial.IRON_SWORD, PermaKillListener.class),
+    // INFINITEENCHANTS(UniversalMaterial.ENCHANTING_TABLE,
+    // InfiniteEnchantsListener.class),
+    // GONEFISHING(UniversalMaterial.FISHING_ROD, GoneFishingListener.class),
+    // FASTLEAVESDECAY(UniversalMaterial.ACACIA_LEAVES,
+    // FastLeavesDecayListener.class),
+    // FASTSMELTING(UniversalMaterial.FURNACE, FastSmeltingListener.class),
+    // HASTEYBOYS(UniversalMaterial.DIAMOND_PICKAXE, HasteyBoysListener.class),
+    // FIRELESS(UniversalMaterial.LAVA_BUCKET, FirelessListener.class),
+    // BOWLESS(UniversalMaterial.BOW, BowlessListener.class),
+    // RODLESS(UniversalMaterial.FISHING_ROD, RodlessListener.class),
+    // SHIELDLESS(UniversalMaterial.SHIELD, ShieldlessListener.class, 9),
+    // NOFALL(UniversalMaterial.FEATHER, NoFallListener.class),
+    // HORSELESS(UniversalMaterial.SADDLE, HorselessListener.class),
+    ANONYMOUS(UniversalMaterial.NAME_TAG, AnonymousListener.class), // had issues with disabling, so I just left it in
+    SILENTNIGHT(UniversalMaterial.CLOCK, SilentNightListener.class),
+
+    // ONLY WORK FOR DUOS/QUADS
+    // SHAREDHEALTH(UniversalMaterial.RED_DYE, SharedHealthListener.class),
+    // DOUBLEDATES(UniversalMaterial.RED_BANNER, DoubleDatesListener.class),
+    // CHILDRENLEFTUNATTENDED(UniversalMaterial.WOLF_SPAWN_EGG,
+    // ChildrenLeftUnattended.class),
+    TEAMINVENTORY(UniversalMaterial.CHEST); // same as above, had issues with disabling
 
     private String name;
-    private UniversalMaterial material;
-    private Class<? extends ScenarioListener> listener;
-    private int fromVersion;
+    private final UniversalMaterial material;
+    private final Class<? extends ScenarioListener> listener;
+    private final int fromVersion;
     private boolean isNew;
     private List<String> description;
 

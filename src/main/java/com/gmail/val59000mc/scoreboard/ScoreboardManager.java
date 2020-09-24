@@ -28,8 +28,8 @@ import java.util.List;
 
 public class ScoreboardManager {
 
-    private ScoreboardLayout scoreboardLayout;
-    private List<Placeholder> placeholders;
+    private final ScoreboardLayout scoreboardLayout;
+    private final List<Placeholder> placeholders;
 
     public ScoreboardManager() {
         scoreboardLayout = new ScoreboardLayout();
@@ -41,9 +41,7 @@ public class ScoreboardManager {
         placeholders.add(new TimersPlaceholder());
     }
 
-    public ScoreboardLayout getScoreboardLayout() {
-        return scoreboardLayout;
-    }
+    public ScoreboardLayout getScoreboardLayout() { return scoreboardLayout; }
 
     public void setUpPlayerScoreboard(UhcPlayer scoreboardPlayer) {
 
@@ -183,8 +181,8 @@ public class ScoreboardManager {
             updatePlayerTab(scoreboardPlayer);
         }
 
-        Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new UpdateScoreboardThread(scoreboardPlayer),
-                1L);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(),
+                new UpdateScoreboardThread(gm, scoreboardPlayer), 1L);
     }
 
     public void updatePlayerTab(UhcPlayer uhcPlayer) {
@@ -194,9 +192,7 @@ public class ScoreboardManager {
 
             for (UhcPlayer all : gm.getPlayersManager().getPlayersList()) {
                 Scoreboard scoreboard = all.getScoreboard();
-                if (scoreboard == null) {
-                    continue;
-                }
+                if (scoreboard == null) { continue; }
 
                 if (uhcPlayer.getState().equals(PlayerState.PLAYING)) {
                     if (all.isInTeamWith(uhcPlayer)) {
@@ -217,9 +213,7 @@ public class ScoreboardManager {
 
             for (UhcPlayer all : gm.getPlayersManager().getPlayersList()) {
                 Scoreboard scoreboard = all.getScoreboard();
-                if (scoreboard == null) {
-                    continue;
-                }
+                if (scoreboard == null) { continue; }
 
                 if (uhcPlayer.getState().equals(PlayerState.PLAYING)
                         || uhcPlayer.getState().equals(PlayerState.WAITING)) {
@@ -254,9 +248,7 @@ public class ScoreboardManager {
                 } else {
                     // add to no-team team
                     Team team = scoreboard.getTeam("spectators");
-                    if (team != null) {
-                        team.addEntry(uhcPlayer.getName());
-                    }
+                    if (team != null) { team.addEntry(uhcPlayer.getName()); }
                 }
 
             }
@@ -273,36 +265,21 @@ public class ScoreboardManager {
     }
 
     public String getScoreboardLine(int line) {
-        if (line == 0)
-            return ChatColor.UNDERLINE + "" + ChatColor.RESET;
-        if (line == 1)
-            return ChatColor.ITALIC + "" + ChatColor.RESET;
-        if (line == 2)
-            return ChatColor.BOLD + "" + ChatColor.RESET;
-        if (line == 3)
-            return ChatColor.RESET + "" + ChatColor.RESET;
-        if (line == 4)
-            return ChatColor.GREEN + "" + ChatColor.RESET;
-        if (line == 5)
-            return ChatColor.DARK_GRAY + "" + ChatColor.RESET;
-        if (line == 6)
-            return ChatColor.GOLD + "" + ChatColor.RESET;
-        if (line == 7)
-            return ChatColor.RED + "" + ChatColor.RESET;
-        if (line == 8)
-            return ChatColor.YELLOW + "" + ChatColor.RESET;
-        if (line == 9)
-            return ChatColor.WHITE + "" + ChatColor.RESET;
-        if (line == 10)
-            return ChatColor.DARK_GREEN + "" + ChatColor.RESET;
-        if (line == 11)
-            return ChatColor.BLUE + "" + ChatColor.RESET;
-        if (line == 12)
-            return ChatColor.STRIKETHROUGH + "" + ChatColor.RESET;
-        if (line == 13)
-            return ChatColor.MAGIC + "" + ChatColor.RESET;
-        if (line == 14)
-            return ChatColor.DARK_RED + "" + ChatColor.RESET;
+        if (line == 0) return ChatColor.UNDERLINE + "" + ChatColor.RESET;
+        if (line == 1) return ChatColor.ITALIC + "" + ChatColor.RESET;
+        if (line == 2) return ChatColor.BOLD + "" + ChatColor.RESET;
+        if (line == 3) return ChatColor.RESET + "" + ChatColor.RESET;
+        if (line == 4) return ChatColor.GREEN + "" + ChatColor.RESET;
+        if (line == 5) return ChatColor.DARK_GRAY + "" + ChatColor.RESET;
+        if (line == 6) return ChatColor.GOLD + "" + ChatColor.RESET;
+        if (line == 7) return ChatColor.RED + "" + ChatColor.RESET;
+        if (line == 8) return ChatColor.YELLOW + "" + ChatColor.RESET;
+        if (line == 9) return ChatColor.WHITE + "" + ChatColor.RESET;
+        if (line == 10) return ChatColor.DARK_GREEN + "" + ChatColor.RESET;
+        if (line == 11) return ChatColor.BLUE + "" + ChatColor.RESET;
+        if (line == 12) return ChatColor.STRIKETHROUGH + "" + ChatColor.RESET;
+        if (line == 13) return ChatColor.MAGIC + "" + ChatColor.RESET;
+        if (line == 14) return ChatColor.DARK_RED + "" + ChatColor.RESET;
         return null;
     }
 
@@ -326,9 +303,7 @@ public class ScoreboardManager {
             }
         }
 
-        if (returnString.contains("%kills%")) {
-            returnString = returnString.replace("%kills%", uhcPlayer.kills + "");
-        }
+        if (returnString.contains("%kills%")) { returnString = returnString.replace("%kills%", uhcPlayer.kills + ""); }
 
         if (returnString.contains("%teamKills%")) {
             returnString = returnString.replace("%teamKills%", uhcPlayer.getTeam().getKills() + "");
@@ -342,9 +317,7 @@ public class ScoreboardManager {
 
             int size = (int) bukkitPlayer.getWorld().getWorldBorder().getSize() / 2;
 
-            if (size == 30000000) {
-                size = 0;
-            }
+            if (size == 30000000) { size = 0; }
 
             String borderString = "+" + size + " -" + size;
 
@@ -432,9 +405,8 @@ public class ScoreboardManager {
                     String.format("%.2f", VaultManager.getPlayerMoney(bukkitPlayer)));
         }
 
-        if (returnString.contains("%userScore%"))
-            returnString = returnString.replace("%userScore%",
-                    String.format("%.2f", gm.getPlayersManager().getScoreKeeper().getScore(uhcPlayer)));
+        if (returnString.contains("%userScore%")) returnString = returnString.replace("%userScore%",
+                String.format("%.2f", gm.getPlayersManager().getScoreKeeper().getScore(uhcPlayer)));
 
         // Parse custom placeholders
         for (Placeholder placeholder : placeholders) {
@@ -454,8 +426,5 @@ public class ScoreboardManager {
      * 
      * @param placeholder The placeholder you want to register.
      */
-    public void registerPlaceholder(Placeholder placeholder) {
-        placeholders.add(placeholder);
-    }
-
+    public void registerPlaceholder(Placeholder placeholder) { placeholders.add(placeholder); }
 }

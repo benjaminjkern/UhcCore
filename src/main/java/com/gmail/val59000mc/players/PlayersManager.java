@@ -45,7 +45,7 @@ import java.util.*;
 
 public class PlayersManager {
 
-	private List<UhcPlayer> players;
+	private final List<UhcPlayer> players;
 	private long lastDeathTime;
 	private ScoreKeeper scoreKeeper;
 
@@ -212,7 +212,6 @@ public class PlayersManager {
 				setPlayerWaitsAtLobby(uhcPlayer);
 
 				if (gm.getConfiguration().getAutoAssignNewPlayerTeam()) { autoAssignPlayerToTeam(uhcPlayer); }
-				uhcPlayer.sendPrefixedMessage(Lang.PLAYERS_WELCOME_NEW);
 				break;
 			case PLAYING:
 				setPlayerStartPlaying(uhcPlayer);
@@ -280,7 +279,7 @@ public class PlayersManager {
 					&& team.getMembers().size() < gm.getConfiguration().getMaxPlayersPerTeam()) {
 				try {
 					team.join(uhcPlayer);
-				} catch (UhcTeamException e) {}
+				} catch (UhcTeamException ignored) {}
 				break;
 			}
 		}
@@ -408,7 +407,7 @@ public class PlayersManager {
 		if (cfg.getEnableBungeeSupport() && cfg.getTimeBeforeSendBungeeAfterEnd() >= 0) {
 			for (UhcPlayer player : getPlayersList()) {
 				Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(),
-						new TimeBeforeSendBungeeThread(player, cfg.getTimeBeforeSendBungeeAfterEnd()));
+						new TimeBeforeSendBungeeThread(this, player, cfg.getTimeBeforeSendBungeeAfterEnd()));
 			}
 		}
 
@@ -460,7 +459,7 @@ public class PlayersManager {
 	}
 
 	private List<UhcPlayer> getWinners() {
-		List<UhcPlayer> winners = new ArrayList<UhcPlayer>();
+		List<UhcPlayer> winners = new ArrayList<>();
 		for (UhcPlayer player : getPlayersList()) {
 			try {
 				Player connected = player.getPlayer();
@@ -473,7 +472,7 @@ public class PlayersManager {
 	}
 
 	public List<UhcTeam> listUhcTeams() {
-		List<UhcTeam> teams = new ArrayList<UhcTeam>();
+		List<UhcTeam> teams = new ArrayList<>();
 		for (UhcPlayer player : getPlayersList()) {
 			UhcTeam team = player.getTeam();
 			if (!teams.contains(team)) teams.add(team);
@@ -514,18 +513,14 @@ public class PlayersManager {
 
 			for (UhcPlayer uhcPlayer : team.getMembers()) { gm.getPlayersManager().setPlayerStartPlaying(uhcPlayer); }
 
-			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new TeleportPlayersThread(team),
-					delayTeleportByTeam);
+			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
+					new TeleportPlayersThread(GameManager.getGameManager(), team), delayTeleportByTeam);
 			Bukkit.getLogger().info("[UhcCore] Teleporting a team in " + delayTeleportByTeam + " ticks");
 			delayTeleportByTeam += 10; // ticks
 		}
 
-		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new Runnable() {
-
-			@Override
-			public void run() { GameManager.getGameManager().startWatchingEndOfGame(); }
-
-		}, delayTeleportByTeam + 20);
+		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
+				() -> GameManager.getGameManager().startWatchingEndOfGame(), delayTeleportByTeam + 20);
 
 	}
 
@@ -723,7 +718,8 @@ public class PlayersManager {
 			Bukkit.getPluginManager().callEvent(new PlayerStartsPlayingEvent(uhcPlayer));
 		}
 
-		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new CheckRemainingPlayerThread(), 40);
+		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
+				new CheckRemainingPlayerThread(GameManager.getGameManager()), 40);
 	}
 
 	public void sendPlayerToBungeeServer(Player player) {

@@ -6,6 +6,7 @@ import com.gmail.val59000mc.configuration.VaultManager;
 import com.gmail.val59000mc.customitems.UhcItems;
 import com.gmail.val59000mc.events.UhcPlayerKillEvent;
 import com.gmail.val59000mc.game.GameManager;
+import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.PlayersManager;
@@ -40,9 +41,17 @@ public class PlayerDeathListener implements Listener {
 		MainConfiguration cfg = gm.getConfiguration();
 		UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
 
+		if (gm.getGameState() == GameState.WAITING || gm.getGameState() == GameState.STARTING) {
+			if (cfg.getEnableBungeeSupport()) {
+				pm.sendPlayerToBungeeServer(player);
+			} else {
+				player.kickPlayer("Oof");
+			}
+		}
+
 		if (uhcPlayer.getState() != PlayerState.PLAYING) {
 			Bukkit.getLogger().warning("[UhcCore] " + player.getName() + " died while already in 'DEAD' mode!");
-			player.kickPlayer("Don't cheat!");
+			// player.kickPlayer("Don't cheat!");
 			return;
 		}
 
@@ -108,7 +117,6 @@ public class PlayerDeathListener implements Listener {
 
 				Skull skull = (Skull) loc.getBlock().getState();
 				VersionUtils.getVersionUtils().setSkullOwner(skull, uhcPlayer);
-				skull.setRotation(BlockFace.NORTH);
 				skull.update();
 			} else {
 				event.getDrops().add(UhcItems.createGoldenHeadPlayerSkull(player.getName(), player.getUniqueId()));
@@ -128,7 +136,7 @@ public class PlayerDeathListener implements Listener {
 		if (!canContinueToSpectate) {
 			if (cfg.getEnableBungeeSupport()) {
 				Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(),
-						new TimeBeforeSendBungeeThread(uhcPlayer, cfg.getTimeBeforeSendBungeeAfterDeath()));
+						new TimeBeforeSendBungeeThread(pm, uhcPlayer, cfg.getTimeBeforeSendBungeeAfterDeath()));
 			} else {
 				player.kickPlayer(Lang.DISPLAY_MESSAGE_PREFIX + " " + Lang.KICK_DEAD);
 			}
