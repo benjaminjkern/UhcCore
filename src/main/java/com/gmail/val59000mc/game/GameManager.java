@@ -31,9 +31,13 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.event.Listener;
 import com.gmail.val59000mc.scenarios.DogNameGenerator;
+import com.gmail.val59000mc.threads.LobbySocketThread;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,8 +60,11 @@ public class GameManager {
 	private int episodeNumber;
 	private long remainingTime;
 	private long elapsedTime;
+
 	private DogNameGenerator dogNames;
 	private int startPlayers;
+	private Socket lobbySocket;
+	private PrintWriter lobbyOutputStream;
 
 	private static GameManager gameManager;
 
@@ -71,6 +78,8 @@ public class GameManager {
 		scoreboardManager = new ScoreboardManager();
 		scenarioManager = new ScenarioManager();
 		dogNames = new DogNameGenerator();
+
+		Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new LobbySocketThread());
 
 		episodeNumber = 0;
 		elapsedTime = 0;
@@ -97,6 +106,41 @@ public class GameManager {
 	public Lobby getLobby() { return lobby; }
 
 	public DeathmatchArena getArena() { return arena; }
+
+	public PrintWriter getLobbyOutputStream() { return lobbyOutputStream; }
+
+	public void setLobbySocket(Socket s) {
+		lobbySocket = s;
+		try {
+			lobbyOutputStream = new PrintWriter(lobbySocket.getOutputStream(), true);
+		} catch (Exception e) {
+			// not really sure what to do if this fails
+		}
+	}
+
+	public void sendInfoToServer(String s) {
+		if (lobbyOutputStream != null) {
+			lobbyOutputStream.println(s);
+			if (!lobbyOutputStream.checkError()) return;
+		}
+
+		try {
+			setLobbySocket(new Socket("localhost", 58901));
+		} catch (Exception e) {
+			lobbySocket = null;
+			lobbyOutputStream = null;
+			return;
+		}
+
+		Bukkit.getLogger().info("Connected to lobby server.");
+
+		// send all information when created, slightly redundant but whatever
+		sendInfoToServer("SERVERNAME:" + "solo0");
+		sendInfoToServer("MINSIZE:" + getConfiguration().getMinPlayersToStart());
+		sendInfoToServer("MAXSIZE:" + Bukkit.getMaxPlayers());
+		sendInfoToServer("GAMESTATE:" + getGameState().name());
+		sendInfoToServer("CURRENTSIZE:" + Bukkit.getOnlinePlayers().size());
+	}
 
 	public boolean getGameIsEnding() { return gameIsEnding; }
 
@@ -131,6 +175,8 @@ public class GameManager {
 
 		GameState oldGameState = this.gameState;
 		this.gameState = gameState;
+
+		sendInfoToServer("GAMESTATE:" + gameState.name());
 
 		// Call UhcGameStateChangedEvent
 		Bukkit.getPluginManager().callEvent(new UhcGameStateChangedEvent(oldGameState, gameState));
@@ -579,5 +625,7 @@ public class GameManager {
 			EndThread.stop();
 		}
 	}
+
+	public Socket getLobbySocket() { return lobbySocket; }
 
 }

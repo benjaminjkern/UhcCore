@@ -212,7 +212,6 @@ public class PlayersManager {
 				setPlayerWaitsAtLobby(uhcPlayer);
 
 				if (gm.getConfiguration().getAutoAssignNewPlayerTeam()) { autoAssignPlayerToTeam(uhcPlayer); }
-				uhcPlayer.sendPrefixedMessage(Lang.PLAYERS_WELCOME_NEW);
 				break;
 			case PLAYING:
 				setPlayerStartPlaying(uhcPlayer);

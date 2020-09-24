@@ -44,3 +44,8 @@ I (Ben Kern) forked this from Mezy because I wanted to run my own private server
 - Fly high now spawns you high and also negates fall damage.
 - Lucky Leaves now sets apples to spawn at 5%, golden apples at 0.5%, and enchanted golden apples at 0.05%, not mutually exclusive. Also it sets the ability for all trees to drop apples. This is an option in the config
 - Achievement Hunter was printing a lot to console.
+
+### Changes that don't have to do with this plugin cuz I'm just running a server now at this point
+
+- Creative Lobby that queues people into games
+- Bungee supports older versions of mc

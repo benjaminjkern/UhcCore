@@ -1,5 +1,7 @@
 package com.gmail.val59000mc.listeners;
 
+import java.io.PrintWriter;
+
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.exceptions.UhcPlayerJoinException;
 import com.gmail.val59000mc.exceptions.UhcTeamException;
@@ -17,71 +19,77 @@ import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-public class PlayerConnectionListener implements Listener{
-	
-	@EventHandler(priority=EventPriority.HIGHEST)
-	public void onPlayerLogin(PlayerLoginEvent event){
+public class PlayerConnectionListener implements Listener {
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onPlayerLogin(PlayerLoginEvent event) {
 		GameManager gm = GameManager.getGameManager();
 
-		// Player is not allowed to join so don't create UhcPlayer. (Server full, whitelist, ban, ...)
-		if (event.getResult() != Result.ALLOWED){
-			return;
-		}
-		
-		try{
+		// Player is not allowed to join so don't create UhcPlayer. (Server full,
+		// whitelist, ban, ...)
+		if (event.getResult() != Result.ALLOWED) { return; }
+
+		try {
 			boolean allowedToJoin = gm.getPlayersManager().isPlayerAllowedToJoin(event.getPlayer());
 
-			if (allowedToJoin){
+			if (allowedToJoin) {
 				// Create player if not existent.
 				gm.getPlayersManager().getOrCreateUhcPlayer(event.getPlayer());
-			}else{
+			} else {
 				throw new UhcPlayerJoinException("An unexpected error as occured.");
 			}
-		}catch(final UhcPlayerJoinException e){
+		} catch (final UhcPlayerJoinException e) {
 			event.setKickMessage(e.getMessage());
 			event.setResult(Result.KICK_OTHER);
 		}
 	}
-	
-	@EventHandler(priority=EventPriority.HIGHEST)
-	public void onPlayerJoin(final PlayerJoinEvent event){
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onPlayerJoin(final PlayerJoinEvent event) {
+		GameManager.getGameManager().sendInfoToServer("CURRENTSIZE:" + (Bukkit.getOnlinePlayers().size()));
 		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new Runnable() {
-			
+
 			@Override
 			public void run() {
 				GameManager.getGameManager().getPlayersManager().playerJoinsTheGame(event.getPlayer());
 			}
 		}, 1);
-		
+
 	}
 
-	@EventHandler(priority=EventPriority.HIGHEST)
-	public void onPlayerDisconnect(PlayerQuitEvent event){
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onPlayerDisconnect(PlayerQuitEvent event) {
 		GameManager gm = GameManager.getGameManager();
-		if(gm.getGameState().equals(GameState.WAITING) || gm.getGameState().equals(GameState.STARTING)){
+
+		gm.sendInfoToServer("CURRENTSIZE:" + (Bukkit.getOnlinePlayers().size() - 1));
+
+		if (gm.getGameState().equals(GameState.WAITING) || gm.getGameState().equals(GameState.STARTING)) {
 			UhcPlayer uhcPlayer = gm.getPlayersManager().getUhcPlayer(event.getPlayer());
 
-			if(gm.getGameState().equals(GameState.STARTING)){
+			if (gm.getGameState().equals(GameState.STARTING)) {
 				gm.getPlayersManager().setPlayerSpectateAtLobby(uhcPlayer);
-				gm.broadcastInfoMessage(uhcPlayer.getName()+" has left while the game was starting and has been killed.");
+				gm.broadcastInfoMessage(
+						uhcPlayer.getName() + " has left while the game was starting and has been killed.");
 				gm.getPlayersManager().strikeLightning(uhcPlayer);
 			}
 
-			try{
+			try {
 				uhcPlayer.getTeam().leave(uhcPlayer);
-			}catch (UhcTeamException e){
+			} catch (UhcTeamException e) {
 				// Nothing
 			}
 
 			gm.getPlayersManager().getPlayersList().remove(uhcPlayer);
 		}
 
-		if(gm.getGameState().equals(GameState.PLAYING) || gm.getGameState().equals(GameState.DEATHMATCH)){
+		if (gm.getGameState().equals(GameState.PLAYING) || gm.getGameState().equals(GameState.DEATHMATCH)) {
 			UhcPlayer uhcPlayer = gm.getPlayersManager().getUhcPlayer(event.getPlayer());
-			if(gm.getConfiguration().getEnableKillDisconnectedPlayers() && uhcPlayer.getState().equals(PlayerState.PLAYING)){
-				Bukkit.getScheduler().runTaskLaterAsynchronously(UhcCore.getPlugin(), new KillDisconnectedPlayerThread(event.getPlayer().getUniqueId()),1);
+			if (gm.getConfiguration().getEnableKillDisconnectedPlayers()
+					&& uhcPlayer.getState().equals(PlayerState.PLAYING)) {
+				Bukkit.getScheduler().runTaskLaterAsynchronously(UhcCore.getPlugin(),
+						new KillDisconnectedPlayerThread(event.getPlayer().getUniqueId()), 1);
 			}
-			if(gm.getConfiguration().getSpawnOfflinePlayers() && uhcPlayer.getState().equals(PlayerState.PLAYING)){
+			if (gm.getConfiguration().getSpawnOfflinePlayers() && uhcPlayer.getState().equals(PlayerState.PLAYING)) {
 				gm.getPlayersManager().spawnOfflineZombieFor(event.getPlayer());
 			}
 			gm.getPlayersManager().checkIfRemainingPlayers();
