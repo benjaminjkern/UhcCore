@@ -427,5 +427,4 @@ public class ScoreboardManager {
      * @param placeholder The placeholder you want to register.
      */
     public void registerPlaceholder(Placeholder placeholder) { placeholders.add(placeholder); }
-
 }
