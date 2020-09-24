@@ -1,6 +1,6 @@
 package com.gmail.val59000mc.customitems;
 
-import com.gmail.val59000mc.game.GameManager;
+import com.gmail.val59000mc.configuration.MainConfiguration;
 import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -10,10 +10,10 @@ import java.util.List;
 
 public class Kit{
 
-	private String key;
+	private final String key;
 	private String name;
 	private ItemStack symbol;
-	private List<ItemStack> items;
+	private final List<ItemStack> items;
 
 	private Kit(String key){
 		this.key = key;
@@ -36,16 +36,15 @@ public class Kit{
 		return items.toArray(new ItemStack[]{});
 	}
 
-	public boolean canBeUsedBy(Player player){
-		GameManager gm = GameManager.getGameManager();
-		return !gm.getConfiguration().getEnableKitsPermissions() || player.hasPermission("uhc-core.kit."+key);
+	public boolean canBeUsedBy(Player player, MainConfiguration configuration){
+		return !configuration.getEnableKitsPermissions() || player.hasPermission("uhc-core.kit."+key);
 	}
 
 	/**
 	 * This class is used to create kits.
 	 */
 	public static class Builder{
-		private Kit kit;
+		private final Kit kit;
 
 		/**
 		 * Builder constructor

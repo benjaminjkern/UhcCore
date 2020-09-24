@@ -128,8 +128,8 @@
   - Ghast: Make a ghast shot be a superpower you can get like you activate it by sneaking (Can use 5 in a row then must cool down for 15 seconds)
   - Creeper: Explosion resistance and when you sneak, primed tnt spawns at your feet (Cooldown: 15 seconds)
   - Iceman: Whenever you deal damage to a player, they get slowed and mining fatigue. Also you can encase yourself in ice by sneaking (Cooldown: 1 minute and the ice goes away after 10 seconds)
-  - Necromancer: Press sneak to summon a (will not attack you) (Cooldown: 1 minute).
-    - Whenever you are attacked by another player, a skeleton or zombie will spawn and try to kill the person who attacked you. (Once per player)
+  - Necromancer: Press sneak to summon a (will not attack you) zombies (Cooldown: 1 minute).
+    - Whenever you are attacked by another player, a skeleton or zombie will spawn and try to kill the person who attacked you. (Once per player) has a chance of spawning a wither skeleton
   - Vampire: You get back 5% of the damage you deal to living things (Maybe cool blood effects as well)
   - Lucky: Breaking cobblestonen or other types of stone has a 10% chance of dropping an ore, all ores are equally likely (If on king midas mode, its always gold)
   - Potionmaster: sneak to toss a random splash potion. If you're facing downward (Like lower than 45 degrees), it will be good. Otherwise it will be bad. You don't get resistance from any of them. (Cooldown: 15 seconds)
@@ -140,13 +140,12 @@
 - Infected: When you die a zombie spawn holding your stuff (Perhaps multiple zombies depending on how hard we want it to be)
 - Everyone gets (the same) random potion effect every minute, have it only last like 5 seconds and it won’t be super strong
 - Arrows are replaced with a random mob, including skeleton arrows
-- Lava is replaced with water, vice versa, this one might be hard to do cuz it would have to be on world gen
 - Every minute you must be standing on a specific block
 - You cannot damage players with swords, only using other methods like fire or lava or wolves or monsters or tnt (Maybe bows)
-- Explosive Gang: Everyone gets flint and steel with unbreaking, a stack of creeper eggs, a stack of fire charges, a stack of tnt, and a stack of end crystals
+- Explosive Gang: Everyone gets flint and steel with unbreaking, a stack of creeper eggs, a stack of fire charges, a stack of tnt
 - Gulag: When you die, you go to a gulag and battle 1v1
 - Farmer: Amass the biggest army of animals and have them fight for you
-- Sleeper agent: Beds explode when you try to sleep in them in the overworld like youre in the end/nether
+- Beds explode when you try to sleep in them in the overworld like youre in the end/nether
 - Assassin: Every player has 1 person they are trying to kill, and they are given a compass that points towards that person and that person is glowing for them.
   - This is the only person they are allowed to kill. If that person dies on their own, your compass points towards the next person in the cycle.
   - If you try to kill anyone else, the kill is cancelled and you die instead
@@ -158,7 +157,7 @@
 - Buy teammates back with gold or Buy dead players not on your team back
 - Being on fire or in lava heals you, while water poisons you
 - Your max health is 1 heart for the whole game, and you're invulnerable for the first ten minutes.
-- Juggernaut: 1 person is given diamond armor, a diamond sword, a diamond pickaxe, resistance, and double health. It is 1 v everyone else.
+- Juggernaut: 1 person is given netherite armor, a netherite sword, a netherite pickaxe, resistance, and double health. It is 1 v everyone else.
 - Wither Rush: A wither is spawned in the middle of the map Starting at 10 minutesKill it to win.
 - Contracts: Kill a specific player within a time frame and win a prize
 - You can only die when the timer ends in a specific number, everyone gets a different one and theyre a secret (Or maybe theyre not)
@@ -182,6 +181,7 @@
 - Every player is disguised as a block (A rare block) that snaps to the grid if you stay still for 5 seconds
 - Idk if its possible but Play the game as chickens (low to the ground and Other players see you as a chicken also you float down to the ground instead of falling)
 - King of the hill: Everyone gets a map, Whoever has the most kills or the most hearts if its a tie is glowing on everyone's map
+- King of the hill: A crown
 - You and someone else (Who you are not on a team with) have health bars swapped. But you cant just try to kill yourself because you die when they die.
 - Tourettes : You will occasionally swing or place blocks or say things in the chat or drop the item in your hand and you cannot control it
 - Anvils drop on everyone's head every 20 seconds

@@ -15,7 +15,7 @@ import com.gmail.val59000mc.players.UhcTeam;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioManager;
 import com.gmail.val59000mc.utils.UniversalMaterial;
-import net.wesjd.anvilgui.AnvilGUI;
+// import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -112,7 +112,7 @@ public class ItemsListener implements Listener {
 			if (KitsManager.isKitItem(item)) {
 				event.setCancelled(true);
 				Kit kit = KitsManager.getKitByName(item.getItemMeta().getDisplayName());
-				if (kit.canBeUsedBy(player)) {
+				if (kit.canBeUsedBy(player, gm.getConfiguration())) {
 					uhcPlayer.setKit(kit);
 					uhcPlayer.sendMessage(Lang.ITEMS_KIT_SELECTED.replace("%kit%", kit.getName()));
 				} else {
@@ -313,25 +313,30 @@ public class ItemsListener implements Listener {
 	}
 
 	private void openTeamRenameGUI(Player player, UhcTeam team) {
-		new AnvilGUI.Builder().plugin(UhcCore.getPlugin()).title(Lang.TEAM_INVENTORY_RENAME).text(team.getTeamName())
-				.item(new ItemStack(Material.NAME_TAG)).onComplete(((p, s) -> {
-					if (GameManager.getGameManager().getTeamManager().isValidTeamName(s)) {
-						team.setTeamName(s);
-						p.sendMessage(Lang.TEAM_MESSAGE_NAME_CHANGED);
-						return AnvilGUI.Response.close();
-					} else {
-						p.sendMessage(Lang.TEAM_MESSAGE_NAME_CHANGED_ERROR);
-						return AnvilGUI.Response.close();
-					}
-				})).open(player);
+		player.sendMessage("AnvilGUI isn't working at the moment! Idk why");
+		// new
+		// AnvilGUI.Builder().plugin(UhcCore.getPlugin()).title(Lang.TEAM_INVENTORY_RENAME).text(team.getTeamName())
+		// .item(new ItemStack(Material.NAME_TAG)).onComplete(((p, s) -> {
+		// if (GameManager.getGameManager().getTeamManager().isValidTeamName(s)) {
+		// team.setTeamName(s);
+		// p.sendMessage(Lang.TEAM_MESSAGE_NAME_CHANGED);
+		// return AnvilGUI.Response.close();
+		// } else {
+		// p.sendMessage(Lang.TEAM_MESSAGE_NAME_CHANGED_ERROR);
+		// return AnvilGUI.Response.close();
+		// }
+		// })).open(player);
 	}
 
 	private void openTeamInviteGUI(Player player) {
-		new AnvilGUI.Builder().plugin(UhcCore.getPlugin()).title(Lang.TEAM_INVENTORY_INVITE_PLAYER)
-				.text("Enter name ...").item(new ItemStack(Material.NAME_TAG)).onComplete(((p, s) -> {
-					p.performCommand("team invite " + s);
-					return AnvilGUI.Response.close();
-				})).open(player);
+		player.sendMessage("AnvilGUI isn't working at the moment! Idk why");
+		// new
+		// AnvilGUI.Builder().plugin(UhcCore.getPlugin()).title(Lang.TEAM_INVENTORY_INVITE_PLAYER)
+		// .text("Enter name ...").item(new
+		// ItemStack(Material.NAME_TAG)).onComplete(((p, s) -> {
+		// p.performCommand("team invite " + s);
+		// return AnvilGUI.Response.close();
+		// })).open(player);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
@@ -347,8 +352,8 @@ public class ItemsListener implements Listener {
 	}
 
 	private static class CheckBrewingStandAfterClick implements Runnable {
-		private BrewingStand stand;
-		private HumanEntity human;
+		private final BrewingStand stand;
+		private final HumanEntity human;
 
 		private CheckBrewingStandAfterClick(BrewingStand stand, HumanEntity human) {
 			this.stand = stand;
@@ -369,14 +374,10 @@ public class ItemsListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerDropItem(PlayerDropItemEvent event) {
-		Player player = event.getPlayer();
 		ItemStack item = event.getItemDrop().getItemStack();
 		GameManager gm = GameManager.getGameManager();
 
-		if (gm.getGameState() == GameState.WAITING) {
-			event.setCancelled(true);
-			return;
-		}
+		if (gm.getGameState() == GameState.WAITING) { event.setCancelled(true); }
 	}
 
 	@EventHandler
@@ -430,8 +431,7 @@ public class ItemsListener implements Listener {
 
 			// Send scenario info
 			player.sendMessage(Lang.SCENARIO_GLOBAL_DESCRIPTION_HEADER.replace("%scenario%", scenario.getName()));
-			scenario.getDescription()
-					.forEach(s -> { player.sendMessage(Lang.SCENARIO_GLOBAL_DESCRIPTION_PREFIX + s); });
+			scenario.getDescription().forEach(s -> player.sendMessage(Lang.SCENARIO_GLOBAL_DESCRIPTION_PREFIX + s));
 		} else if (editInventory) {
 			// Handle back item
 			if (item.getItemMeta().getDisplayName().equals(Lang.SCENARIO_GLOBAL_ITEM_BACK)) {

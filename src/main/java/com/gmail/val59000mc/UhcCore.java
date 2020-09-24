@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 public class UhcCore extends JavaPlugin {
 
@@ -25,6 +24,7 @@ public class UhcCore extends JavaPlugin {
 	private static UhcCore pl;
 	private static int version;
 	private boolean bStats;
+	private GameManager gameManager;
 	private Updater updater;
 
 	@Override
@@ -34,20 +34,8 @@ public class UhcCore extends JavaPlugin {
 		loadServerVersion();
 		addBStats();
 
-		Bukkit.getScheduler().runTaskLater(this, new Runnable() {
-
-			@Override
-			public void run() {
-
-				GameManager gm = GameManager.getGameManager();
-				if (gm != null) {
-					gm.getPlayersManager().getScoreKeeper().storeData();
-					GameState oldGameState = gm.getGameState();
-					new GameManager().loadNewGame(oldGameState);
-				} else new GameManager().loadNewGame();
-			}
-
-		}, 1);
+		gameManager = new GameManager();
+		Bukkit.getScheduler().runTaskLater(this, () -> gameManager.loadNewGame(), 1);
 
 		updater = new Updater(this);
 
@@ -74,91 +62,56 @@ public class UhcCore extends JavaPlugin {
 		Metrics metrics = new Metrics(this);
 		bStats = metrics.isEnabled();
 
-		metrics.addCustomChart(new Metrics.SingleLineChart("game_count", new Callable<Integer>() {
-			@Override
-			public Integer call() throws Exception {
-				YamlFile storage = FileUtils.saveResourceIfNotAvailable("storage.yml", true);
+		metrics.addCustomChart(new Metrics.SingleLineChart("game_count", () -> {
+			YamlFile storage = FileUtils.saveResourceIfNotAvailable("storage.yml", true);
 
-				List<Long> games = storage.getLongList("games");
-				List<Long> recentGames = new ArrayList<>();
+			List<Long> games = storage.getLongList("games");
+			List<Long> recentGames = new ArrayList<>();
 
-				// only keep games for an hour
-				for (long game : games) {
-					if (game + TimeUtils.HOUR > System.currentTimeMillis()) { recentGames.add(game); }
-				}
-
-				storage.set("games", recentGames);
-				storage.save();
-				return recentGames.size();
+			for (long game : games) {
+				if (game + TimeUtils.HOUR > System.currentTimeMillis()) { recentGames.add(game); }
 			}
+
+			storage.set("games", recentGames);
+			storage.save();
+			return recentGames.size();
 		}));
 
-		metrics.addCustomChart(new Metrics.SimplePie("team_size", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return String.valueOf(GameManager.getGameManager().getConfiguration().getMaxPlayersPerTeam());
+		metrics.addCustomChart(new Metrics.SimplePie("team_size",
+				() -> String.valueOf(gameManager.getConfiguration().getMaxPlayersPerTeam())));
+
+		metrics.addCustomChart(new Metrics.SimplePie("nether",
+				() -> (gameManager.getConfiguration().getEnableNether() ? "enabled" : "disabled")));
+
+		metrics.addCustomChart(new Metrics.AdvancedPie("scenarios", () -> {
+			Map<String, Integer> scenarios = new HashMap<>();
+
+			for (Scenario scenario : gameManager.getScenarioManager().getActiveScenarios()) {
+				scenarios.put(scenario.getName(), 1);
 			}
+
+			return scenarios;
 		}));
 
-		metrics.addCustomChart(new Metrics.SimplePie("nether", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return (GameManager.getGameManager().getConfiguration().getEnableNether() ? "enabled" : "disabled");
-			}
+		metrics.addCustomChart(new Metrics.SimplePie("the_end",
+				() -> (gameManager.getConfiguration().getEnableTheEnd() ? "enabled" : "disabled")));
+
+		metrics.addCustomChart(new Metrics.SimplePie("team_colors",
+				() -> (gameManager.getConfiguration().getUseTeamColors() ? "enabled" : "disabled")));
+
+		metrics.addCustomChart(new Metrics.SimplePie("deathmatch", () -> {
+			if (!gameManager.getConfiguration().getEnableTimeLimit()) { return "No deathmatch"; }
+
+			if (gameManager.getArena().isUsed()) { return "Arena deathmatch"; }
+
+			return "Center deatchmatch";
 		}));
 
-		metrics.addCustomChart(new Metrics.AdvancedPie("scenarios", new Callable<Map<String, Integer>>() {
-			@Override
-			public Map<String, Integer> call() throws Exception {
-				Map<String, Integer> scenarios = new HashMap<>();
+		metrics.addCustomChart(new Metrics.SimplePie("auto_update",
+				() -> (gameManager.getConfiguration().getEnableAutoUpdate() ? "enabled" : "disabled")));
 
-				for (Scenario scenario : GameManager.getGameManager().getScenarioManager().getActiveScenarios()) {
-					scenarios.put(scenario.getName(), 1);
-				}
-
-				return scenarios;
-			}
-		}));
-
-		metrics.addCustomChart(new Metrics.SimplePie("the_end", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return (GameManager.getGameManager().getConfiguration().getEnableTheEnd() ? "enabled" : "disabled");
-			}
-		}));
-
-		metrics.addCustomChart(new Metrics.SimplePie("team_colors", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return (GameManager.getGameManager().getConfiguration().getUseTeamColors() ? "enabled" : "disabled");
-			}
-		}));
-
-		metrics.addCustomChart(new Metrics.SimplePie("deathmatch", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				if (!GameManager.getGameManager().getConfiguration().getEnableTimeLimit()) { return "No deathmatch"; }
-
-				if (GameManager.getGameManager().getArena().isUsed()) { return "Arena deathmatch"; }
-
-				return "Center deatchmatch";
-			}
-		}));
-
-		metrics.addCustomChart(new Metrics.SimplePie("auto_update", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return (GameManager.getGameManager().getConfiguration().getEnableAutoUpdate() ? "enabled" : "disabled");
-			}
-		}));
-
-		metrics.addCustomChart(new Metrics.SimplePie("replace_oceans", new Callable<String>() {
-			@Override
-			public String call() throws Exception {
-				return (GameManager.getGameManager().getConfiguration().getReplaceOceanBiomes() ? "enabled"
-						: "disabled");
-			}
-		}));
+		metrics.addCustomChart(new Metrics.SimplePie("replace_oceans",
+				() -> (gameManager.getConfiguration().getReplaceOceanBiomes() ? "enabled" : "disabled")));
 	}
 
 	// This collects the amount of games started. They are stored anonymously by
@@ -211,8 +164,8 @@ public class UhcCore extends JavaPlugin {
 		// kick anyone who might be on
 		Bukkit.getServer().getOnlinePlayers().forEach(player -> { player.kickPlayer("Server Restarting"); });
 
-		GameManager.getGameManager().getPlayersManager().getScoreKeeper().storeData();
-		GameManager.getGameManager().getScenarioManager().disableAllScenarios();
+		gameManager.getPlayersManager().getScoreKeeper().storeData();
+		gameManager.getScenarioManager().disableAllScenarios();
 
 		storeGameRunning();
 

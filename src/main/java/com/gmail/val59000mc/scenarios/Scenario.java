@@ -81,9 +81,9 @@ public enum Scenario {
     TEAMINVENTORY(UniversalMaterial.CHEST); // same as above, had issues with disabling
 
     private String name;
-    private UniversalMaterial material;
-    private Class<? extends ScenarioListener> listener;
-    private int fromVersion;
+    private final UniversalMaterial material;
+    private final Class<? extends ScenarioListener> listener;
+    private final int fromVersion;
     private boolean isNew;
     private List<String> description;
 
