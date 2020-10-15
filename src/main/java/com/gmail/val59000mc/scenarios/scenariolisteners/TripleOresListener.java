@@ -20,7 +20,7 @@ public class TripleOresListener extends ScenarioListener {
 
     public static Map<Material, Ore> ores;
 
-    public TripleOresListener() {
+    static {
         ores = new HashMap<>();
         ores.put(Material.IRON_ORE, new Ore(Material.IRON_ORE));
         ores.put(Material.COAL_ORE, new Ore(Material.COAL_ORE, 0, 2, Material.COAL));
@@ -56,8 +56,7 @@ public class TripleOresListener extends ScenarioListener {
 
         ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
 
-        if (!UniversalMaterial.isCorrectTool(block.getType(), hand.getType()))
-            return;
+        if (!UniversalMaterial.isCorrectTool(block.getType(), hand.getType())) return;
 
         Location loc = e.getBlock().getLocation().add(0.5, 0, 0.5);
         boolean silkTouch = hand.containsEnchantment(Enchantment.SILK_TOUCH);
@@ -70,11 +69,12 @@ public class TripleOresListener extends ScenarioListener {
                     .dropItem(loc, new ItemStack(thisOre.getMaterial(silkTouch), 3
                             * thisOre.getAmount(silkTouch, fortuneLevel)
                             * (isActivated(Scenario.DOUBLEGOLD) && thisOre.silkMaterial == Material.GOLD_ORE ? 2 : 1)));
-            UhcItems.spawnExtraXp(loc, thisOre.getExp(silkTouch));
+            int exp = thisOre.getExp(silkTouch);
+            if (exp > 0) UhcItems.spawnExtraXp(loc, exp);
         }
     }
 
-    private class Ore {
+    private static class Ore {
         final Material silkMaterial, material;
         final int lowExp, highExp, lowAmount, highAmount;
 
@@ -106,20 +106,17 @@ public class TripleOresListener extends ScenarioListener {
         }
 
         Material getMaterial(boolean silkTouch) {
-            if (silkTouch)
-                return silkMaterial;
+            if (silkTouch) return silkMaterial;
             return material;
         }
 
         int getAmount(boolean silkTouch, int fortuneLevel) {
-            if (silkTouch)
-                return 1;
+            if (silkTouch) return 1;
             return RandomUtils.randomInteger(lowAmount, highAmount) * getFortune(fortuneLevel);
         }
 
         private int getFortune(int fortuneLevel) {
-            if (silkMaterial == material)
-                return 1;
+            if (silkMaterial == material) return 1;
 
             double r = Math.random() * 60;
             switch (fortuneLevel) {
@@ -135,8 +132,7 @@ public class TripleOresListener extends ScenarioListener {
         }
 
         int getExp(boolean silkTouch) {
-            if (silkTouch || silkMaterial == material)
-                return 0;
+            if (silkTouch || silkMaterial == material) return 0;
             return RandomUtils.randomInteger(lowExp, highExp);
         }
     }

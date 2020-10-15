@@ -7,6 +7,7 @@ import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.UhcTeam;
 import com.gmail.val59000mc.utils.UniversalSound;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 
@@ -54,11 +55,14 @@ public class PreStartThread implements Runnable {
 
 		if (force && remainingTime > 5) remainingTime = 5;
 
-		if (force || (!pause && (remainingTime < 5 || (playersNumber >= minPlayers
+		// if its 5 seconds or less,
+		if (force || (!pause && (remainingTime <= 5 || (playersNumber >= minPlayers
 				&& readyTeams >= gameManager.getConfiguration().getMinimalReadyTeamsToStart()
 				&& percentageReadyTeams >= gameManager.getConfiguration().getMinimalReadyTeamsPercentageToStart())))) {
+
 			if (remainingTime == timeBeforeStart + 1) {
 				gameManager.broadcastInfoMessage(Lang.GAME_ENOUGH_TEAMS_READY);
+			} else if (remainingTime == timeBeforeStart) {
 				gameManager
 						.broadcastInfoMessage(Lang.GAME_STARTING_IN.replace("%time%", String.valueOf(remainingTime)));
 				gameManager.getPlayersManager().playSoundToAll(UniversalSound.CLICK);
@@ -78,6 +82,11 @@ public class PreStartThread implements Runnable {
 		} else {
 			if (!pause && remainingTime < timeBeforeStart + 1) {
 				gameManager.broadcastInfoMessage(Lang.GAME_STARTING_CANCELLED);
+			} else {
+				if (playersNumber < minPlayers) {
+					for (Player p : Bukkit.getOnlinePlayers())
+						gameManager.getPlayersManager().sendPlayerToBungeeServer(p);
+				}
 			}
 			remainingTime = timeBeforeStart + 1;
 			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), this, 20);

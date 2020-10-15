@@ -26,15 +26,23 @@ import com.gmail.val59000mc.utils.*;
 import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.World.Environment;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.mcmonkey.sentinel.SentinelTrait;
+import org.mcmonkey.sentinel.targeting.SentinelTargetLabel;
+
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPC;
+
 import com.gmail.val59000mc.scenarios.DogNameGenerator;
-import com.gmail.val59000mc.threads.LobbySocketThread;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.net.Socket;
@@ -51,10 +59,11 @@ public class GameManager {
 	private final PlayersManager playerManager;
 	private final TeamManager teamManager;
 	private final ScoreboardManager scoreboardManager;
-	private final ScenarioManager scenarioManager;
 	private final MainConfiguration configuration;
 	private final MapLoader mapLoader;
 	private final UhcWorldBorder worldBorder;
+
+	private ScenarioManager scenarioManager;
 
 	private Lobby lobby;
 	private DeathmatchArena arena;
@@ -80,14 +89,12 @@ public class GameManager {
 		playerManager = new PlayersManager();
 		teamManager = new TeamManager(playerManager);
 		scoreboardManager = new ScoreboardManager();
-		scenarioManager = new ScenarioManager();
-
-		dogNames = new DogNameGenerator();
-		Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new LobbySocketThread());
-
 		configuration = new MainConfiguration(this);
+
 		mapLoader = new MapLoader();
 		worldBorder = new UhcWorldBorder();
+
+		dogNames = new DogNameGenerator();
 
 		episodeNumber = 0;
 		elapsedTime = 0;
@@ -126,28 +133,33 @@ public class GameManager {
 		}
 	}
 
-	public void sendInfoToServer(String s) {
+	public boolean sendInfoToServer(String s, boolean reEstablish) {
 		if (lobbyOutputStream != null) {
 			lobbyOutputStream.println(s);
-			if (!lobbyOutputStream.checkError()) return;
+			if (!lobbyOutputStream.checkError()) return true;
 		}
+
+		if (!reEstablish) return false;
 
 		try {
 			setLobbySocket(new Socket("localhost", 58901));
+			Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new ReceiveScoresThread());
 		} catch (Exception e) {
 			lobbySocket = null;
 			lobbyOutputStream = null;
-			return;
+			return false;
 		}
 
-		Bukkit.getLogger().info("Connected to lobby server.");
+		Bukkit.getLogger().info("[UhcCore] Connected to lobby server.");
 
 		// send all information when created, slightly redundant but whatever
-		sendInfoToServer("SERVERNAME:" + "solo0");
-		sendInfoToServer("MINSIZE:" + getConfiguration().getMinPlayersToStart());
-		sendInfoToServer("MAXSIZE:" + Bukkit.getMaxPlayers());
-		sendInfoToServer("GAMESTATE:" + getGameState().name());
-		sendInfoToServer("CURRENTSIZE:" + Bukkit.getOnlinePlayers().size());
+		sendInfoToServer("SERVERNAME:" + getConfiguration().getServerName(), true);
+		sendInfoToServer("MINSIZE:" + getConfiguration().getMinPlayersToStart(), true);
+		sendInfoToServer("MAXSIZE:" + Bukkit.getMaxPlayers(), true);
+		sendInfoToServer("GAMESTATE:" + getGameState().name(), true);
+		sendInfoToServer("CURRENTSIZE:" + Bukkit.getOnlinePlayers().size(), true);
+
+		return true;
 	}
 
 	public boolean getGameIsEnding() { return gameIsEnding; }
@@ -184,7 +196,7 @@ public class GameManager {
 		GameState oldGameState = this.gameState;
 		this.gameState = gameState;
 
-		sendInfoToServer("GAMESTATE:" + gameState.name());
+		sendInfoToServer("GAMESTATE:" + gameState.name(), false);
 
 		// Call UhcGameStateChangedEvent
 		Bukkit.getPluginManager().callEvent(new UhcGameStateChangedEvent(oldGameState, gameState));
@@ -338,14 +350,40 @@ public class GameManager {
 		// scenario voting
 		if (configuration.getEnableScenarioVoting()) { scenarioManager.countVotes(); }
 
+		// if (fillgamewithbots) {
+		if (true) {
+
+			startPlayers = Bukkit.getMaxPlayers();
+
+			for (int i = Bukkit.getOnlinePlayers().size(); i < Bukkit.getMaxPlayers(); i++) {
+				NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, "Bot" + i);
+
+				SentinelTrait sentinel = new SentinelTrait();
+				npc.addTrait(sentinel);
+
+				new SentinelTargetLabel("monsters").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("players").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("npcs").addToList(sentinel.allTargets);
+
+				sentinel.attackRate += (int) (21 * Math.random() - 10);
+				sentinel.range = 100;
+
+				npc.spawn(Bukkit.getOnlinePlayers().iterator().next().getLocation());
+				npc.setProtected(false);
+
+				Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
+						() -> playerManager.playerJoinsTheGame((Player) npc.getEntity()), 1);
+			}
+		} else startPlayers = getPlayersManager().getAllPlayingPlayers().size();
+
+		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new UpdateBotsThread(), 20);
+
 		Bukkit.getPluginManager().callEvent(new UhcStartingEvent());
 
 		broadcastInfoMessage(Lang.GAME_STARTING);
 		broadcastInfoMessage(Lang.GAME_PLEASE_WAIT_TELEPORTING);
 		playerManager.randomTeleportTeams();
 		gameIsEnding = false;
-
-		startPlayers = getPlayersManager().getAllPlayingPlayers().size();
 	}
 
 	public void startWatchingEndOfGame() {
@@ -378,6 +416,8 @@ public class GameManager {
 		}
 
 		worldBorder.startBorderThread();
+		Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new TimeEndGameThread(this, playerManager),
+				20 * 60 * 30);
 
 		Bukkit.getPluginManager().callEvent(new UhcStartedEvent());
 		UhcCore.getPlugin().addGameToStatistics();
@@ -416,6 +456,12 @@ public class GameManager {
 		configuration.preLoad(cfg);
 		configuration.load(cfg, storage);
 
+		scenarioManager = new ScenarioManager();
+
+		// ping lobby
+		if (!configuration.getServerName().equals("test"))
+			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new LobbyPingThread(this), 20);
+
 		// Load kits
 		KitsManager.loadKits();
 
@@ -452,6 +498,7 @@ public class GameManager {
 		listeners.add(new WorldListener());
 		listeners.add(new PlayerMovementListener(playerManager));
 		listeners.add(new EntityDamageListener(this));
+		listeners.add(new ArmorListener());
 		for (Listener listener : listeners) {
 			Bukkit.getServer().getPluginManager().registerEvents(listener, UhcCore.getPlugin());
 		}
@@ -540,6 +587,8 @@ public class GameManager {
 		registerCommand("deathmatch", new DeathmatchCommandExecutor(this));
 		registerCommand("team", new TeamCommandExecutor(this));
 		registerCommand("rating", new RatingCommandExecutor());
+		registerCommand("ping", new PingCommandExecutor(this));
+		registerCommand("discord", new DiscordCommand());
 	}
 
 	private void registerCommand(String commandName, CommandExecutor executor) {
@@ -555,13 +604,14 @@ public class GameManager {
 	public void endGame() {
 		if (gameState.equals(GameState.PLAYING) || gameState.equals(GameState.DEATHMATCH)) {
 			setGameState(GameState.ENDED);
+			playerManager.getAllPlayingPlayers()
+					.forEach(uhcPlayer -> { playerManager.getScoreKeeper().envWin(uhcPlayer); });
 			pvp = false;
 			gameIsEnding = true;
 			broadcastInfoMessage(Lang.GAME_FINISHED);
+			broadcastInfoMessage("You can use \u00a7d/lobby \u00a7fto go back to the lobby.");
 			playerManager.playSoundToAll(UniversalSound.ENDERDRAGON_GROWL, 1, 2);
 			playerManager.setAllPlayersEndGame();
-			getPlayersManager().getOnlinePlayingPlayers()
-					.forEach(uhcPlayer -> { playerManager.getScoreKeeper().envWin(uhcPlayer); });
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new StopRestartThread(), 20);
 		}
 	}

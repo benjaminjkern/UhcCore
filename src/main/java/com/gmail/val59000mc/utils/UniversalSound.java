@@ -4,7 +4,7 @@ import com.gmail.val59000mc.UhcCore;
 import org.bukkit.Sound;
 
 public enum UniversalSound {
-    CLICK("CLICK", "UI_BUTTON_CLICK", "UI_BUTTON_CLICK"),
+    BLOCK_NOTE_BLOCK_HARP, CLICK("CLICK", "UI_BUTTON_CLICK", "UI_BUTTON_CLICK"),
     ENDERDRAGON_GROWL("ENDERDRAGON_GROWL", "ENTITY_ENDERDRAGON_GROWL", "ENTITY_ENDER_DRAGON_GROWL"),
     WITHER_SPAWN("WITHER_SPAWN", "ENTITY_WITHER_SPAWN", "ENTITY_WITHER_SPAWN"),
     FIREWORK_LAUNCH("FIREWORK_LAUNCH", "ENTITY_FIREWORK_LAUNCH", "ENTITY_FIREWORK_ROCKET_LAUNCH"),
@@ -14,7 +14,14 @@ public enum UniversalSound {
     private final String name8, name9, name13;
     private Sound sound;
 
-    UniversalSound(String name8, String name9, String name13){
+    UniversalSound() {
+        sound = null;
+        name13 = this.name();
+        name8 = null;
+        name9 = null;
+    }
+
+    UniversalSound(String name8, String name9, String name13) {
         this.name8 = name8;
         this.name9 = name9;
         this.name13 = name13;
@@ -22,13 +29,13 @@ public enum UniversalSound {
         sound = null;
     }
 
-    public Sound getSound(){
-        if (sound == null){
-            if (UhcCore.getVersion() < 9){
+    public Sound getSound() {
+        if (sound == null) {
+            if (UhcCore.getVersion() < 9) {
                 sound = Sound.valueOf(name8);
-            }else if (UhcCore.getVersion() < 13){
+            } else if (UhcCore.getVersion() < 13) {
                 sound = Sound.valueOf(name9);
-            }else {
+            } else {
                 sound = Sound.valueOf(name13);
             }
         }

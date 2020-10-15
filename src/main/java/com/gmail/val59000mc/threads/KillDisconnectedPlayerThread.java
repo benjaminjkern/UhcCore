@@ -12,12 +12,12 @@ import org.bukkit.entity.Player;
 import java.util.HashSet;
 import java.util.UUID;
 
-public class KillDisconnectedPlayerThread implements Runnable{
-	
+public class KillDisconnectedPlayerThread implements Runnable {
+
 	private final UUID uuid;
 	private int timeLeft;
-	
-	public KillDisconnectedPlayerThread(UUID playerUuid, int maxDisconnectPlayersTime){
+
+	public KillDisconnectedPlayerThread(UUID playerUuid, int maxDisconnectPlayersTime) {
 		uuid = playerUuid;
 		timeLeft = maxDisconnectPlayersTime;
 	}
@@ -26,36 +26,37 @@ public class KillDisconnectedPlayerThread implements Runnable{
 	public void run() {
 		GameManager gm = GameManager.getGameManager();
 
-		if(!gm.getGameState().equals(GameState.PLAYING)) {
-			return;
-		}
+		if (!gm.getGameState().equals(GameState.PLAYING)) { return; }
 
 		Player player = Bukkit.getPlayer(uuid);
 
-		if (player != null){
+		if (player != null) {
 			return; // Player is back online
 		}
 
-		if(timeLeft <= 0){
+		if (timeLeft <= 0) {
 			UhcPlayer uhcPlayer;
 			PlayersManager pm = gm.getPlayersManager();
 			try {
 				uhcPlayer = pm.getUhcPlayer(uuid);
-			} catch (UhcPlayerDoesntExistException e){
+			} catch (UhcPlayerDoesntExistException e) {
 				e.printStackTrace();
 				return;
 			}
 
 			// If using offline zombies kill that zombie.
-			if (uhcPlayer.getOfflineZombie() != null){
-				pm.killOfflineUhcPlayer(uhcPlayer, uhcPlayer.getOfflineZombie().getLocation(), new HashSet<>(uhcPlayer.getStoredItems()), null);
+			if (uhcPlayer.getOfflineZombie() != null) {
+				pm.killOfflineUhcPlayer(uhcPlayer, uhcPlayer.getOfflineZombie().getLocation(),
+						new HashSet<>(uhcPlayer.getStoredItems()), null);
 				uhcPlayer.getOfflineZombie().remove();
 				uhcPlayer.setOfflineZombie(null);
-			}else{
+			} else {
 				pm.killOfflineUhcPlayer(uhcPlayer, new HashSet<>());
 			}
-		}else{
-			timeLeft-=5;
+
+			gm.sendInfoToServer("TIMEOUT:" + uhcPlayer.getName(), false);
+		} else {
+			timeLeft -= 5;
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), this, 100);
 		}
 	}

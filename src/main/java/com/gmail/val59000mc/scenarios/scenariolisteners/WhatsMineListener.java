@@ -8,8 +8,10 @@ import com.gmail.val59000mc.utils.RandomUtils;
 import com.gmail.val59000mc.UhcCore;
 import org.bukkit.event.EventHandler;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.entity.Player;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Item;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -52,12 +54,15 @@ public class WhatsMineListener extends ScenarioListener {
 
                 int slot = player.getInventory().getHeldItemSlot();
                 ItemStack items = otherPlayer.getInventory().getItem(slot);
-                MaterialData md = items.getData();
-                ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
-                newItems.setData(md);
-                otherPlayer.getInventory().setItem(slot, newItems);
+                if (items != null) {
+                    ItemMeta md = items.getItemMeta();
+                    ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
+                    newItems.setItemMeta(md);
+                    otherPlayer.getInventory().setItem(slot, newItems);
+                }
             } catch (UhcPlayerNotOnlineException p) {}
         });
+
     }
 
     @EventHandler

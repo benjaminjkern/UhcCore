@@ -1,5 +1,6 @@
 package com.gmail.val59000mc.listeners;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import com.gmail.val59000mc.UhcCore;
@@ -20,6 +21,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.BrewingStand;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,18 +44,32 @@ public class ItemsListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onRightClickItem(PlayerInteractEvent event) {
-		if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) { return; }
+		if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
 		Player player = event.getPlayer();
 		GameManager gm = GameManager.getGameManager();
 		UhcPlayer uhcPlayer = gm.getPlayersManager().getUhcPlayer(player);
-		ItemStack hand = player.getItemInHand();
+		ItemStack hand = player.getInventory().getItemInMainHand();
 
 		if (GameItem.isGameItem(hand)) {
 			event.setCancelled(true);
 			GameItem gameItem = GameItem.getGameItem(hand);
 			handleGameItemInteract(gameItem, player, uhcPlayer, hand);
 			return;
+		}
+
+		if (hand.hasItemMeta()) {
+			// Clicked scenario
+			Scenario scenario = Scenario.getScenario(hand.getItemMeta().getDisplayName());
+
+			// Clicked item is not a scenario item
+			if (scenario == null) return;
+
+			event.setCancelled(true);
+
+			// Send scenario info
+			player.sendMessage(Lang.SCENARIO_GLOBAL_DESCRIPTION_HEADER.replace("%scenario%", scenario.getName()));
+			scenario.getDescription().forEach(s -> player.sendMessage(Lang.SCENARIO_GLOBAL_DESCRIPTION_PREFIX + s));
 		}
 
 		if ((gm.getGameState().equals(GameState.PLAYING) || gm.getGameState().equals(GameState.DEATHMATCH))
@@ -394,7 +410,7 @@ public class ItemsListener implements Listener {
 
 		InventoryView clickedInv = e.getView();
 
-		if (clickedInv == null || e.getCurrentItem() == null || !e.getCurrentItem().hasItemMeta()) { return; }
+		if (clickedInv == null || e.getCurrentItem() == null) return;
 
 		Player player = ((Player) e.getWhoClicked()).getPlayer();
 		ItemStack item = e.getCurrentItem();
@@ -404,6 +420,8 @@ public class ItemsListener implements Listener {
 		ScenarioManager scenarioManager = gm.getScenarioManager();
 
 		if (gm.getGameState() == GameState.WAITING) { e.setCancelled(true); }
+
+		if (!e.getCurrentItem().hasItemMeta()) return;
 
 		boolean mainInventory = clickedInv.getTitle().equals(Lang.SCENARIO_GLOBAL_INVENTORY);
 		boolean editInventory = clickedInv.getTitle().equals(Lang.SCENARIO_GLOBAL_INVENTORY_EDIT);
@@ -451,12 +469,23 @@ public class ItemsListener implements Listener {
 		} else if (voteInventory) {
 			UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
 
+			if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) return;
+
 			// Clicked scenario
 			Scenario scenario = Scenario.getScenario(meta.getDisplayName());
 
 			// toggle scenario
 			if (uhcPlayer.getScenarioVotes().contains(scenario)) {
 				uhcPlayer.getScenarioVotes().remove(scenario);
+				if (item.getAmount() == 1) {
+					meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					meta.removeEnchant(Enchantment.DURABILITY);
+				} else {
+					meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+							Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					item.setAmount(item.getAmount() - 1);
+				}
+				item.setItemMeta(meta);
 			} else {
 				int maxVotes = gm.getConfiguration().getMaxScenarioVotes();
 				if (uhcPlayer.getScenarioVotes().size() == maxVotes) {
@@ -464,10 +493,21 @@ public class ItemsListener implements Listener {
 					return;
 				}
 				uhcPlayer.getScenarioVotes().add(scenario);
+
+				if (item.getAmount() == 1 && !meta.hasEnchant(Enchantment.DURABILITY)) {
+					meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					meta.addEnchant(Enchantment.DURABILITY, 1, true);
+				} else {
+					meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+							Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					item.setAmount(item.getAmount() + 1);
+				}
+
+				item.setItemMeta(meta);
 			}
 			// add to
 			Iterator<Scenario> it = uhcPlayer.getScenarioVotes().iterator();
-			for (int i = 8; i > 0; i--) {
+			for (int i = 8; i > 1; i--) {
 				if (it.hasNext()) player.getInventory().setItem(i, it.next().getScenarioItem());
 				else player.getInventory().clear(i);
 			}

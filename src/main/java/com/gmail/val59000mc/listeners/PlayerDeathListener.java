@@ -18,8 +18,8 @@ import com.gmail.val59000mc.threads.TimeBeforeSendBungeeThread;
 import com.gmail.val59000mc.utils.UniversalMaterial;
 import com.gmail.val59000mc.utils.VersionUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.Skull;
 import org.bukkit.command.CommandException;
 import org.bukkit.entity.Player;
@@ -28,6 +28,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 
@@ -41,12 +42,17 @@ public class PlayerDeathListener implements Listener {
 		MainConfiguration cfg = gm.getConfiguration();
 		UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
 
-		if (gm.getGameState() == GameState.WAITING || gm.getGameState() == GameState.STARTING) {
+		if (!player.hasMetadata("NPC")
+				&& (gm.getGameState() == GameState.WAITING || gm.getGameState() == GameState.STARTING)) {
 			if (cfg.getEnableBungeeSupport()) {
 				pm.sendPlayerToBungeeServer(player);
 			} else {
 				player.kickPlayer("Oof");
 			}
+		} else {
+			// TODO: fix
+			new BukkitRunnable() { public void run() { player.setGameMode(GameMode.SPECTATOR); } }
+					.runTaskLater(UhcCore.getPlugin(), 110);
 		}
 
 		if (uhcPlayer.getState() != PlayerState.PLAYING) {
@@ -90,9 +96,7 @@ public class PlayerDeathListener implements Listener {
 					}
 				});
 			}
-		} else {
-			pm.getScoreKeeper().envDie(uhcPlayer);
-		}
+		} else if (gm.getStartPlayers() > 1) { pm.getScoreKeeper().envDie(uhcPlayer); }
 
 		// Store drops in case player gets re-spawned.
 		uhcPlayer.getStoredItems().clear();

@@ -83,21 +83,24 @@ public class ScoreboardManager {
 
                 try {
                     if (healthTab != null) {
-                        healthTab.getScore(uhcPlayer.getName()).setScore((int) uhcPlayer.getPlayer().getHealth());
+                        healthTab.getScore(uhcPlayer.getPlayer().getName())
+                                .setScore((int) uhcPlayer.getPlayer().getHealth());
                     }
                     if (healthBelowName != null) {
-                        healthBelowName.getScore(uhcPlayer.getName()).setScore((int) uhcPlayer.getPlayer().getHealth());
+                        healthBelowName.getScore(uhcPlayer.getPlayer().getName())
+                                .setScore((int) uhcPlayer.getPlayer().getHealth());
+                    }
+
+                    if (uhcPlayer.getState().equals(PlayerState.DEAD)
+                            || uhcPlayer.getState().equals(PlayerState.WAITING)) {
+                        spectators.addEntry(uhcPlayer.getPlayer().getName());
+                    } else if (uhcPlayer.isInTeamWith(scoreboardPlayer)) {
+                        friends.addEntry(uhcPlayer.getPlayer().getName());
+                    } else {
+                        enemies.addEntry(uhcPlayer.getPlayer().getName());
                     }
                 } catch (UhcPlayerNotOnlineException ex) {
                     // No health display for offline players.
-                }
-
-                if (uhcPlayer.getState().equals(PlayerState.DEAD) || uhcPlayer.getState().equals(PlayerState.WAITING)) {
-                    spectators.addEntry(uhcPlayer.getName());
-                } else if (uhcPlayer.isInTeamWith(scoreboardPlayer)) {
-                    friends.addEntry(uhcPlayer.getName());
-                } else {
-                    enemies.addEntry(uhcPlayer.getName());
                 }
 
             }
@@ -126,21 +129,22 @@ public class ScoreboardManager {
 
                         try {
                             if (healthTab != null) {
-                                healthTab.getScore(member.getName()).setScore((int) member.getPlayer().getHealth());
+                                healthTab.getScore(member.getPlayer().getName())
+                                        .setScore((int) member.getPlayer().getHealth());
                             }
                             if (healthBelowName != null) {
-                                healthBelowName.getScore(member.getName())
+                                healthBelowName.getScore(member.getPlayer().getName())
                                         .setScore((int) member.getPlayer().getHealth());
+                            }
+
+                            if (member.getState().equals(PlayerState.DEAD)) {
+                                // spec team
+                                spectators.addEntry(member.getPlayer().getName());
+                            } else {
+                                team.addEntry(member.getPlayer().getName());
                             }
                         } catch (UhcPlayerNotOnlineException ex) {
                             // No health display for offline players.
-                        }
-
-                        if (member.getState().equals(PlayerState.DEAD)) {
-                            // spec team
-                            spectators.addEntry(member.getName());
-                        } else {
-                            team.addEntry(member.getName());
                         }
                     }
 
@@ -158,21 +162,22 @@ public class ScoreboardManager {
 
                         try {
                             if (healthTab != null) {
-                                healthTab.getScore(member.getName()).setScore((int) member.getPlayer().getHealth());
+                                healthTab.getScore(member.getPlayer().getName())
+                                        .setScore((int) member.getPlayer().getHealth());
                             }
                             if (healthBelowName != null) {
-                                healthBelowName.getScore(member.getName())
+                                healthBelowName.getScore(member.getPlayer().getName())
                                         .setScore((int) member.getPlayer().getHealth());
+                            }
+
+                            if (member.getState().equals(PlayerState.DEAD)) {
+                                // spec team
+                                spectators.addEntry(member.getPlayer().getName());
+                            } else {
+                                team.addEntry(member.getPlayer().getName());
                             }
                         } catch (UhcPlayerNotOnlineException ex) {
                             // No health display for offline players.
-                        }
-
-                        if (member.getState().equals(PlayerState.DEAD)) {
-                            // spec team
-                            spectators.addEntry(member.getName());
-                        } else {
-                            team.addEntry(member.getName());
                         }
                     }
                 }
@@ -194,18 +199,20 @@ public class ScoreboardManager {
                 Scoreboard scoreboard = all.getScoreboard();
                 if (scoreboard == null) { continue; }
 
-                if (uhcPlayer.getState().equals(PlayerState.PLAYING)) {
-                    if (all.isInTeamWith(uhcPlayer)) {
-                        // add to there friend team
-                        scoreboard.getTeam("friends").addEntry(uhcPlayer.getName());
+                try {
+                    if (uhcPlayer.getState().equals(PlayerState.PLAYING)) {
+                        if (all.isInTeamWith(uhcPlayer)) {
+                            // add to there friend team
+                            scoreboard.getTeam("friends").addEntry(uhcPlayer.getPlayer().getName());
+                        } else {
+                            // add to enemies team
+                            scoreboard.getTeam("enemies").addEntry(uhcPlayer.getPlayer().getName());
+                        }
                     } else {
-                        // add to enemies team
-                        scoreboard.getTeam("enemies").addEntry(uhcPlayer.getName());
+                        // add to spectators team
+                        scoreboard.getTeam("spectators").addEntry(uhcPlayer.getPlayer().getName());
                     }
-                } else {
-                    // add to spectators team
-                    scoreboard.getTeam("spectators").addEntry(uhcPlayer.getName());
-                }
+                } catch (UhcPlayerNotOnlineException e) {}
 
             }
 
@@ -218,37 +225,41 @@ public class ScoreboardManager {
                 if (uhcPlayer.getState().equals(PlayerState.PLAYING)
                         || uhcPlayer.getState().equals(PlayerState.WAITING)) {
 
-                    if (all.isInTeamWith(uhcPlayer)) {
-                        // add to there team with 0 in front
+                    try {
+                        if (all.isInTeamWith(uhcPlayer)) {
+                            // add to there team with 0 in front
 
-                        Team team = scoreboard.getTeam("0" + uhcPlayer.getTeam().getTeamNumber());
-                        if (team == null) {
-                            team = scoreboard.registerNewTeam("0" + uhcPlayer.getTeam().getTeamNumber());
-                        }
-                        team.setPrefix(uhcPlayer.getTeam().getPrefix());
-                        team.setSuffix(ChatColor.RESET + "");
-                        team.addEntry(uhcPlayer.getName());
-
-                    } else {
-                        // add to normal team
-
-                        Team team = scoreboard.getTeam("" + uhcPlayer.getTeam().getTeamNumber());
-                        if (team == null) {
-                            team = scoreboard.registerNewTeam("" + uhcPlayer.getTeam().getTeamNumber());
-
-                            if (gm.getConfiguration().getDisableEnemyNametags()) {
-                                VersionUtils.getVersionUtils().setTeamNameTagVisibility(team, false);
+                            Team team = scoreboard.getTeam("0" + uhcPlayer.getTeam().getTeamNumber());
+                            if (team == null) {
+                                team = scoreboard.registerNewTeam("0" + uhcPlayer.getTeam().getTeamNumber());
                             }
+                            team.setPrefix(uhcPlayer.getTeam().getPrefix());
+                            team.setSuffix(ChatColor.RESET + "");
+                            team.addEntry(uhcPlayer.getPlayer().getName());
+
+                        } else {
+                            // add to normal team
+
+                            Team team = scoreboard.getTeam("" + uhcPlayer.getTeam().getTeamNumber());
+                            if (team == null) {
+                                team = scoreboard.registerNewTeam("" + uhcPlayer.getTeam().getTeamNumber());
+
+                                if (gm.getConfiguration().getDisableEnemyNametags()) {
+                                    VersionUtils.getVersionUtils().setTeamNameTagVisibility(team, false);
+                                }
+                            }
+                            team.setPrefix(uhcPlayer.getTeam().getPrefix());
+                            team.setSuffix(ChatColor.RESET + "");
+                            team.addEntry(uhcPlayer.getPlayer().getName());
                         }
-                        team.setPrefix(uhcPlayer.getTeam().getPrefix());
-                        team.setSuffix(ChatColor.RESET + "");
-                        team.addEntry(uhcPlayer.getName());
-                    }
+                    } catch (UhcPlayerNotOnlineException e) {}
 
                 } else {
                     // add to no-team team
                     Team team = scoreboard.getTeam("spectators");
-                    if (team != null) { team.addEntry(uhcPlayer.getName()); }
+                    try {
+                        if (team != null) { team.addEntry(uhcPlayer.getPlayer().getName()); }
+                    } catch (UhcPlayerNotOnlineException e) {}
                 }
 
             }
@@ -372,7 +383,7 @@ public class ScoreboardManager {
                 returnString = returnString.replace("%alive%", "?");
             } else {
                 returnString = returnString.replace("%alive%",
-                        gm.getPlayersManager().getOnlinePlayingPlayers().size() + "");
+                        gm.getPlayersManager().getAllPlayingPlayers().size() + "");
             }
         }
 

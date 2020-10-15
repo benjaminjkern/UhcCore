@@ -378,5 +378,36 @@
             "Players get paired up randomly.",
             "If there are an odd number of players, the odd man out gets a totem of undying."
         ]
+    },
+    "SUDDENDEATH": {
+        "name": "Sudden Death",
+        "description": [
+            "Everyone gets 1 heart. You are invulnerable for the first 10 minutes."
+        ]
+    },
+    "PASSIVE": {
+        "name": "Passive Aggressive",
+        "description": [
+            "You cannot hurt players directly."
+        ]
+    },
+    "INHERITANCE": {
+        "name": "Inheritance",
+        "description": [
+            "When you kill another player, you inherit their inventory."
+        ]
+    },
+    "ONETRICKPONY": {
+        "name": "One Trick Pony",
+        "description": [
+            "When the game begins, a random mob will be chosen.",
+            "All mobs spawned throughout the game will become that mob."
+        ]
+    },
+    "TNTWORLD": {
+        "name": "Tnt World",
+        "description": [
+            "All blocks can be ignited as if they are tnt. Be careful!"
+        ]
     }
 }

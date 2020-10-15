@@ -18,41 +18,41 @@ import org.bukkit.inventory.ItemStack;
 import java.io.IOException;
 import java.util.Map;
 
-public class ItemInfoCommandExecutor implements CommandExecutor{
+public class ItemInfoCommandExecutor implements CommandExecutor {
 
     private static final boolean DEBUG = false;
 
-    @Override @SuppressWarnings("deprecation")
+    @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
-        if (!(sender instanceof Player)){
+        if (!(sender instanceof Player)) {
             sender.sendMessage("Only players can use this command!");
             return true;
         }
 
         Player player = ((Player) sender).getPlayer();
-        ItemStack item = player.getItemInHand();
+        ItemStack item = player.getInventory().getItemInMainHand();
 
-        if (DEBUG && args.length != 0){
+        if (DEBUG && args.length != 0) {
             try {
                 item = JsonItemUtils.getItemFromJson(args[0]);
                 player.getInventory().addItem(item);
-            }catch (ParseException ex){
+            } catch (ParseException ex) {
                 player.sendMessage(ex.getMessage());
             }
             return true;
         }
 
-        if (item.getType() == Material.AIR){
+        if (item.getType() == Material.AIR) {
             player.sendMessage(ChatColor.RED + "Please hold a item first!");
             return true;
         }
 
-        if (args.length == 2){
+        if (args.length == 2) {
             int min, max;
             try {
                 min = Integer.parseInt(args[0]);
                 max = Integer.parseInt(args[1]);
-            }catch (IllegalArgumentException ex){
+            } catch (IllegalArgumentException ex) {
                 player.sendMessage(ChatColor.RED + "Usage: /iteminfo [minimum] [maximum]");
                 return true;
             }
@@ -61,7 +61,7 @@ public class ItemInfoCommandExecutor implements CommandExecutor{
             jsonItem.setMinimum(min);
             try {
                 jsonItem.setMaximum(max);
-            }catch (IllegalArgumentException ex){
+            } catch (IllegalArgumentException ex) {
                 player.sendMessage(ChatColor.RED + ex.getMessage());
                 return true;
             }
@@ -73,27 +73,29 @@ public class ItemInfoCommandExecutor implements CommandExecutor{
         player.sendMessage(ChatColor.DARK_GREEN + " Data/Damage value: " + ChatColor.GREEN + item.getDurability());
         sendJsonItemMessage(player, item);
 
-        if (item.hasItemMeta() && item.getItemMeta().hasEnchants()){
+        if (item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
             player.sendMessage(ChatColor.DARK_GREEN + " Enchantments:");
             Map<Enchantment, Integer> enchantments = item.getItemMeta().getEnchants();
-            for (Enchantment enchantment : enchantments.keySet()){
-                player.sendMessage("  " + ChatColor.DARK_GREEN + enchantment.getName() + ChatColor.GREEN + " (level " + enchantments.get(enchantment) + ")");
+            for (Enchantment enchantment : enchantments.keySet()) {
+                player.sendMessage("  " + ChatColor.DARK_GREEN + enchantment.getKey() + ChatColor.GREEN + " (level "
+                        + enchantments.get(enchantment) + ")");
             }
         }
         return true;
     }
 
-    private void sendJsonItemMessage(Player player, ItemStack item){
+    private void sendJsonItemMessage(Player player, ItemStack item) {
         String json = JsonItemUtils.getItemJson(item);
 
-        if (json.length() > 100){
+        if (json.length() > 100) {
             player.sendMessage(ChatColor.GREEN + "Item Json is too big for chat, uploading to paste bin ...");
 
             String url;
-            try{
+            try {
                 url = FileUtils.uploadTextFile(new StringBuilder(json));
-            }catch (IOException ex){
-                player.sendMessage(ChatColor.RED + "Failed to upload item json to paste bin, check console for more detail.");
+            } catch (IOException ex) {
+                player.sendMessage(
+                        ChatColor.RED + "Failed to upload item json to paste bin, check console for more detail.");
                 ex.printStackTrace();
                 return;
             }
@@ -103,9 +105,9 @@ public class ItemInfoCommandExecutor implements CommandExecutor{
         }
 
         String text = ChatColor.DARK_GREEN + " Json-Item: " + ChatColor.RESET + json;
-        if (UhcCore.isSpigotServer()){
+        if (UhcCore.isSpigotServer()) {
             SpigotUtils.sendMessage(player, text, ChatColor.GREEN + "Click to copy", json, SpigotUtils.Action.SUGGEST);
-        }else{
+        } else {
             player.sendMessage(text);
         }
     }

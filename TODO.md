@@ -1,4 +1,4 @@
-# Server Todos
+# Server in general
 
 - Advertise & Get a consistent player base
 - Voting:
@@ -6,109 +6,118 @@
   - Add double vote power
 - Make the creative server fancier
   - Far down the line: Multiple different queues for singles, doubles, and quads
-- A test server so that I dont have to take stuff down
+- Multiple lobby servers - once there are more players
 - Upgrade Server infrastructure - this was done but can always be added to
 - Easy suggestion box
-- Consider switching to paper spigot
-- Make a discord
 - A way to keep track of which scenarios are popular
-- Website to tell you status of server
+- Server website
 - Auction: once a week we give stuff away outside of the game and you can put in tickets
-- A Shop! (IDK HOW THIS WILL WORK)
-- Add rating system to bungee/lobby
+- A Shop! (IDK HOW THIS WILL WORK also I kinda don't wanna do it)
 - Implement Ranks / Patreon
+- When a game finishes it should say who won
+- Voting is broken, will do a double vote
+  - Should be controlled through lobby
+- Afk should opt you out
 
-# Ranks
+# Lobby
 
-- Member:
-  - Front of the lines in queues
-  - Can use the rating/Exp system
-  - Can use one of their votes to downvote
-- Level 1: \$2 a month
-  - Can always downvote without voting
-  - Discord bits
-  - +50 rank per month
-  - You get to have a say in what gets added to the server!
-- Level 2: \$5 a month
-  - +150 rank per month
-  - Discord bits
-  - Your votes always count as double or you get 5 single votes
-  - /hat
-  - Can nickname yourself
-  - Fun particles in game that follow you, always assigned to whatever the current color is
-  - Particles when you kill people
-  - Vote for scenarios that aren't on the list
-- Level 3: \$12 a month
-  - Discord bits
-  - You get 3 triple votes, 4 double votes, or 7 single votes
-  - +400 rank per month
-  - /ec (ender chest is always consistent between games, but is disabled on certain scenarios)
-  - /craft
-  - Customize your particle colors
-  - Customize the music thats played when players are near you (Certain sounds will be outside of minecraft's regular resource pack and will require the server resource pack to be able to hear it)
-  - Customize the music thats played when you kill a player
-- Admin:
-  - Can force-start games
-  - /newmap (restart and force a new map)
-  - luckperms (Change groups so that they dont appear as an admin)
-  - kick / ban / banip
-  - /reload
-  - /restart
-
-# Small changes - Server
-
-- Announce new scenarios to server as well as the becoming member link
-- Make rating only stay if you are a member
-- Make info show up in book format
-- Make server popular times easier to put in
+- Trying to break restricted land should remind you to donate
+- Make patron menu
+- Add statues that tell you to use /help
+- Make rating only stay if you are a member "Want your ranking to stay when you log off?"
 - Figure out how to do the infobook automatically show to players
+- Add info around spawn on:
+  - What YEUH is
+  - What being a member does
+  - What being a patron does
+  - People with top ratings, kills, wins, and something else I think maybe most time spent on server idk
+- Continue to build out spawn
+- It says players have 100 blocks to claim, it shouldnt say anything
+- Dying in lobby says you have no bed, it shouldnt
+- Trying to build in spawn says "You dont have permission", but it should say something like "You can't build in spawn!"
+- Fire spread should be active in lobby
+- Opt afk players out of queue (unless they have override perm or something)
+- Fix all the gay stuff with griefprevention
+- Make boats float in lava
 
-# Small changes - UHC
+# UHC Game Servers
 
-- /newmap command force reloads and starts a new map
+- /newmap command with force
+- /rating top [num] - wip
+- Ratings should do a lookup case sensitive
 - Use one of your votes to downvote - Members only
-- Make the scenario voter tell you how many votes you have left
-- Votes should show how many votes there are for specific one
-- Politics doesn’t always end game when one team is alive (Might not be an issue but shold look into it)
-- Spectators shouldnt be able to fly through stuff
-- Doesnt show scenarios when youre spectating
-- Make sure Vein works with lagworld and midas and cutclean and lagworld works with timber
-- One of the scenarios (triple, cut, midas) may have spawned me really high up, I'm not sure how or why
-- I wrote down something about gold, I dont remember what it was though. Probably not super important
-- They also all still apply when in creative mode, not that that matters
-- Randomzied drops doesnt check tool - i dont actually care that much about this
-- Something on cutclean caused a nullpointerexception
-- Cutclean doesnt give experience but it also doesnt take away so thats not a huge deal
-- Triple ores gives experience when mining blocks that return ores
-- Shared inventory throws exceptions that lag the server
+- Spectators shouldnt be able to fly through stuff - switch to invisible flying adventure mode, possibly
+- Spectators cant tp currently
+- Advertise that shears give double apples and enderchests are consistent between games
 - Make enderchest consistent between games but disabled on:
-  - Flower Power
-  - Lil Cheat
-  - Dont waste your time
-  - Triple ores
-  - King Midas
-- Achievements show in the nether
+  - Lil Cheat (I cant think of a way around this one)
+  - Dont waste your time (Maybe just make it so you cant put god tools in the ender chest)
+- Achievements show in the nether for some reason
 - Add a bigger warning on getting close to UHC wall
-- Make randomized drops compatible with triple ores and whatnot
-- Make scenarios know that they're incompatible with each other, and select a rnaodm one if doesnt work
-- Material/UniversalMaterial have bugs
+- Compatibility
+  - Randomized Drops should be incompatible with:
+    - specifically the luck power in super powers
+  - Vein Miner should be fully compatible with:
+    - Lag World
+    - king midas
+    - triple ores
+    - king midas
+  - Lag world should be fully compatible with:
+    - Timber
+  - Make sure Vein works with lagworld and midas and cutclean and lagworld works with timber
+- Material/UniversalMaterial have bugs that throw exceptions on legacy materials
+- A BUNCH of deprecation warnings (515)
 - Fix the not finding biome exceptions, its fricken annoying
-- Keep track of stats and let players view stats easily
-- I'm pretty sure shears on lucky leaves gives double apples but I dont wanna deal with that rn
-- Clicking the book opens a book inventory at first
-- Rotating text in vote inventory
-- Item that lets you see your info in an inventory
+- Voting GUI
+  - Make the scenario voter tell you how many votes you have left
+  - Rotating text in vote inventory - not sure if its possible
+- When joining, Title or subtitle should splash on screen, also change it to say "Pick" instead of vote, so it doesnt interfere with server voting
+- Item that lets you see your info and stats in an inventory
   - Rating
   - Kills
   - Games played
   - Deaths (player deaths/environment deaths)
-  - A second page that lets you read about how the rating works
+  - A second page that lets you read about how the rating system works
 - Test Scenarios:
   - Updated Bleeding Sweets (Disabled for now so isnt a huge deal)
   - Weakest Link (Disabled for now so isnt a huge deal)
   - PVE (Disabled for now so isnt a huge deal)
-  - Whether duos gives totem or works at all, for that matter
   - Skyhigh - this should work I've just never tested it
+- Make player render distance further
+- Nicknames and ranking in tablist
+- Should say congrats for winning
+- Command to see which scenarios are currently active more easily showable
+- Make sounds on send back to lobby - May be implemented already
+- If you hit a teammate it should warn you the first time, cancel it, and warn the rest of the team if you do it again but it does damage the second time (maybe put a cooldown in) EITHER DO THIS OR DISABLE FRIENDLYFIRE
+- Signs drop when lobby is unloaded
+- Locations should be preselected before the game starts
+- Paper "SERVER IS SLOW" errors are annoyinga nd should be fixed
+- When a player joins a server it lags and gives players the opportunty to both write in and sign the book menu, and if done so then the menu isn't accesible anymore
+- Still has off chances of spawning players in blocks which is WACK
+- Make it so random picking scenarios cannot pick disabled scenarios
+
+### Bots
+
+- Bots should either avoid the wall or move toward center of map
+- I dont think mobs target bots as of rn **TEST**
+- Bot range is 20 blocks still **TEST**
+- Make bots have an AI that learns (NO IDEA HOW TO DO THIS)
+  - An easy AI is just give them all increasingly better things as the game goes on
+    - Maybe their inventories can reflect the real player's inventories or something and be set every 2-5 minutes idk
+- Bot's teams don't show up on their name tag - idk if players even do this but whatever **TEST**
+- Bots aren't compatible with most scenarios
+
+> The rest of these aren't as importante
+
+- I dont think the realistic option works for bots
+- Bots don't take fall damage
+- Two games running at once will not update bot scores correctly
+- The tablist is disabled for bots rn but it should:
+  - Show all bots, not just the ones that are loaded
+  - Show when bots are respawned in spectator mode
+  - Show the bot's teams and health
+- Bot attack rate should be based on the item in the main hand
+  - Right now it's just randomized between 20-40 ticks, this works for now
 
 # Scenarios
 
@@ -117,31 +126,59 @@
 
   > These two could be put in the inventory so that theyre viewed as constants
 
-- Nether Start: Should put a nether portal in the middle of the map
-- Duos: should pick another randomm scenario if there are less than 2 players active (Doesnt really matter since this wont ever happen naturally)
+- Nether Start:
+  - Kicks for flying a lot
+- Politics
+  - On switch dog should become docile (maybe in general)
+  - doesn’t always end game when one team is alive (Might not be an issue but shold look into it)
+  - throws IllegalArgumentExceptions - don't know why
+  - On switch the player should be immortal but also cant do damage for 5 seconds
+  - Make it say if you die of natural causes, you don't join another team
+- Super heros
+  - being kicked or leaving and coming back screws up the sneaking
+  - Not compatible with teams at all **NEED TO TEST**
+  - Make it more obvious what your power is (Maybe dont need this but two people have had the same issue)
+  - If the player attacks a zombie, a tamed dog will still attack the zombie, not sure if this is fixable
+  - make lucky power compatible with ez money (always cook instead of dropping ore) and triple ore (triple ore) and king midas (always drop gold)
+- Ez money
+  - doesnt give infinity experience for enchanting but it also doesnt take away so thats not a huge deal
+- Shared inventory: throws exceptions that lag the server
+- Ez money, triple ores, randomized drops, etc. all still apply when in creative mode. Across the board they shouldnt work.
+- Randomzied drops:
+  - Doesnt check tool - not entirely sure how I feel about this
+  - Should work for mob drops too
+  - Shouldnt drop barriers or bedrock
+  - Sometimes stone bricks break instantly - pretty sure its only infested stone bricks but still not sure why
+- Randomized crafts:
+  - Make sure frunaces and stuff still work (Not important cuz its not in rn)
+- Dont waste your time:
+  - Crafting multiple items doesnt enchant all of them
 
-- Super heros 2:
-  - Tank: extra health, add strength 2 and slowness
-  - Ghost: invisibility, add resistance and speed
-  - Spiderman:
-    - You can climb walls, you fall down walls slowly like ladders, you can sneak to stay still on a wall, You get jump boost and dont take fall damage
-  - Ghast: Make a ghast shot be a superpower you can get like you activate it by sneaking (Can use 5 in a row then must cool down for 15 seconds)
-  - Creeper: Explosion resistance and when you sneak, primed tnt spawns at your feet (Cooldown: 15 seconds)
-  - Iceman: Whenever you deal damage to a player, they get slowed and mining fatigue. Also you can encase yourself in ice by sneaking (Cooldown: 1 minute and the ice goes away after 10 seconds)
-  - Necromancer: Press sneak to summon a (will not attack you) zombies (Cooldown: 1 minute).
-    - Whenever you are attacked by another player, a skeleton or zombie will spawn and try to kill the person who attacked you. (Once per player) has a chance of spawning a wither skeleton
-  - Vampire: You get back 5% of the damage you deal to living things (Maybe cool blood effects as well)
-  - Lucky: Breaking cobblestonen or other types of stone has a 10% chance of dropping an ore, all ores are equally likely (If on king midas mode, its always gold)
-  - Potionmaster: sneak to toss a random splash potion. If you're facing downward (Like lower than 45 degrees), it will be good. Otherwise it will be bad. You don't get resistance from any of them. (Cooldown: 15 seconds)
-- You inherit the inventory of whoever you kill
+> The rest of these are new ideas
+
+### Next Week:
+
+Get rid of:
+
+- Duos
+- Sky high
+- Fly high
+
+Add:
+
+- Chicken fight: Duos but one player rides the other, all items collected by the bottom dude go to the top dude, bottom controls movement and top controls item usage. Health is shared and all teams get double health
+- Fish gang: You are given infinite water breathing and enchanted boots that let you swim and whatnot underwater as well as night vision, however you cannot breathe on land for longer than 10 seconds. You may bring buckets of water with you and stand in them to get oxygen
+- Weakest Link: Every minute, the person with the lowest health dies
+
+### Other ideas:
+
+- Voldemort: eyes in the back of your head
 - You can ram someone by riding into them with a horse or pig or llama or strider
-- Every mob that spawns is a random mob (Same mob for whole game)
-- Your team randomizes every couple of minutes
+- Your team randomizes every couple of minutes - only works for non solo games
 - Infected: When you die a zombie spawn holding your stuff (Perhaps multiple zombies depending on how hard we want it to be)
 - Everyone gets (the same) random potion effect every minute, have it only last like 5 seconds and it won’t be super strong
 - Arrows are replaced with a random mob, including skeleton arrows
 - Every minute you must be standing on a specific block
-- You cannot damage players with swords, only using other methods like fire or lava or wolves or monsters or tnt (Maybe bows)
 - Explosive Gang: Everyone gets flint and steel with unbreaking, a stack of creeper eggs, a stack of fire charges, a stack of tnt
 - Gulag: When you die, you go to a gulag and battle 1v1
 - Farmer: Amass the biggest army of animals and have them fight for you
@@ -149,6 +186,7 @@
 - Assassin: Every player has 1 person they are trying to kill, and they are given a compass that points towards that person and that person is glowing for them.
   - This is the only person they are allowed to kill. If that person dies on their own, your compass points towards the next person in the cycle.
   - If you try to kill anyone else, the kill is cancelled and you die instead
+- Prop hunt
 - Drunk: Controls are wonky (?) and you alternate between having speed, nausea, hunger, and resistence.
   - Drink any potion or water bottle to get drunker, making all potion effects stronger. If you get to 3 you "throw up" half of your inventory, an dif you get to 4 you get poisoned, and if you get to 5, you die instantly.
   - Drinking milk will make you throw up
@@ -156,7 +194,6 @@
   - You can get your drunkness back by drinking more
 - Buy teammates back with gold or Buy dead players not on your team back
 - Being on fire or in lava heals you, while water poisons you
-- Your max health is 1 heart for the whole game, and you're invulnerable for the first ten minutes.
 - Juggernaut: 1 person is given netherite armor, a netherite sword, a netherite pickaxe, resistance, and double health. It is 1 v everyone else.
 - Wither Rush: A wither is spawned in the middle of the map Starting at 10 minutesKill it to win.
 - Contracts: Kill a specific player within a time frame and win a prize
@@ -177,7 +214,6 @@
 - No stacking: Nothing in your inventory stacks
 - Hurricane: It is raining and thundering (More than usual) and wind blows you around a lot
 - End Start: You start in the end.
-- Fish gang: You are given infinite water breathing and enchanted boots that let you swim and whatnot underwater as well as night vision, however you cannot breathe on land for longer than 10 seconds. You may bring buckets of water with you and stand in them to get oxygen
 - Every player is disguised as a block (A rare block) that snaps to the grid if you stay still for 5 seconds
 - Idk if its possible but Play the game as chickens (low to the ground and Other players see you as a chicken also you float down to the ground instead of falling)
 - King of the hill: Everyone gets a map, Whoever has the most kills or the most hearts if its a tie is glowing on everyone's map
@@ -186,4 +222,8 @@
 - Tourettes : You will occasionally swing or place blocks or say things in the chat or drop the item in your hand and you cannot control it
 - Anvils drop on everyone's head every 20 seconds
 - You are given potions so you cant move or jump, negated fall damage, and an infinite stack of enderpearls. teleport and win game
-- Hunger Games: A bunch of chests with loot spawn in the middle, and everyone spawns around the middle
+- Hunger Games: A bunch of chests with loot spawn in the middle, and everyone spawns around the middle, and spectating players can give items to alive players
+- UAV: All players get a map of where all the other players are
+- JETPACK
+- Instakill: Players instant break blocks and instant kill mobs and other players with just their fists.
+- Deathmatch: When there are 2 players left OR when the time reaches 30 minutes, all players are teleported to an arena for the final death match.

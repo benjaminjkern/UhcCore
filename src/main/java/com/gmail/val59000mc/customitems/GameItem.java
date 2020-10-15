@@ -16,7 +16,7 @@ public enum GameItem {
     // Lobby Items
     TEAM_LIST(UniversalMaterial.PLAYER_HEAD), TEAM_SELECTION(UniversalMaterial.IRON_SWORD),
     KIT_SELECTION(UniversalMaterial.IRON_PICKAXE), SCENARIO_VIEWER(UniversalMaterial.WRITABLE_BOOK),
-    BUNGEE_ITEM(UniversalMaterial.BARRIER),
+    BUNGEE_ITEM(UniversalMaterial.PINK_BED),
 
     // Team Setting Items
     TEAM_SETTINGS(UniversalMaterial.ANVIL), TEAM_COLOR_SELECTION(UniversalMaterial.LAPIS_LAZULI),

@@ -6,13 +6,15 @@ import com.gmail.val59000mc.scenarios.ScenarioListener;
 import com.gmail.val59000mc.utils.UniversalMaterial;
 import com.gmail.val59000mc.scenarios.Option;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
-public class FlyHighListener extends ScenarioListener{
+public class FlyHighListener extends ScenarioListener {
 
     @Option(key = "height")
     private int height = 500;
@@ -22,9 +24,7 @@ public class FlyHighListener extends ScenarioListener{
         // all pets also get free no fall damage
         if (e.getEntity() instanceof Tameable) {
             if (((Tameable) e.getEntity()).getOwner() == null) return;
-            if (e.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
-                e.setCancelled(true);
-            }
+            if (e.getCause().equals(EntityDamageEvent.DamageCause.FALL)) { e.setCancelled(true); }
         }
     }
 
@@ -32,37 +32,43 @@ public class FlyHighListener extends ScenarioListener{
     public void onPlayerDamage(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player) {
 
-            if (e.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
-                e.setCancelled(true);
-            }
+            if (e.getCause().equals(EntityDamageEvent.DamageCause.FALL)) { e.setCancelled(true); }
 
         }
     }
 
     @EventHandler
-    public void onGameStart(UhcStartedEvent e){
+    public void onGameStart(UhcStartedEvent e) {
         getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
-            try{
+            try {
                 Player thisPlayer = uhcPlayer.getPlayer();
                 thisPlayer.getInventory().setChestplate(UniversalMaterial.ELYTRA.getStack());
-                if (thisPlayer.getLocation().getBlockY() > thisPlayer.getWorld().getHighestBlockYAt(thisPlayer.getLocation()))
+                if (thisPlayer.getLocation().getBlockY() > thisPlayer.getWorld()
+                        .getHighestBlockYAt(thisPlayer.getLocation()))
                     thisPlayer.teleport(thisPlayer.getLocation().add(0, height, 0));
                 else {
-                    Location loc = thisPlayer.getEyeLocation().add(0,1,0);
- 
-                    while(loc.getY() < thisPlayer.getLocation().getBlockY() + height) {
-                        if(loc.getBlock().getType() != Material.AIR) {
-                            loc.add(0,-2,0);
+                    Location loc = thisPlayer.getEyeLocation().add(0, 1, 0);
+
+                    while (loc.getY() < thisPlayer.getLocation().getBlockY() + height) {
+                        if (loc.getBlock().getType() != Material.AIR) {
+                            loc.add(0, -2, 0);
                             thisPlayer.teleport(loc);
                             break;
                         }
-                        loc.add(0,1,0);
+                        loc.add(0, 1, 0);
                     }
                 }
-            }catch (UhcPlayerNotOnlineException ex){
+            } catch (UhcPlayerNotOnlineException ex) {
                 // No elytra for offline players.
             }
         });
+    }
+
+    @EventHandler
+    public void onUnEquip(InventoryClickEvent e) {
+        // you can't take that shit off, (I guess if it breaks its fine)
+        Bukkit.getLogger().info(e.getSlot() + "");
+        if (e.getSlot() == 38 && e.getCurrentItem().getType() == Material.ELYTRA) e.setCancelled(true);
     }
 
 }

@@ -75,8 +75,7 @@ public class CutCleanListener extends ScenarioListener {
         // don't bother cooking other people's stuff
         if (e.getEntityType() == EntityType.PLAYER) return;
 
-        // doesnt check if killer is sneaking because thats not easily accessible, but
-        // it should
+        if (e.getEntity().getKiller() != null && e.getEntity().getKiller().isSneaking()) return;
 
         // also this should check for looting but I do NOT wanna deal with that, silk
         // touch and fortune are annoying enough
@@ -93,11 +92,17 @@ public class CutCleanListener extends ScenarioListener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(final BlockBreakEvent e) {
 
+        Block block = e.getBlock();
+
+        if (UniversalMaterial.isLog(block.getType())) {
+            breakTree(block);
+            return;
+        }
+
         // technically hsould check for veinminer as well but its redundant since that
         // only triggers when the player is sneaking
         if (isActivated(Scenario.KINGMIDAS) || e.getPlayer().isSneaking()) return;
 
-        Block block = e.getBlock();
         ItemStack hand = e.getPlayer().getInventory().getItemInMainHand();
 
         if (checkTool && !UniversalMaterial.isCorrectTool(block.getType(), hand.getType())) return;
@@ -173,6 +178,21 @@ public class CutCleanListener extends ScenarioListener {
                 e.setCancelled(true);
             } else {
                 e.getInventory().setItem(1, lapis);
+            }
+        }
+    }
+
+    private void breakTree(Block block) {
+        if (UniversalMaterial.isLog(block.getType())) {
+            block.breakNaturally();
+
+            for (int z = -1; z <= 1; z++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int x = -1; x <= 1; x++) {
+                        if (z == 0 && y == 0 && x == 0) continue;
+                        breakTree(block.getRelative(x, y, z));
+                    }
+                }
             }
         }
     }

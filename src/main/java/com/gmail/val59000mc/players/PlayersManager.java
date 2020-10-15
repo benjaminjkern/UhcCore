@@ -14,6 +14,7 @@ import com.gmail.val59000mc.exceptions.UhcTeamException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.languages.Lang;
+import com.gmail.val59000mc.listeners.PlayerConnectionListener;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioManager;
 import com.gmail.val59000mc.scenarios.scenariolisteners.SilentNightListener;
@@ -40,6 +41,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import net.citizensnpcs.api.npc.NPC;
+
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -51,7 +54,7 @@ public class PlayersManager {
 
 	public PlayersManager() {
 		players = Collections.synchronizedList(new ArrayList<>());
-		scoreKeeper = new ScoreKeeper();
+		scoreKeeper = new ScoreKeeper(GameManager.getGameManager());
 	}
 
 	public void setLastDeathTime() { lastDeathTime = System.currentTimeMillis(); }
@@ -196,16 +199,19 @@ public class PlayersManager {
 	public void playerJoinsTheGame(Player player) {
 		UhcPlayer uhcPlayer;
 
+		GameManager gm = GameManager.getGameManager();
+
 		if (doesPlayerExist(player)) {
 			uhcPlayer = getUhcPlayer(player);
 		} else {
-			uhcPlayer = newUhcPlayer(player);
-			Bukkit.getLogger().warning("[UhcCore] None existent player joined!");
+			uhcPlayer = newUhcPlayer(player.getUniqueId(), "YEUH-BOT");
+			uhcPlayer.setState(PlayerState.PLAYING);
+			Bukkit.getLogger().warning("[UhcCore] Non-existent player joined!");
+
+			if (gm.getConfiguration().getAutoAssignNewPlayerTeam()) { autoAssignPlayerToTeam(uhcPlayer); }
 		}
 
 		uhcPlayer.setUpScoreboard();
-
-		GameManager gm = GameManager.getGameManager();
 
 		switch (uhcPlayer.getState()) {
 			case WAITING:
@@ -273,7 +279,7 @@ public class PlayersManager {
 
 		for (UhcTeam team : listUhcTeams()) {
 			// Don't assign player to spectating team.
-			if (team.isSpectating()) { continue; }
+			if (team.isSpectating()) continue;
 
 			if (team != uhcPlayer.getTeam()
 					&& team.getMembers().size() < gm.getConfiguration().getMaxPlayersPerTeam()) {
@@ -366,6 +372,7 @@ public class PlayersManager {
 
 		uhcPlayer.setState(PlayerState.DEAD);
 		uhcPlayer.sendPrefixedMessage(Lang.PLAYERS_WELCOME_BACK_SPECTATING);
+		uhcPlayer.sendPrefixedMessage("Use \u00a7d/lobby \u00a7fto go back to the lobby.");
 
 		if (GameManager.getGameManager().getConfiguration().getSpectatingTeleport()) {
 			uhcPlayer.sendPrefixedMessage(Lang.COMMAND_SPECTATING_HELP);
@@ -495,10 +502,8 @@ public class PlayersManager {
 			}
 		}
 
-		for (UhcTeam team : listUhcTeams()) {
-			Location newLoc = findRandomSafeLocation(world, maxDistance);
-			team.setStartingLocation(newLoc);
-		}
+		Queue<Location> randLocs = getRandomSafeLocations(world, listUhcTeams().size(), maxDistance, 100);
+		for (UhcTeam team : listUhcTeams()) { team.setStartingLocation(randLocs.poll()); }
 
 		Bukkit.getPluginManager().callEvent(new UhcPreTeleportEvent());
 
@@ -528,7 +533,7 @@ public class PlayersManager {
 		Random r = new Random();
 		double x = 2 * maxDistance * r.nextDouble() - maxDistance;
 		double z = 2 * maxDistance * r.nextDouble() - maxDistance;
-		return new Location(world, x, 250, z);
+		return new Location(world, x, 0, z);
 	}
 
 	/**
@@ -542,16 +547,48 @@ public class PlayersManager {
 	private Location getGroundLocation(Location loc, boolean allowCaves) {
 		World w = loc.getWorld();
 
-		loc.setY(0);
+		Location setLoc = loc.clone();
 
 		if (allowCaves) {
-			while (loc.getBlock().getType() != Material.AIR) { loc = loc.add(0, 1, 0); }
+			setLoc.setY(0);
+			while (setLoc.getBlock().getType() != Material.AIR
+					|| setLoc.clone().add(0, 1, 0).getBlock().getType() != Material.AIR) {
+				setLoc.add(0, 1, 0);
+			}
 		} else {
-			loc = w.getHighestBlockAt(loc).getLocation();
+			setLoc = w.getHighestBlockAt(setLoc).getLocation().clone().add(0, 1, 0);
+		}
+		return setLoc;
+	}
+
+	public Queue<Location> getRandomSafeLocations(World world, int num, double mapSize, double minDist) {
+		return getRandomSafeLocations(world, num, mapSize, minDist, 20);
+	}
+
+	public Queue<Location> getRandomSafeLocations(World world, int num, double mapSize, double minDist, int bailout) {
+		List<Location> checkedLocations = new LinkedList<>();
+
+		for (int i = 0; i < num; i++) {
+			Location randomLoc = findRandomSafeLocation(world, mapSize);
+
+			boolean verified = false;
+			for (int j = 0; j < bailout && !verified; j++) {
+				verified = true;
+				for (Location l : checkedLocations) {
+					if (l.distanceSquared(randomLoc) < minDist * minDist) {
+						verified = false;
+						randomLoc = findRandomSafeLocation(world, mapSize);
+						break;
+					}
+				}
+			}
+
+			if (!verified) Bukkit.getLogger().info("[UhcCore] Location " + randomLoc.toString()
+					+ " was within range of another team, but the bailout was reached.");
+			checkedLocations.add(randomLoc);
 		}
 
-		loc = loc.add(.5, 0, .5);
-		return loc;
+		return new LinkedList<>(checkedLocations);
 	}
 
 	/***
@@ -564,22 +601,24 @@ public class PlayersManager {
 	 */
 	public Location findRandomSafeLocation(World world, double maxDistance) {
 		// 35 is the range findSafeLocationAround() will look for a spawn block
-		maxDistance -= 10;
-		Location randomLoc;
-		Location location = null;
-
+		Location r = newRandomLocation(world, maxDistance);
+		Location l = null;
 		int i = 0;
-		while (location == null) {
+		while (l == null) {
 			i++;
-			randomLoc = newRandomLocation(world, maxDistance);
-			location = findSafeLocationAround(randomLoc, 10);
-			if (i > 20) { return randomLoc; }
+			l = findSafeLocationAround(r, (int) maxDistance);
+			if (i > 20 || l != null) break;
+			r = newRandomLocation(world, maxDistance);
 		}
 
-		// Attempt to fix players spawning underground.
-		location = location.add(0, 2, 0);
+		if (l != null) {
+			Bukkit.getLogger().info(l + " is a safe location, apparently");
+		} else {
+			Bukkit.getLogger()
+					.info("idk if " + r + " is a safe location, but I couldnt find any others before bailout");
+		}
 
-		return location;
+		return l == null ? r : l;
 	}
 
 	/***
@@ -592,28 +631,57 @@ public class PlayersManager {
 	 *         be found!
 	 */
 	@Nullable
-	private Location findSafeLocationAround(Location loc, int searchRadius) {
+	public Location findSafeLocationAround(Location loc, int mapSize) {
 		boolean nether = loc.getWorld().getEnvironment() == World.Environment.NETHER;
 		Material material;
-		Location betterLocation;
+		Location betterLocation = loc.clone();
+		Location testLoc = loc.clone();
 
-		for (int i = -searchRadius; i <= searchRadius; i += 3) {
-			for (int j = -searchRadius; j <= searchRadius; j += 3) {
-				betterLocation = getGroundLocation(loc.clone().add(new Vector(i, 0, j)), nether);
+		int i = 0;
+		Vector dir = new Vector(0, 0, 1);
+		// dear god I hope it never gets to full map size
+		while (i < mapSize) {
+			for (int j = 0; j < i; j++) {
+				betterLocation = getGroundLocation(testLoc, nether);
+				testLoc.add(dir);
 
 				// Check if location is on the nether roof.
-				if (nether && betterLocation.getBlockY() > 120) { continue; }
+				if (nether && betterLocation.getBlockY() > 120) continue;
 
 				// Check if the block below is lava / water
 				material = betterLocation.clone().add(0, -1, 0).getBlock().getType();
 				if (material.equals(UniversalMaterial.STATIONARY_LAVA.getType())
-						|| material.equals(UniversalMaterial.STATIONARY_WATER.getType())) {
+						|| material.equals(UniversalMaterial.STATIONARY_WATER.getType())
+						|| material.equals(Material.MAGMA_BLOCK)) {
 					continue;
 				}
-
 				return betterLocation;
 			}
+
+			dir = new Vector(dir.getZ(), 0, -dir.getX());
+
+			for (int j = 0; j < i; j++) {
+				betterLocation = getGroundLocation(testLoc, nether);
+				testLoc.add(dir);
+
+				// Check if location is on the nether roof.
+				if (nether && betterLocation.getBlockY() > 120) continue;
+
+				// Check if the block below is lava / water
+				material = betterLocation.clone().add(0, -1, 0).getBlock().getType();
+				if (material.equals(UniversalMaterial.STATIONARY_LAVA.getType())
+						|| material.equals(UniversalMaterial.STATIONARY_WATER.getType())
+						|| material.equals(Material.MAGMA_BLOCK)) {
+					continue;
+				}
+				return betterLocation;
+			}
+
+			dir = new Vector(dir.getZ(), 0, -dir.getX());
+			i++;
 		}
+
+		Bukkit.getLogger().info("[UhcCore] Could not find ANY safe spawn spot near " + loc.toString());
 
 		return null;
 	}
@@ -657,6 +725,8 @@ public class PlayersManager {
 		int playingTeams = 0;
 		int playingTeamsOnline = 0;
 
+		boolean allBots = true;
+
 		for (UhcTeam team : listUhcTeams()) {
 
 			int teamIsOnline = 0;
@@ -666,6 +736,9 @@ public class PlayersManager {
 				if (player.getState().equals(PlayerState.PLAYING)) {
 					playingPlayers++;
 					teamIsPlaying = 1;
+
+					if (!player.getName().equals("YEUH-BOT")) allBots = false;
+
 					try {
 						player.getPlayer();
 						playingPlayersOnline++;
@@ -684,7 +757,7 @@ public class PlayersManager {
 		MainConfiguration cfg = gm.getConfiguration();
 		if (cfg.getEnableTimeLimit() && gm.getRemainingTime() <= 0 && gm.getGameState().equals(GameState.PLAYING)) {
 			gm.startDeathmatch();
-		} else if (playingPlayers == 0) {
+		} else if (playingPlayers == 0 || allBots) {
 			gm.endGame();
 		} else if (gm.getGameState() == GameState.DEATHMATCH && cfg.getEnableDeathmatchForceEnd() && gm.getPvp()
 				&& (lastDeathTime + (cfg.getDeathmatchForceEndDelay() * TimeUtils.SECOND)) < System
@@ -723,6 +796,7 @@ public class PlayersManager {
 	}
 
 	public void sendPlayerToBungeeServer(Player player) {
+		PlayerConnectionListener.addToSendingToLobby(player);
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		out.writeUTF("Connect");
 		out.writeUTF(GameManager.getGameManager().getConfiguration().getServerBungee());
@@ -769,11 +843,13 @@ public class PlayersManager {
 
 		// DeathMatch at 0 0
 		else {
-			for (UhcTeam teams : listUhcTeams()) {
-				Location teleportSpot = findRandomSafeLocation(gm.getLobby().getLoc().getWorld(),
-						cfg.getDeathmatchStartSize() - 10);
+			Queue<Location> randomLocations = getRandomSafeLocations(gm.getLobby().getLoc().getWorld(),
+					listUhcTeams().size(), cfg.getDeathmatchStartSize() - 10, 10);
 
-				for (UhcPlayer player : teams.getMembers()) {
+			for (UhcTeam team : listUhcTeams()) {
+				Location teleportSpot = randomLocations.poll();
+
+				for (UhcPlayer player : team.getMembers()) {
 					try {
 						Player bukkitPlayer = player.getPlayer();
 
@@ -851,9 +927,7 @@ public class PlayersManager {
 				});
 
 			}
-		} else {
-			scoreKeeper.envDie(uhcPlayer);
-		}
+		} else if (gm.getStartPlayers() > 1) { scoreKeeper.envDie(uhcPlayer); }
 
 		// Store drops in case player gets re-spawned.
 		uhcPlayer.getStoredItems().clear();

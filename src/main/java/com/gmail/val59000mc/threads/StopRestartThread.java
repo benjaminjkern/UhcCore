@@ -1,12 +1,8 @@
 package com.gmail.val59000mc.threads;
 
-import java.io.PrintWriter;
-
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
-import com.gmail.val59000mc.configuration.MainConfiguration;
-import com.gmail.val59000mc.maploader.MapLoader;
 import org.bukkit.Bukkit;
 
 public class StopRestartThread implements Runnable {
@@ -32,14 +28,12 @@ public class StopRestartThread implements Runnable {
 
 			// if you do it this way, it will just reload the plugin and not have to turn
 			// off and back on the server
-			PrintWriter out = gm.getLobbyOutputStream();
-			if (out != null) out.println("SHUTTINGDOWN");
 			Bukkit.getServer().getOnlinePlayers().forEach(player -> { player.kickPlayer("Server Restarting"); });
-			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "reload");
+			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stop");
 		} else {
 			if (timeBeforeStop < 5 || timeBeforeStop % 10 == 0) {
-				Bukkit.getLogger().info("[UhcCore] Server will shutdown in " + timeBeforeStop + "s");
-				gm.broadcastInfoMessage(Lang.GAME_SHUTDOWN.replace("%time%", "" + timeBeforeStop));
+				Bukkit.getLogger().info("[UhcCore] Sending players back to lobby in " + timeBeforeStop + "s");
+				gm.broadcastInfoMessage("Sending players back to lobby in \u00a7d" + timeBeforeStop + " seconds.");
 			}
 
 			timeBeforeStop--;

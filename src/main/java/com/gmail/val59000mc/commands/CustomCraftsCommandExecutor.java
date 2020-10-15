@@ -14,25 +14,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class CustomCraftsCommandExecutor implements CommandExecutor{
+public class CustomCraftsCommandExecutor implements CommandExecutor {
 
     private final Map<UUID, Craft.Creator> craftCreators;
 
-    public CustomCraftsCommandExecutor(){
-        craftCreators = new HashMap<>();
-    }
+    public CustomCraftsCommandExecutor() { craftCreators = new HashMap<>(); }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)){
+        if (!(sender instanceof Player)) {
             sender.sendMessage("Only players can use this command.");
             return true;
         }
 
         Player player = (Player) sender;
 
-        if (args.length == 0){
-            if (!CraftsManager.isAtLeastOneCraft()){
+        if (args.length == 0) {
+            if (!CraftsManager.isAtLeastOneCraft()) {
                 // no crafts
                 player.sendMessage(Lang.COMMAND_RECIPES_ERROR);
                 return true;
@@ -42,13 +40,13 @@ public class CustomCraftsCommandExecutor implements CommandExecutor{
             return true;
         }
 
-        if (!player.hasPermission("uhc-core.commands.craft.create")){
+        if (!player.hasPermission("uhc-core.commands.craft.create")) {
             player.sendMessage(ChatColor.RED + "Your not allowed to create recipes!");
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("name")){
-            if (args.length != 2){
+        if (args[0].equalsIgnoreCase("name")) {
+            if (args.length != 2) {
                 player.sendMessage(ChatColor.RED + "Usage: /craft name <name>");
                 return true;
             }
@@ -58,37 +56,38 @@ public class CustomCraftsCommandExecutor implements CommandExecutor{
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("item")){
-            if (args.length != 2){
+        if (args[0].equalsIgnoreCase("item")) {
+            if (args.length != 2) {
                 player.sendMessage(ChatColor.RED + "Usage: '/craft item <item-number (1-9)>' (While holding the item)");
                 return true;
             }
 
             int number;
-            ItemStack item = player.getItemInHand();
+            ItemStack item = player.getInventory().getItemInMainHand();
 
             try {
                 number = Integer.parseInt(args[1]);
                 if (number < 1 || number > 9) throw new IllegalArgumentException();
-            }catch (IllegalArgumentException ex){
+            } catch (IllegalArgumentException ex) {
                 player.sendMessage(ChatColor.RED + "Usage: '/craft item <item-number (1-9)>' (While holding the item)");
                 return true;
             }
 
-            getCraftCreator(player).setRecipeItem(number-1, item);
+            getCraftCreator(player).setRecipeItem(number - 1, item);
             player.sendMessage(ChatColor.GREEN + "Set recipe item " + number + " to " + item.getType());
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("craft")){
-            getCraftCreator(player).setCraft(player.getItemInHand());
-            player.sendMessage(ChatColor.GREEN + "Set craft item to " + player.getItemInHand().getType());
+        if (args[0].equalsIgnoreCase("craft")) {
+            getCraftCreator(player).setCraft(player.getInventory().getItemInMainHand());
+            player.sendMessage(
+                    ChatColor.GREEN + "Set craft item to " + player.getInventory().getItemInMainHand().getType());
             return true;
         }
 
         // limit
-        if (args[0].equalsIgnoreCase("limit")){
-            if (args.length != 2){
+        if (args[0].equalsIgnoreCase("limit")) {
+            if (args.length != 2) {
                 player.sendMessage(ChatColor.RED + "Usage: '/craft limit <amount>'");
                 return true;
             }
@@ -97,7 +96,7 @@ public class CustomCraftsCommandExecutor implements CommandExecutor{
 
             try {
                 number = Integer.parseInt(args[1]);
-            }catch (IllegalArgumentException ex){
+            } catch (IllegalArgumentException ex) {
                 player.sendMessage(ChatColor.RED + "Usage: '/craft limit <amount>'");
                 return true;
             }
@@ -108,8 +107,8 @@ public class CustomCraftsCommandExecutor implements CommandExecutor{
         }
 
         // default name
-        if (args[0].equalsIgnoreCase("default-name")){
-            if (args.length != 2){
+        if (args[0].equalsIgnoreCase("default-name")) {
+            if (args.length != 2) {
                 player.sendMessage(ChatColor.RED + "Usage: '/craft default-name <true | false>'");
                 return true;
             }
@@ -118,7 +117,7 @@ public class CustomCraftsCommandExecutor implements CommandExecutor{
 
             try {
                 value = Boolean.parseBoolean(args[1]);
-            }catch (IllegalArgumentException ex){
+            } catch (IllegalArgumentException ex) {
                 player.sendMessage(ChatColor.RED + "Usage: '/craft default-name <true | false>'");
                 return true;
             }
@@ -128,13 +127,13 @@ public class CustomCraftsCommandExecutor implements CommandExecutor{
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("create")){
+        if (args[0].equalsIgnoreCase("create")) {
             Craft craft;
 
             try {
                 craft = getCraftCreator(player).create();
                 craftCreators.remove(player.getUniqueId());
-            }catch (IllegalArgumentException ex){
+            } catch (IllegalArgumentException ex) {
                 player.sendMessage(ChatColor.RED + "Error while creating: " + ex.getMessage());
                 return true;
             }
@@ -149,16 +148,19 @@ public class CustomCraftsCommandExecutor implements CommandExecutor{
 
         player.sendMessage(ChatColor.DARK_GREEN + "Craft creation commands:");
         player.sendMessage(ChatColor.GREEN + " - '/craft name <name>' (To change the craft name)");
-        player.sendMessage(ChatColor.GREEN + " - '/craft item <item-number (1-9)>' (While holding the item you want in your recipe)");
+        player.sendMessage(ChatColor.GREEN
+                + " - '/craft item <item-number (1-9)>' (While holding the item you want in your recipe)");
         player.sendMessage(ChatColor.GREEN + " - '/craft craft' (While holding the item you want as craft)");
-        player.sendMessage(ChatColor.GREEN + " - '/craft limit <amount>' (To set the maximum times someone can craft a item)");
-        player.sendMessage(ChatColor.GREEN + " - '/craft default-name <true | false>' (Set to true to leave the crafted item name as default)");
+        player.sendMessage(
+                ChatColor.GREEN + " - '/craft limit <amount>' (To set the maximum times someone can craft a item)");
+        player.sendMessage(ChatColor.GREEN
+                + " - '/craft default-name <true | false>' (Set to true to leave the crafted item name as default)");
         player.sendMessage(ChatColor.GREEN + " - '/craft create' (Creates the craft)");
         return true;
     }
 
-    private Craft.Creator getCraftCreator(Player player){
-        if (!craftCreators.containsKey(player.getUniqueId())){
+    private Craft.Creator getCraftCreator(Player player) {
+        if (!craftCreators.containsKey(player.getUniqueId())) {
             craftCreators.put(player.getUniqueId(), new Craft.Creator());
         }
         return craftCreators.get(player.getUniqueId());

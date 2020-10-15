@@ -1,12 +1,8 @@
 package com.gmail.val59000mc.players;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
-import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.exceptions.UhcPlayerDoesntExistException;
 import com.gmail.val59000mc.game.GameManager;
 
@@ -17,58 +13,22 @@ public class ScoreKeeper {
     private Map<String, Double> cache;
     private final double defaultValue = 50;
     private final double scale = 10;
+    private final double factorOfTen = 400;
+    private GameManager gm;
 
-    private Scanner s;
-    private File f;
-
-    public ScoreKeeper() {
+    public ScoreKeeper(GameManager gm) {
         cache = new HashMap<>();
-        s = null;
-        resetScanner();
-    }
-
-    private void resetScanner() {
-        try {
-            f = new File(UhcCore.getPlugin().getDataFolder(), "userScores.txt");
-            f.createNewFile();
-            s = new Scanner(f);
-        } catch (IOException f) {
-            Bukkit.getLogger().warning("[UhcCore] Something went wrong when openning userScores.txt!");
-        }
+        this.gm = gm;
     }
 
     public double getScore(String name, boolean create) throws UhcPlayerDoesntExistException {
 
         if (cache.containsKey(name)) return cache.get(name);
 
-        if (s == null) {
-            cache.put(name, defaultValue);
-            return defaultValue;
-        }
+        gm.sendInfoToServer("RATINGREQUEST:" + name, false);
 
-        while (s.hasNextLine()) {
-            String[] player = s.nextLine().split(":");
-
-            double score = Double.parseDouble(player[1]);
-
-            if (!cache.containsKey(player[0]))
-                // if it finds other players while looking for one in specifics, it adds them to
-                // the cache anyways
-                cache.put(player[0], score);
-
-            if (player[0].equals(name)) {
-                cache.put(name, score);
-                return score;
-            }
-        }
-
-        if (create) {
-            Bukkit.getLogger()
-                    .info("[UhcCore] Creating user score for " + name + ". Default value: " + defaultValue + ".");
-            cache.put(name, defaultValue);
-            return defaultValue;
-        }
-        throw new UhcPlayerDoesntExistException(name);
+        // dont save to cache unless the server explicitly said to
+        return defaultValue;
     }
 
     public double getScore(UhcPlayer p) {
@@ -89,8 +49,10 @@ public class ScoreKeeper {
 
         cache.put(name, filteredScore);
 
-        GameManager.getGameManager().getPlayersManager().getUhcPlayer(name)
-                .sendMessage("Your Player Rating has been updated to \u00a76" + String.format("%.2f", filteredScore));
+        try {
+            gm.getPlayersManager().getUhcPlayer(name).sendMessage(
+                    "Your Player Rating has been updated to \u00a76" + String.format("%.2f", filteredScore));
+        } catch (UhcPlayerDoesntExistException e) {}
         Bukkit.getLogger().info(name + "'s new score is " + filteredScore);
         return filteredScore;
     }
@@ -133,53 +95,43 @@ public class ScoreKeeper {
 
     // write back to disk, should really only be done when plugin is disabled
     public void storeData() {
-        Bukkit.getLogger().info("[UhcCore] Storing User Score data.");
-        // finish the scanner
-        while (s.hasNextLine()) {
-            String[] player = s.nextLine().split(":");
-            double score = Double.parseDouble(player[1]);
-
-            if (!cache.containsKey(player[0])) cache.put(player[0], score);
+        for (Entry<String, Double> e : cache.entrySet()) {
+            if (e.getValue() != defaultValue) gm.sendInfoToServer("RATING:" + e.getKey() + ":" + e.getValue(), false);
         }
-        s.close();
-
-        // write everything in the cache
-        try {
-            FileWriter myWriter = new FileWriter(f, false);
-            for (Entry<String, Double> e : cache.entrySet()) {
-                if (e.getValue() != defaultValue) myWriter.write(e.getKey() + ":" + e.getValue() + "\n");
-            }
-            myWriter.close();
-        } catch (IOException e) {
-            Bukkit.getLogger().warning("[UhcCore] Something went wrong when writing to userScores.txt!");
-        }
-
-        resetScanner();
         cache.clear();
     }
 
-    private double Prob(double x) { return 1 / (1 + Math.pow(10, x / 400)); }
+    private double Prob(double x) { return 1 / (1 + Math.pow(10, x / factorOfTen)); }
 
     private double forward(double x) { return 100 * Prob(1000 - x); }
 
-    private double inverse(double x) { return 1000 - 400 * Math.log10(100 / x - 1); }
+    private double inverse(double x) { return 1000 - factorOfTen * Math.log10(100 / x - 1); }
+
+    // these are the three that are called by the game
 
     public void updateScores(UhcPlayer winner, UhcPlayer loser) {
+        // don't do anything if the two are the same
+        if (winner.getName().equals(loser.getName())) return;
+
         double A = getScoreI(winner);
         double B = getScoreI(loser);
 
         double P = Prob(B - A);
 
-        double diff = scale * (P - 1);
+        double diff = scale * (1 - P);
 
-        setScore(winner, forward(A + diff));
-        setScore(loser, forward(B - diff));
+        gm.sendInfoToServer("RATING:" + winner.getName() + ":" + setScore(winner, forward(A + diff)), false);
+        gm.sendInfoToServer("RATING:" + loser.getName() + ":" + setScore(loser, forward(B - diff)), false);
     }
 
-    public void envDie(UhcPlayer loser) { setScore(loser, forward(getScoreI(loser) - scale * getScore(loser) / 100)); }
+    public void envDie(UhcPlayer loser) {
+        gm.sendInfoToServer("RATING:" + loser.getName() + ":"
+                + setScore(loser, forward(getScoreI(loser) - scale * getScore(loser) / 100)), false);
+    }
 
     public void envWin(UhcPlayer winner) {
-        setScore(winner, forward(getScoreI(winner) + scale * getScore(winner) / 100));
+        gm.sendInfoToServer("RATING:" + winner.getName() + ":"
+                + setScore(winner, forward(getScoreI(winner) + scale * getScore(winner) / 100)), false);
     }
 
 }

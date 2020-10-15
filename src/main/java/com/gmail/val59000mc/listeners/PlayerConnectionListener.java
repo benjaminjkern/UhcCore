@@ -1,29 +1,41 @@
 package com.gmail.val59000mc.listeners;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.exceptions.UhcPlayerJoinException;
 import com.gmail.val59000mc.exceptions.UhcTeamException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
+import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.PlayersManager;
 import com.gmail.val59000mc.players.UhcPlayer;
+import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.threads.KillDisconnectedPlayerThread;
 import org.bukkit.Bukkit;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PlayerConnectionListener implements Listener {
 
 	private final GameManager gameManager;
 	private final PlayersManager playersManager;
+	private static Set<Player> sendingToLobby = new HashSet<>();
 
 	public PlayerConnectionListener(GameManager gameManager, PlayersManager playersManager) {
 		this.gameManager = gameManager;
@@ -52,25 +64,44 @@ public class PlayerConnectionListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onPlayerJoin(final PlayerJoinEvent event) {
-		gameManager.sendInfoToServer("CURRENTSIZE:" + (Bukkit.getOnlinePlayers().size()));
+	public void onPlayerJoin(PlayerJoinEvent event) {
+		gameManager.sendInfoToServer("CURRENTSIZE:" + (Bukkit.getOnlinePlayers().size()), false);
 		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
 				() -> playersManager.playerJoinsTheGame(event.getPlayer()), 1);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerDisconnect(PlayerQuitEvent event) {
-		gameManager.sendInfoToServer("CURRENTSIZE:" + (Bukkit.getOnlinePlayers().size() - 1));
+		gameManager.sendInfoToServer("CURRENTSIZE:" + (Bukkit.getOnlinePlayers().size() - 1), false);
 
 		if (gameManager.getGameState().equals(GameState.WAITING)
 				|| gameManager.getGameState().equals(GameState.STARTING)) {
 			UhcPlayer uhcPlayer = playersManager.getUhcPlayer(event.getPlayer());
 
-			if (gameManager.getGameState().equals(GameState.STARTING)) {
-				playersManager.setPlayerSpectateAtLobby(uhcPlayer);
-				gameManager.broadcastInfoMessage(
-						uhcPlayer.getName() + " has left while the game was starting and has been killed.");
-				playersManager.strikeLightning(uhcPlayer);
+			// if (gameManager.getGameState().equals(GameState.STARTING)) {
+			// playersManager.setPlayerSpectateAtLobby(uhcPlayer);
+			// gameManager.broadcastInfoMessage(
+			// uhcPlayer.getName() + " has left while the game was starting and has been
+			// killed.");
+			// playersManager.strikeLightning(uhcPlayer);
+			// }
+
+			Inventory scenarioInventory = gameManager.getScenarioManager().getScenarioVoteInventory(uhcPlayer);
+			for (ItemStack item : scenarioInventory.getContents()) {
+				ItemMeta meta = item.getItemMeta();
+				Scenario scenario = Scenario.getScenario(meta.getDisplayName());
+				if (uhcPlayer.getScenarioVotes().contains(scenario)) {
+					uhcPlayer.getScenarioVotes().remove(scenario);
+					if (item.getAmount() == 1) {
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						meta.removeEnchant(Enchantment.DURABILITY);
+					} else {
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						item.setAmount(item.getAmount() - 1);
+					}
+					item.setItemMeta(meta);
+				}
 			}
 
 			try {
@@ -99,6 +130,16 @@ public class PlayerConnectionListener implements Listener {
 			}
 			playersManager.checkIfRemainingPlayers();
 		}
+
+		Player p = event.getPlayer();
+		if (sendingToLobby.contains(p)) {
+			event.setQuitMessage("\u00a70(\u00a7d\u00a7l<\u00a70) \u00a77" + p.getDisplayName());
+			sendingToLobby.remove(p);
+		} else if (gameManager.getPlayersManager().getUhcPlayer(p).getState() == PlayerState.PLAYING) {
+			gameManager.sendInfoToServer("DISCONNECTED:" + p.getName(), false);
+		}
 	}
+
+	public static void addToSendingToLobby(Player p) { sendingToLobby.add(p); }
 
 }

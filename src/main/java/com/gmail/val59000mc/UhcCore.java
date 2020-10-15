@@ -1,7 +1,6 @@
 package com.gmail.val59000mc;
 
 import com.gmail.val59000mc.game.GameManager;
-import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.utils.FileUtils;
 import com.gmail.val59000mc.configuration.YamlFile;
@@ -9,6 +8,10 @@ import com.gmail.val59000mc.utils.TimeUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.api.npc.NPCRegistry;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,6 +29,8 @@ public class UhcCore extends JavaPlugin {
 	private boolean bStats;
 	private GameManager gameManager;
 	private Updater updater;
+
+	public static final String PREFIX = "\u00a75(\u00a7d\u00a7lYEUH\u00a75) ";
 
 	@Override
 	public void onEnable() {
@@ -161,9 +166,19 @@ public class UhcCore extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+
+		if (getServer().getPluginManager().getPlugin("Citizens") != null
+				&& getServer().getPluginManager().getPlugin("Citizens").isEnabled() != false) {
+
+			Bukkit.getLogger().info("[UhcCore] Removing all Citizens");
+			// might be redundant
+			for (NPCRegistry r : CitizensAPI.getNPCRegistries()) { r.deregisterAll(); }
+		}
+
 		// kick anyone who might be on
 		Bukkit.getServer().getOnlinePlayers().forEach(player -> { player.kickPlayer("Server Restarting"); });
 
+		gameManager.sendInfoToServer("SHUTTINGDOWN", false);
 		gameManager.getPlayersManager().getScoreKeeper().storeData();
 		gameManager.getScenarioManager().disableAllScenarios();
 

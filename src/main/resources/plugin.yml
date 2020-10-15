@@ -3,7 +3,7 @@ main: com.gmail.val59000mc.UhcCore
 version: @version@
 description: Automates UHC games on a dedicated server
 author: val59000mc, Mezy
-softdepend: [WorldEdit,Vault,ProtocolLib]
+softdepend: [WorldEdit,Vault,ProtocolLib,Citizens,Sentinel]
 api-version: 1.13
 commands:
   uhccore:
@@ -71,3 +71,13 @@ commands:
   rating:
     description: "Used to see info about your Player Rating."
     usage: /<command> <sub-commands>
+  newmap:
+    description: "Get a new map of the world, if you dont like the one you got"
+    usage: /<command>
+  ping:
+    description: "Ping the lobby server."
+    permission: "uhc-core.commands.ping"
+    usage: /<command> [on|off]
+  discord:
+    description: "Display discord"
+    usage: /<command>

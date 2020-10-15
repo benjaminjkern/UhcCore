@@ -27,10 +27,30 @@ public class ScenarioManager {
     private static final int ROW = 9;
     private final Map<Scenario, ScenarioListener> activeScenarios;
 
-    public ScenarioManager() { activeScenarios = new HashMap<>(); }
+    private Inventory scenarioVoteInventory;
+
+    public ScenarioManager() {
+        activeScenarios = new HashMap<>();
+
+        Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
+        scenarioVoteInventory = Bukkit.createInventory(null,
+                (int) Math.ceil((Scenario.values().length - blacklist.size()) / ROW) * ROW,
+                RandomUtils.randomTextColor() + Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
+
+        for (Scenario scenario : Scenario.values()) {
+            // Don't add to menu when blacklisted / not compatible / already enabled.
+            if (blacklist.contains(scenario) || !scenario.isCompatibleWithVersion() || isActivated(scenario)) continue;
+
+            ItemStack item = scenario.getScenarioItem();
+            ItemMeta meta = item.getItemMeta();
+            meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+            item.setItemMeta(meta);
+            scenarioVoteInventory.addItem(item);
+        }
+    }
 
     public void addScenario(Scenario scenario) {
-        if (isActivated(scenario)) { return; }
+        if (isActivated(scenario)) return;
 
         Class<? extends ScenarioListener> listenerClass = scenario.getListener();
 
@@ -77,6 +97,11 @@ public class ScenarioManager {
     public synchronized Set<Scenario> getActiveScenarios() { return activeScenarios.keySet(); }
 
     public boolean isActivated(Scenario scenario) { return activeScenarios.containsKey(scenario); }
+
+    public boolean isActivated(String scenarioName) {
+        for (Scenario s : activeScenarios.keySet()) { if (s.name().equals(scenarioName)) return true; }
+        return false;
+    }
 
     public ScenarioListener getScenarioListener(Scenario scenario) { return activeScenarios.get(scenario); }
 
@@ -125,29 +150,7 @@ public class ScenarioManager {
         return inv;
     }
 
-    public Inventory getScenarioVoteInventory(UhcPlayer uhcPlayer) {
-        Set<Scenario> playerVotes = uhcPlayer.getScenarioVotes();
-        Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
-        Inventory inv = Bukkit.createInventory(null,
-                (int) Math.ceil((Scenario.values().length - blacklist.size()) / ROW) * ROW,
-                RandomUtils.randomTextColor() + Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
-
-        for (Scenario scenario : Scenario.values()) {
-            // Don't add to menu when blacklisted / not compatible / already enabled.
-            if (blacklist.contains(scenario) || !scenario.isCompatibleWithVersion() || isActivated(scenario)) {
-                continue;
-            }
-
-            ItemStack item = scenario.getScenarioItem();
-
-            if (playerVotes.contains(scenario)) {
-                item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
-                item.setAmount(2);
-            }
-            inv.addItem(item);
-        }
-        return inv;
-    }
+    public Inventory getScenarioVoteInventory(UhcPlayer uhcPlayer) { return scenarioVoteInventory; }
 
     public void disableAllScenarios() {
         Set<Scenario> active = new HashSet<>(getActiveScenarios());
@@ -155,6 +158,8 @@ public class ScenarioManager {
     }
 
     public void countVotes() {
+        // should be a priority queue, though I think that messes with the randomness of
+        // it
 
         Map<Scenario, Integer> votesMap = new HashMap<>();
         List<List<Scenario>> votesList = new ArrayList<>();
@@ -189,7 +194,16 @@ public class ScenarioManager {
             Scenario scenario = currentList.get((int) (Math.random() * currentList.size()));
             currentList.remove(scenario);
 
-            addScenario(scenario);
+            try {
+                if (scenario.condition.call()) addScenario(scenario);
+                else {
+                    Bukkit.getLogger()
+                            .info("[UhcCore] Scenario +" + scenario.getName() + "'s condition was not met, moving on");
+                    continue;
+                }
+            } catch (Exception e) {
+                continue;
+            }
             scenarioCount--;
         }
     }
