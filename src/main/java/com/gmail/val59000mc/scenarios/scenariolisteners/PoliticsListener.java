@@ -1,5 +1,6 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
+import com.gmail.val59000mc.customitems.UhcItems;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.languages.Lang;
@@ -31,14 +32,24 @@ public class PoliticsListener extends ScenarioListener {
         // check if it was friendlyfire
         if (uhcKiller.getTeam() == uhcKilled.getTeam()) return;
 
-        getGameManager().broadcastMessage(uhcKilled.getName() + " was killed by " + uhcKiller.getName() + "!");
-        getPlayersManager().getScoreKeeper().updateScores(uhcKiller, uhcKilled);
+        getGameManager().broadcastMessage(
+                uhcKilled.getDisplayName() + " was killed and joined " + uhcKiller.getDisplayName() + "'s team!");
 
+        GameManager gm = GameManager.getGameManager();
+        gm.sendInfoToServer("KILL:" + uhcKiller.getName() + ":" + uhcKilled.getName(), false);
+
+        uhcKiller.kills++;
+
+        if (getGameManager().getConfiguration().getEnableExpDropOnDeath()) {
+            UhcItems.spawnExtraXp(killed.getLocation(), getGameManager().getConfiguration().getExpDropOnDeath());
+        }
+
+        uhcKilled.getTeam().getMembers().remove(uhcKilled);
         uhcKilled.setTeam(uhcKiller.getTeam());
         uhcKiller.getTeam().getMembers().add(uhcKilled);
 
         uhcKiller.getTeam().sendMessage(Lang.TEAM_MESSAGE_PLAYER_JOINS.replace("%player%", uhcKilled.getName()));
-        GameManager gm = GameManager.getGameManager();
+
         gm.getScoreboardManager().updatePlayerTab(uhcKilled);
 
         killed.setHealth(10);

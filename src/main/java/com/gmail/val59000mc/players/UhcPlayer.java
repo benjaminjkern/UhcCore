@@ -119,7 +119,11 @@ public class UhcPlayer {
 	 */
 	public String getDisplayName() {
 		if (GameManager.getGameManager().getConfiguration().getUseTeamColors()) {
-			return team.getColor() + getName() + ChatColor.RESET;
+			try {
+				return team.getColor() + getPlayer().getName() + ChatColor.RESET;
+			} catch (UhcPlayerNotOnlineException e) {
+				return team.getColor() + getName() + ChatColor.RESET;
+			}
 		}
 		return getName();
 	}

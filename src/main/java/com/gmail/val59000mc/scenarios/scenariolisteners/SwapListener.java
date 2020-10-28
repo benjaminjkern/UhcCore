@@ -9,6 +9,9 @@ import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.players.PlayerState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import net.citizensnpcs.api.CitizensAPI;
+
 import org.bukkit.Location;
 
 import java.util.*;
@@ -30,7 +33,7 @@ public class SwapListener extends ScenarioListener {
         UhcPlayer lastPlayer = null;
         UhcPlayer firstPlayer = null;
 
-        for (UhcPlayer uhcPlayer : getPlayersManager().getOnlinePlayingPlayers()) {
+        for (UhcPlayer uhcPlayer : getPlayersManager().getAllPlayingPlayers()) {
             if (lastPlayer == null) firstPlayer = uhcPlayer;
             else order.put(lastPlayer, uhcPlayer);
             lastPlayer = uhcPlayer;
@@ -40,12 +43,12 @@ public class SwapListener extends ScenarioListener {
         new BukkitRunnable() {
             @Override
             public void run() { getGameManager().broadcastInfoMessage("Swapping places in \u00a7f30 seconds!"); }
-        }.runTaskTimer(UhcCore.getPlugin(), 20 * time, 20 * (time - 30));
+        }.runTaskTimer(UhcCore.getPlugin(), 20 * (time - 30), 20 * time);
 
         new BukkitRunnable() {
             @Override
             public void run() { getGameManager().broadcastInfoMessage("Swapping places in \u00a7f10 seconds!"); }
-        }.runTaskTimer(UhcCore.getPlugin(), 20 * time, 20 * (time - 10));
+        }.runTaskTimer(UhcCore.getPlugin(), 20 * (time - 10), 20 * time);
 
         new BukkitRunnable() {
             @Override
@@ -53,10 +56,10 @@ public class SwapListener extends ScenarioListener {
                 getGameManager().broadcastInfoMessage("Swapping places!");
 
                 order.keySet().forEach(uhcPlayer -> {
+                    if (uhcPlayer.getState() != PlayerState.PLAYING) return;
                     UhcPlayer nextPlayer = order.get(uhcPlayer);
 
-                    while (!(nextPlayer.getState().equals(PlayerState.PLAYING) && nextPlayer.isOnline()))
-                        nextPlayer = order.get(nextPlayer);
+                    while (nextPlayer.getState() != PlayerState.PLAYING) nextPlayer = order.get(nextPlayer);
 
                     order.put(uhcPlayer, nextPlayer);
                     try {
@@ -66,6 +69,8 @@ public class SwapListener extends ScenarioListener {
 
                 locations.keySet().forEach(uhcPlayer -> {
                     try {
+                        if (uhcPlayer.getName().equals("YEUH-BOT")) CitizensAPI.getNPCRegistry()
+                                .getNPC(uhcPlayer.getPlayer()).getNavigator().cancelNavigation();
                         uhcPlayer.getPlayer().teleport(locations.get(uhcPlayer));
                     } catch (UhcPlayerNotOnlineException e) {}
                 });

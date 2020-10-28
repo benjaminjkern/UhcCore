@@ -158,6 +158,7 @@ public class ScenarioManager {
     }
 
     public void countVotes() {
+        Bukkit.getLogger().info("" + GameManager.getGameManager().getPlayersManager().getPlayersList().size());
         // should be a priority queue, though I think that messes with the randomness of
         // it
 

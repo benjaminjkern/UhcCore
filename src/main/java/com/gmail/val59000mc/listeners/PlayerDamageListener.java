@@ -15,6 +15,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.mcmonkey.sentinel.SentinelTrait;
+
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPC;
 
 public class PlayerDamageListener implements Listener {
 
@@ -73,6 +77,14 @@ public class PlayerDamageListener implements Listener {
 			Player damaged = (Player) event.getEntity();
 			UhcPlayer uhcDamager = pm.getUhcPlayer(damager);
 			UhcPlayer uhcDamaged = pm.getUhcPlayer(damaged);
+
+			if (uhcDamager.getName().equals("YEUH-BOT") && uhcDamager.getState().equals(PlayerState.PLAYING)
+					&& uhcDamager.isInTeamWith(uhcDamaged)) {
+				NPC npc = CitizensAPI.getNPCRegistry().getNPC(damager);
+				SentinelTrait sentinel = npc.getTrait(SentinelTrait.class);
+				sentinel.setGuarding(damaged.getUniqueId());
+				event.setCancelled(true);
+			}
 
 			if (!friendlyFire && uhcDamager.getState().equals(PlayerState.PLAYING)
 					&& uhcDamager.isInTeamWith(uhcDamaged)) {

@@ -40,10 +40,7 @@ public class TimeBeforeSendBungeeThread implements Runnable {
 				}
 			}
 
-			if (remainingTime <= 0) {
-				GameManager.getGameManager().sendInfoToServer("OPTIN:" + player.getName(), false);
-				playersManager.sendPlayerToBungeeServer(player);
-			}
+			if (remainingTime <= 0) { playersManager.sendPlayerToBungeeServer(player); }
 
 		} catch (UhcPlayerNotOnlineException e) {
 			// nothing to do for offline players

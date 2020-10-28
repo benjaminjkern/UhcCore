@@ -135,9 +135,11 @@ public class PlayerConnectionListener implements Listener {
 		if (sendingToLobby.contains(p)) {
 			event.setQuitMessage("\u00a70(\u00a7d\u00a7l<\u00a70) \u00a77" + p.getDisplayName());
 			sendingToLobby.remove(p);
-		} else if (gameManager.getPlayersManager().getUhcPlayer(p).getState() == PlayerState.PLAYING) {
-			gameManager.sendInfoToServer("DISCONNECTED:" + p.getName(), false);
-		}
+		} else
+			if ((gameManager.getGameState() == GameState.PLAYING || gameManager.getGameState() == GameState.DEATHMATCH)
+					&& gameManager.getPlayersManager().getUhcPlayer(p).getState() == PlayerState.PLAYING) {
+						gameManager.sendInfoToServer("DISCONNECTED:" + p.getName(), false);
+					}
 	}
 
 	public static void addToSendingToLobby(Player p) { sendingToLobby.add(p); }

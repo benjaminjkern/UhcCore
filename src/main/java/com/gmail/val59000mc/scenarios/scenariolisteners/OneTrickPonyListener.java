@@ -1,15 +1,12 @@
-package com.gmail.val59000mc.scenarios;
+package com.gmail.val59000mc.scenarios.scenariolisteners;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.events.UhcStartedEvent;
-import com.gmail.val59000mc.events.UhcStartingEvent;
+import com.gmail.val59000mc.scenarios.ScenarioListener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -77,6 +74,7 @@ public class OneTrickPonyListener extends ScenarioListener {
 
     @EventHandler
     public void onSpawn(EntitySpawnEvent e) {
+        if (chosenType == null) return;
         if (e.getEntityType() == chosenType) ((LivingEntity) e.getEntity()).setPersistent(false);
         if (!mobSet.contains(e.getEntityType())) return;
 

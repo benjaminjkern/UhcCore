@@ -3,9 +3,6 @@ package com.gmail.val59000mc.scenarios.scenariolisteners;
 import com.gmail.val59000mc.events.UhcStartedEvent;
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
-import com.gmail.val59000mc.utils.UniversalMaterial;
-import com.gmail.val59000mc.scenarios.Option;
-import com.gmail.val59000mc.scenarios.DogNameGenerator;
 
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Wolf;
@@ -16,20 +13,20 @@ import org.bukkit.DyeColor;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionEffect;
 
-public class CompanionListener extends ScenarioListener{
+public class CompanionListener extends ScenarioListener {
 
     @EventHandler
-    public void onGameStart(UhcStartedEvent e){
+    public void onGameStart(UhcStartedEvent e) {
 
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
-            try{
+        getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
+            try {
                 Player thisPlayer = uhcPlayer.getPlayer();
                 Wolf baby = (Wolf) thisPlayer.getWorld().spawnEntity(thisPlayer.getLocation(), EntityType.WOLF);
                 baby.setCustomName(getGameManager().getDogNameGenerator().newName());
                 baby.setOwner(thisPlayer);
                 baby.setCollarColor(getDyeColor(uhcPlayer.getTeam().getColor()));
                 baby.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000, 1));
-            }catch (UhcPlayerNotOnlineException ex){
+            } catch (UhcPlayerNotOnlineException ex) {
                 // No elytra for offline players.
             }
         });

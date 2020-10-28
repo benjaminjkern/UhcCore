@@ -33,6 +33,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.mcmonkey.sentinel.SentinelTrait;
 import org.mcmonkey.sentinel.targeting.SentinelTargetLabel;
@@ -48,7 +49,9 @@ import java.lang.reflect.Method;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GameManager {
 
@@ -79,6 +82,7 @@ public class GameManager {
 	private int startPlayers;
 	private Socket lobbySocket;
 	private PrintWriter lobbyOutputStream;
+	private Set<String> loadedBits;
 
 	static {
 		gameManager = null;
@@ -95,6 +99,7 @@ public class GameManager {
 		worldBorder = new UhcWorldBorder();
 
 		dogNames = new DogNameGenerator();
+		loadedBits = new HashSet<>();
 
 		episodeNumber = 0;
 		elapsedTime = 0;
@@ -301,9 +306,12 @@ public class GameManager {
 		if (configuration.getEnableBungeeSupport()) UhcCore.getPlugin().getServer().getMessenger()
 				.registerOutgoingPluginChannel(UhcCore.getPlugin(), "BungeeCord");
 
-		if (configuration.getEnablePregenerateWorld() && !configuration.getDebug())
-			mapLoader.generateChunks(Environment.NORMAL);
-		else startWaitingPlayers();
+		Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(),
+				() -> PlayersManager.createSpawnLocations(Bukkit.getMaxPlayers()));
+
+		if (configuration.getEnablePregenerateWorld() && !configuration.getDebug()) Bukkit.getScheduler()
+				.runTaskAsynchronously(UhcCore.getPlugin(), () -> mapLoader.generateChunks(Environment.NORMAL));
+		else finishLoad("LOADCHUNKS");
 	}
 
 	private void deleteOldPlayersFiles() {
@@ -330,12 +338,16 @@ public class GameManager {
 
 	}
 
-	public void startWaitingPlayers() {
-		loadWorlds();
-		registerCommands();
-		setGameState(GameState.WAITING);
-		Bukkit.getLogger().info(Lang.DISPLAY_MESSAGE_PREFIX + " Players are now allowed to join");
-		Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new PreStartThread(this), 0);
+	public synchronized void finishLoad(String bit) {
+		if (bit.equals("LOADCHUNKS") || bit.equals("GENERATESPAWNPOINTS")) loadedBits.add(bit);
+		if (loadedBits.size() == 2) {
+			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), () -> loadWorlds(), 0);
+			registerCommands();
+			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), () -> setGameState(GameState.WAITING),
+					0);
+			Bukkit.getLogger().info(Lang.DISPLAY_MESSAGE_PREFIX + " Players are now allowed to join");
+			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new PreStartThread(this), 0);
+		}
 	}
 
 	public void startGame() {
@@ -346,9 +358,6 @@ public class GameManager {
 			VersionUtils.getVersionUtils().setGameRuleValue(overworld, "doDaylightCycle", true);
 			overworld.setTime(0);
 		}
-
-		// scenario voting
-		if (configuration.getEnableScenarioVoting()) { scenarioManager.countVotes(); }
 
 		// if (fillgamewithbots) {
 		if (true) {
@@ -365,18 +374,25 @@ public class GameManager {
 				new SentinelTargetLabel("players").addToList(sentinel.allTargets);
 				new SentinelTargetLabel("npcs").addToList(sentinel.allTargets);
 
-				sentinel.attackRate += (int) (21 * Math.random() - 10);
-				sentinel.range = 100;
+				sentinel.range = 50;
+				sentinel.realistic = true;
+				sentinel.disableTeleporting = true;
+				npc.getNavigator().getDefaultParameters().avoidWater(true);
+				npc.getNavigator().getDefaultParameters().useNewPathfinder(true);
 
-				npc.spawn(Bukkit.getOnlinePlayers().iterator().next().getLocation());
+				Location spawnLoc = Bukkit.getOnlinePlayers().iterator().next().getLocation();
+
+				npc.spawn(spawnLoc);
 				npc.setProtected(false);
 
-				Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
-						() -> playerManager.playerJoinsTheGame((Player) npc.getEntity()), 1);
+				playerManager.playerJoinsTheGame((Player) npc.getEntity());
 			}
-		} else startPlayers = getPlayersManager().getAllPlayingPlayers().size();
+			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new UpdateBotsThread(), 20);
 
-		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new UpdateBotsThread(), 20);
+		} else startPlayers = playerManager.getAllPlayingPlayers().size();
+
+		// scenario voting
+		if (configuration.getEnableScenarioVoting()) { scenarioManager.countVotes(); }
 
 		Bukkit.getPluginManager().callEvent(new UhcStartingEvent());
 
@@ -391,6 +407,12 @@ public class GameManager {
 
 		World overworld = Bukkit.getWorld(configuration.getOverworldUuid());
 		VersionUtils.getVersionUtils().setGameRuleValue(overworld, "doMobSpawning", true);
+
+		Bukkit.getOnlinePlayers().forEach(player -> {
+			player.removePotionEffect(PotionEffectType.BLINDNESS);
+			player.removePotionEffect(PotionEffectType.SLOW_DIGGING);
+			player.removePotionEffect(PotionEffectType.SLOW);
+		});
 
 		lobby.destroyBoundingBox();
 		playerManager.startWatchPlayerPlayingThread();
@@ -414,10 +436,13 @@ public class GameManager {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new FinalHealThread(this, playerManager),
 					configuration.getFinalHealDelay() * 20);
 		}
+		for (UhcPlayer player : playerManager.getAllPlayingPlayers()) { scoreboardManager.updatePlayerTab(player); }
 
 		worldBorder.startBorderThread();
 		Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new TimeEndGameThread(this, playerManager),
 				20 * 60 * 30);
+
+		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "killall all");
 
 		Bukkit.getPluginManager().callEvent(new UhcStartedEvent());
 		UhcCore.getPlugin().addGameToStatistics();
@@ -529,7 +554,7 @@ public class GameManager {
 				VersionUtils.getVersionUtils().setGameRuleValue(nether, "naturalRegeneration", false);
 			}
 			if (!configuration.getAnnounceAdvancements() && UhcCore.getVersion() >= 12) {
-				VersionUtils.getVersionUtils().setGameRuleValue(overworld, "announceAdvancements", false);
+				VersionUtils.getVersionUtils().setGameRuleValue(nether, "announceAdvancements", false);
 			}
 			VersionUtils.getVersionUtils().setGameRuleValue(nether, "commandBlockOutput", false);
 			VersionUtils.getVersionUtils().setGameRuleValue(nether, "logAdminCommands", false);
@@ -544,7 +569,7 @@ public class GameManager {
 				VersionUtils.getVersionUtils().setGameRuleValue(theEnd, "naturalRegeneration", false);
 			}
 			if (!configuration.getAnnounceAdvancements() && UhcCore.getVersion() >= 12) {
-				VersionUtils.getVersionUtils().setGameRuleValue(overworld, "announceAdvancements", false);
+				VersionUtils.getVersionUtils().setGameRuleValue(theEnd, "announceAdvancements", false);
 			}
 			VersionUtils.getVersionUtils().setGameRuleValue(theEnd, "commandBlockOutput", false);
 			VersionUtils.getVersionUtils().setGameRuleValue(theEnd, "logAdminCommands", false);
@@ -589,6 +614,7 @@ public class GameManager {
 		registerCommand("rating", new RatingCommandExecutor());
 		registerCommand("ping", new PingCommandExecutor(this));
 		registerCommand("discord", new DiscordCommand());
+		registerCommand("stats", new StatsCommand(playerManager.getScoreKeeper()));
 	}
 
 	private void registerCommand(String commandName, CommandExecutor executor) {
@@ -604,8 +630,6 @@ public class GameManager {
 	public void endGame() {
 		if (gameState.equals(GameState.PLAYING) || gameState.equals(GameState.DEATHMATCH)) {
 			setGameState(GameState.ENDED);
-			playerManager.getAllPlayingPlayers()
-					.forEach(uhcPlayer -> { playerManager.getScoreKeeper().envWin(uhcPlayer); });
 			pvp = false;
 			gameIsEnding = true;
 			broadcastInfoMessage(Lang.GAME_FINISHED);

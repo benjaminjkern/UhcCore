@@ -34,43 +34,29 @@ public class UhcTeam {
 		teamName = "Team " + teamNumber;
 		prefix = GameManager.getGameManager().getTeamManager().getTeamPrefix();
 		members.add(uhcPlayer);
-		teamInventory = Bukkit.createInventory(null, 9*3, ChatColor.GOLD + "Team Inventory");
+		teamInventory = Bukkit.createInventory(null, 9 * 3, ChatColor.GOLD + "Team Inventory");
 	}
 
-	public int getTeamNumber() {
-		return teamNumber;
+	public int getTeamNumber() { return teamNumber; }
+
+	public String getTeamName() { return teamName; }
+
+	public void setTeamName(String teamName) { this.teamName = teamName; }
+
+	public String getPrefix() { return prefix + "\u25A0 "; }
+
+	public String getColor() { return prefix; }
+
+	public void setPrefix(String prefix) { this.prefix = prefix; }
+
+	public Inventory getTeamInventory() { return teamInventory; }
+
+	public void sendChatMessageToTeamMembers(UhcPlayer sender, String message) {
+		sendMessage(ChatColor.GREEN + "[Team] " + ChatColor.RESET + sender.getRealName() + ": " + message);
 	}
 
-	public String getTeamName() {
-		return teamName;
-	}
-
-	public void setTeamName(String teamName) {
-		this.teamName = teamName;
-	}
-
-	public String getPrefix() {
-		return prefix + "\u25A0 ";
-	}
-
-	public String getColor(){
-		return prefix;
-	}
-
-	public void setPrefix(String prefix){
-		this.prefix = prefix;
-	}
-
-	public Inventory getTeamInventory() {
-		return teamInventory;
-	}
-
-	public void sendChatMessageToTeamMembers(UhcPlayer sender, String message){
-		sendMessage(ChatColor.GREEN+"[Team] "+ChatColor.RESET+sender.getRealName()+": "+message);
-	}
-
-	public void sendMessage(String message){
-		for(UhcPlayer member: members){
+	public void sendMessage(String message) {
+		for (UhcPlayer member : members) {
 			try {
 				member.getPlayer().sendMessage(message);
 			} catch (UhcPlayerNotOnlineException e) {
@@ -79,81 +65,70 @@ public class UhcTeam {
 		}
 	}
 
-	public boolean contains(UhcPlayer player){
-		return members.contains(player);
-	}
+	public boolean contains(UhcPlayer player) { return members.contains(player); }
 
-	public synchronized List<UhcPlayer> getMembers(){
-		return members;
-	}
+	public synchronized List<UhcPlayer> getMembers() { return members; }
 
-	public int getMemberCount(){
-		return members.size();
-	}
+	public int getMemberCount() { return members.size(); }
 
-	public boolean isSolo(){
-		return getMemberCount() == 1;
-	}
+	public boolean isSolo() { return getMemberCount() == 1; }
 
-	public boolean isSpectating(){
-		return isSolo() && getLeader().getState() == PlayerState.DEAD;
-	}
+	public boolean isSpectating() { return isSolo() && getLeader().getState() == PlayerState.DEAD; }
 
-	public int getKills(){
+	public int getKills() {
 		int i = 0;
-		for (UhcPlayer uhcPlayer : members){
-			i += uhcPlayer.kills;
-		}
+		for (UhcPlayer uhcPlayer : members) { i += uhcPlayer.kills; }
 		return i;
 	}
 
-	public List<UhcPlayer> getDeadMembers(){
+	public List<UhcPlayer> getDeadMembers() {
 		List<UhcPlayer> deadMembers = new ArrayList<>();
-		for(UhcPlayer uhcPlayer : getMembers()){
-			if(uhcPlayer.getState().equals(PlayerState.DEAD)){
-				deadMembers.add(uhcPlayer);
-			}
+		for (UhcPlayer uhcPlayer : getMembers()) {
+			if (uhcPlayer.getState().equals(PlayerState.DEAD)) { deadMembers.add(uhcPlayer); }
 		}
 		return deadMembers;
 	}
 
-	public List<UhcPlayer> getPlayingMembers(){
+	public List<UhcPlayer> getPlayingMembers() {
 		List<UhcPlayer> playingMembers = new ArrayList<>();
-		for(UhcPlayer uhcPlayer : getMembers()){
-			if(uhcPlayer.getState().equals(PlayerState.PLAYING)){
+		for (UhcPlayer uhcPlayer : getMembers()) {
+			if (uhcPlayer.getState().equals(PlayerState.PLAYING)) { playingMembers.add(uhcPlayer); }
+		}
+		return playingMembers;
+	}
+
+	public List<UhcPlayer> getOnlinePlayingMembers() {
+		List<UhcPlayer> playingMembers = new ArrayList<>();
+		for (UhcPlayer uhcPlayer : getMembers()) {
+			if (uhcPlayer.getState().equals(PlayerState.PLAYING) && uhcPlayer.isOnline()) {
 				playingMembers.add(uhcPlayer);
 			}
 		}
 		return playingMembers;
 	}
 
-	public List<UhcPlayer> getOnlinePlayingMembers(){
-		List<UhcPlayer> playingMembers = new ArrayList<>();
-		for(UhcPlayer uhcPlayer : getMembers()){
-			if(uhcPlayer.getState().equals(PlayerState.PLAYING) && uhcPlayer.isOnline()){
-				playingMembers.add(uhcPlayer);
-			}
-		}
-		return playingMembers;
-	}
-
-	public List<String> getMembersNames(){
+	public List<String> getMembersNames() {
 		List<String> names = new ArrayList<>();
-		for(UhcPlayer player : getMembers()){
-			names.add(player.getName());
-		}
+		for (UhcPlayer player : getMembers()) { names.add(player.getName()); }
 		return names;
 	}
 
 	public void join(UhcPlayer player) throws UhcTeamException {
-		if(player.canJoinATeam()){
-			if(isFull()){
-				player.sendMessage(Lang.TEAM_MESSAGE_FULL.replace("%player%", player.getName()).replace("%leader%", getLeader().getName()).replace("%limit%", ""+ GameManager.getGameManager().getConfiguration().getMaxPlayersPerTeam()));
-				throw new UhcTeamException(Lang.TEAM_MESSAGE_FULL.replace("%player%", player.getName()).replace("%leader%", getLeader().getName()).replace("%limit%", ""+ GameManager.getGameManager().getConfiguration().getMaxPlayersPerTeam()));
-			}else{
+		if (player.canJoinATeam()) {
+			if (isFull()) {
+				player.sendMessage(Lang.TEAM_MESSAGE_FULL.replace("%player%", player.getName())
+						.replace("%leader%", getLeader().getName()).replace("%limit%",
+								"" + GameManager.getGameManager().getConfiguration().getMaxPlayersPerTeam()));
+				throw new UhcTeamException(Lang.TEAM_MESSAGE_FULL.replace("%player%", player.getName())
+						.replace("%leader%", getLeader().getName()).replace("%limit%",
+								"" + GameManager.getGameManager().getConfiguration().getMaxPlayersPerTeam()));
+			} else {
 				player.sendMessage(Lang.TEAM_MESSAGE_JOIN_AS_PLAYER.replace("%leader%", getLeader().getName()));
-				for(UhcPlayer teamMember : getMembers()){
-					teamMember.sendMessage(Lang.TEAM_MESSAGE_PLAYER_JOINS.replace("%player%",player.getName()));
+				for (UhcPlayer teamMember : getMembers()) {
+					try {
+						teamMember.sendMessage(Lang.TEAM_MESSAGE_PLAYER_JOINS.replace("%player%",
+								player.getPlayer().getDisplayName()));
+					} catch (UhcPlayerNotOnlineException e) {}
 				}
 				getMembers().add(player);
 				player.setTeam(this);
@@ -162,7 +137,7 @@ public class UhcTeam {
 				ScoreboardManager scoreboardManager = GameManager.getGameManager().getScoreboardManager();
 				scoreboardManager.updatePlayerTab(player);
 			}
-		}else{
+		} else {
 			throw new UhcTeamException(Lang.TEAM_MESSAGE_PLAYER_ALREADY_IN_TEAM.replace("%player%", player.getName()));
 		}
 	}
@@ -173,7 +148,7 @@ public class UhcTeam {
 	}
 
 	public void leave(UhcPlayer player) throws UhcTeamException {
-		if(player.canLeaveTeam()){
+		if (player.canLeaveTeam()) {
 
 			boolean isLeader = player.isTeamLeader();
 			getMembers().remove(player);
@@ -183,87 +158,74 @@ public class UhcTeam {
 			GameManager.getGameManager().getScoreboardManager().updatePlayerTab(player);
 			UhcPlayer newLeader = getMembers().get(0);
 
-			if(isLeader){
+			if (isLeader) {
 				player.sendMessage(Lang.TEAM_MESSAGE_LEAVE_AS_LEADER.replace("%newleader%", newLeader.getName()));
-				for(UhcPlayer uhcPlayer : getMembers()){
-					uhcPlayer.sendMessage(Lang.TEAM_MESSAGE_LEADER_LEAVES.replace("%leader%", player.getName()).replace("%newleader%", newLeader.getName()));
+				for (UhcPlayer uhcPlayer : getMembers()) {
+					uhcPlayer.sendMessage(Lang.TEAM_MESSAGE_LEADER_LEAVES.replace("%leader%", player.getName())
+							.replace("%newleader%", newLeader.getName()));
 				}
-			}else{
+			} else {
 				player.sendMessage(Lang.TEAM_MESSAGE_LEAVE_AS_PLAYER);
-				for(UhcPlayer teamMember : getMembers()){
+				for (UhcPlayer teamMember : getMembers()) {
 					teamMember.sendMessage(Lang.TEAM_MESSAGE_PLAYER_LEAVES.replace("%player%", player.getName()));
 				}
 			}
-		}else{
+		} else {
 			throw new UhcTeamException(Lang.TEAM_MESSAGE_CANT_LEAVE);
 		}
 	}
 
-	public UhcPlayer getLeader(){
-		return getMembers().get(0);
-	}
+	public UhcPlayer getLeader() { return getMembers().get(0); }
 
-	public void setReady(boolean value){
-		this.readyToStart = value;
-	}
+	public void setReady(boolean value) { this.readyToStart = value; }
 
-	public boolean isReadyToStart(){
-		return readyToStart;
-	}
+	public boolean isReadyToStart() { return readyToStart; }
 
-	public boolean isOnline(){
+	public boolean isOnline() {
 		int membersOnline = 0;
-		for(UhcPlayer uhcPlayer : getMembers()){
-			try{
+		for (UhcPlayer uhcPlayer : getMembers()) {
+			try {
 				Player player = uhcPlayer.getPlayer();
-				if(player.isOnline())
-					membersOnline++;
-			}catch(UhcPlayerNotOnlineException e){
+				if (player.isOnline()) membersOnline++;
+			} catch (UhcPlayerNotOnlineException e) {
 				// not adding playing to count
 			}
 		}
 		return (membersOnline > 0);
 	}
 
-	public void changeReadyState(){
+	public void changeReadyState() {
 		setReady(!isReadyToStart());
-		for(UhcPlayer teamMember : getMembers()){
-			if(isReadyToStart()) {
+		for (UhcPlayer teamMember : getMembers()) {
+			if (isReadyToStart()) {
 				teamMember.sendMessage(Lang.TEAM_MESSAGE_NOW_READY);
-			}else {
+			} else {
 				teamMember.sendMessage(Lang.TEAM_MESSAGE_NOW_NOT_READY);
 			}
 		}
 	}
 
-	public List<UhcPlayer> getOtherMembers(UhcPlayer excludedPlayer){
+	public List<UhcPlayer> getOtherMembers(UhcPlayer excludedPlayer) {
 		List<UhcPlayer> otherMembers = new ArrayList<>();
-		for(UhcPlayer uhcPlayer : getMembers()){
-			if(!uhcPlayer.equals(excludedPlayer))
-				otherMembers.add(uhcPlayer);
-		}
+		for (UhcPlayer uhcPlayer : getMembers()) { if (!uhcPlayer.equals(excludedPlayer)) otherMembers.add(uhcPlayer); }
 		return otherMembers;
 	}
 
 	public void regenTeam(boolean doubleRegen) {
-		for(UhcPlayer uhcPlayer : getMembers()){
+		for (UhcPlayer uhcPlayer : getMembers()) {
 			uhcPlayer.sendMessage(Lang.ITEMS_REGEN_HEAD_ACTION);
-			try{
+			try {
 				Player p = uhcPlayer.getPlayer();
-				p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION,100,doubleRegen?2:1));
-			}catch(UhcPlayerNotOnlineException e){
+				p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, doubleRegen ? 2 : 1));
+			} catch (UhcPlayerNotOnlineException e) {
 				// No regen for offline players
 			}
 		}
 
 	}
 
-	public void setStartingLocation(Location loc){
-		this.startingLocation = loc;
-	}
+	public void setStartingLocation(Location loc) { this.startingLocation = loc; }
 
-	public Location getStartingLocation(){
-		return startingLocation;
-	}
+	public Location getStartingLocation() { return startingLocation; }
 
 }

@@ -417,7 +417,12 @@ public class ScoreboardManager {
         }
 
         if (returnString.contains("%userScore%")) returnString = returnString.replace("%userScore%",
-                String.format("%.2f", gm.getPlayersManager().getScoreKeeper().getScore(uhcPlayer)));
+                String.format("%.2f", gm.getPlayersManager().getScoreKeeper().getStats(uhcPlayer.getName()).rating));
+
+        if (returnString.contains("%bots%")) {
+            returnString = returnString.replace("%bots%",
+                    (Bukkit.getMaxPlayers() - Bukkit.getOnlinePlayers().size()) + "");
+        }
 
         // Parse custom placeholders
         for (Placeholder placeholder : placeholders) {

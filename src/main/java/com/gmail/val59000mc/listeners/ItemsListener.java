@@ -30,6 +30,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.BrewerInventory;
@@ -390,7 +391,6 @@ public class ItemsListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerDropItem(PlayerDropItemEvent event) {
-		ItemStack item = event.getItemDrop().getItemStack();
 		GameManager gm = GameManager.getGameManager();
 
 		if (gm.getGameState() == GameState.WAITING) { event.setCancelled(true); }
@@ -403,6 +403,12 @@ public class ItemsListener implements Listener {
 		if (e.getItem().equals(UhcItems.createGoldenHead())) {
 			e.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
 		}
+	}
+
+	@EventHandler
+	public void onSignBook(PlayerEditBookEvent e) {
+		GameManager gm = GameManager.getGameManager();
+		if (gm.getGameState() == GameState.WAITING) e.setCancelled(true);
 	}
 
 	private void handleScenarioInventory(InventoryClickEvent e) {

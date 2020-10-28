@@ -38,11 +38,7 @@ public class HubCommandExecutor implements CommandExecutor {
             }
         } else if (!args[0].toLowerCase().equals("confirm")) return false;
 
-        if (pm.getUhcPlayer(player).getState() == PlayerState.DEAD || gameManager.getGameState() == GameState.ENDED) {
-            gameManager.sendInfoToServer("OPTIN:" + player.getName(), false);
-        } else if (pm.getUhcPlayer(player).getState() == PlayerState.PLAYING) {
-            Bukkit.dispatchCommand(sender, "suicide");
-        }
+        if (pm.getUhcPlayer(player).getState() == PlayerState.PLAYING) { Bukkit.dispatchCommand(sender, "suicide"); }
 
         if (gameManager.getConfiguration().getEnableBungeeSupport()) {
             gameManager.getPlayersManager().sendPlayerToBungeeServer(player);

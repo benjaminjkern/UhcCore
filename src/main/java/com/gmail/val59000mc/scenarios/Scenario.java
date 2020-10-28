@@ -12,7 +12,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import javax.annotation.Nullable;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -28,7 +27,7 @@ public enum Scenario {
             () -> !GameManager.getGameManager().getScenarioManager().isActivated("RANDOMIZEDDROPS")),
     SKYHIGH(UniversalMaterial.ANVIL, SkyHighListener.class), EGGS(UniversalMaterial.EGG, EggsScenarioListener.class),
     DUOS(UniversalMaterial.ARMOR_STAND, DuosListener.class,
-            () -> GameManager.getGameManager().getPlayersManager().getOnlinePlayingPlayers().size() > 2),
+            () -> GameManager.getGameManager().getPlayersManager().getPlayersList().size() > 2),
     FLYHIGH(UniversalMaterial.ELYTRA, FlyHighListener.class, 9),
     RANDOMIZEDDROPS(UniversalMaterial.EXPERIENCE_BOTTLE, RandomizedDropsListener.class, new Callable<Boolean>() {
         public Boolean call() {
@@ -39,7 +38,7 @@ public enum Scenario {
     }), ACHIEVEMENTHUNTER(UniversalMaterial.BOOK, AchievementHunter.class),
     NINESLOTS(UniversalMaterial.BARRIER, NineSlotsListener.class),
     POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class,
-            () -> GameManager.getGameManager().getPlayersManager().getOnlinePlayingPlayers().size() > 2),
+            () -> GameManager.getGameManager().getPlayersManager().getPlayersList().size() > 2),
     NETHERSTART(UniversalMaterial.LAVA_BUCKET, NetherStartListener.class),
     LAGWORLD(UniversalMaterial.DIRT, LagWorldListener.class),
     LILCHEAT(UniversalMaterial.DIAMOND_BLOCK, LilCheatListener.class),

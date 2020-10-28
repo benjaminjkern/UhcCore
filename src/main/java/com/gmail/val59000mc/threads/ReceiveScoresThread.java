@@ -1,9 +1,9 @@
 package com.gmail.val59000mc.threads;
 
-import java.io.PrintStream;
 import java.util.Scanner;
 
 import com.gmail.val59000mc.game.GameManager;
+import com.gmail.val59000mc.players.PlayerStats;
 
 import org.bukkit.Bukkit;
 
@@ -12,19 +12,11 @@ public class ReceiveScoresThread implements Runnable {
         try (Scanner in = new Scanner(GameManager.getGameManager().getLobbySocket().getInputStream())) {
             while (in.hasNextLine()) {
                 String input = in.nextLine();
-                if (input.startsWith("RATING:")) {
+                if (input.startsWith("STATS:")) {
                     // update player rating
-                    String[] inputBits = input.split(":");
-                    if (inputBits.length == 3) {
-                        try {
-                            GameManager.getGameManager().getPlayersManager().getScoreKeeper().setScore(inputBits[1],
-                                    Double.parseDouble(inputBits[2]));
-                        } catch (Exception e) {
-                            GameManager.getGameManager().getPlayersManager().getScoreKeeper().setScore(inputBits[1],
-                                    50);
-                        }
-                        continue;
-                    }
+                    PlayerStats ps = PlayerStats.newFromParse(input.substring(6));
+                    GameManager.getGameManager().getPlayersManager().getScoreKeeper().storePlayer(ps);
+                    continue;
                 }
 
                 Bukkit.getLogger().info(input + " was not recognized!");

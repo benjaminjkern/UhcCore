@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class ElapsedTimeThread implements Runnable{
+public class ElapsedTimeThread implements Runnable {
 
 	private final GameManager gm;
 	private final ElapsedTimeThread task;
@@ -26,7 +26,7 @@ public class ElapsedTimeThread implements Runnable{
 	private final double reward;
 	private final List<String> timeCommands;
 	private final List<String> timeCommandsPlayers;
-	
+
 	public ElapsedTimeThread() {
 		this.gm = GameManager.getGameManager();
 		this.task = this;
@@ -36,33 +36,28 @@ public class ElapsedTimeThread implements Runnable{
 		this.timeCommands = gm.getConfiguration().getTimeCommands();
 
 		timeCommandsPlayers = new ArrayList<>();
-		for (String cmd : timeCommands){
-			if (cmd.contains("%name%")){
-				timeCommandsPlayers.add(cmd);
-			}
-		}
+		for (String cmd : timeCommands) { if (cmd.contains("%name%")) { timeCommandsPlayers.add(cmd); } }
 		timeCommands.removeAll(timeCommandsPlayers);
 	}
-	
+
 	@Override
 	public void run() {
-		
+
 		long time = gm.getElapsedTime() + 1;
 		gm.setElapsedTime(time);
 
 		Set<UhcPlayer> playingPlayers = gm.getPlayersManager().getOnlinePlayingPlayers();
 
 		// Call time event
-		UhcTimeEvent event = new UhcTimeEvent(playingPlayers,time);
-		Bukkit.getScheduler().runTask(UhcCore.getPlugin(), () -> Bukkit.getServer().getPluginManager().callEvent(event));
-		
-		if(time%intervalTimeEvent == 0){
-			
-			if(enableTimeEvent){
-				String message = Lang.EVENT_TIME_REWARD
-						.replace("%time%", TimeUtils.getFormattedTime(intervalTimeEvent))
-						.replace("%totaltime%", TimeUtils.getFormattedTime(time))
-						.replace("%money%", "" + reward);
+		UhcTimeEvent event = new UhcTimeEvent(playingPlayers, time);
+		Bukkit.getScheduler().runTask(UhcCore.getPlugin(),
+				() -> Bukkit.getServer().getPluginManager().callEvent(event));
+
+		if (time % intervalTimeEvent == 0) {
+
+			if (enableTimeEvent) {
+				String message = Lang.EVENT_TIME_REWARD.replace("%time%", TimeUtils.getFormattedTime(intervalTimeEvent))
+						.replace("%totaltime%", TimeUtils.getFormattedTime(time)).replace("%money%", "" + reward);
 
 				for (UhcPlayer uhcPlayer : playingPlayers) {
 					try {
@@ -71,7 +66,8 @@ public class ElapsedTimeThread implements Runnable{
 						// Time Commands per player
 						timeCommandsPlayers.forEach(cmd -> {
 							try {
-								Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%name%", uhcPlayer.getRealName()));
+								Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+										cmd.replace("%name%", uhcPlayer.getRealName()));
 							} catch (CommandException exception) {
 								Bukkit.getLogger().warning("[UhcCore] Failed to execute time reward command: " + cmd);
 								exception.printStackTrace();
@@ -81,9 +77,7 @@ public class ElapsedTimeThread implements Runnable{
 						// Money rewards
 						if (reward > 0) {
 							VaultManager.addMoney(p, reward);
-							if (!message.isEmpty()) {
-								p.sendMessage(message);
-							}
+							if (!message.isEmpty()) { p.sendMessage(message); }
 						}
 					} catch (UhcPlayerNotOnlineException e) {
 						// Tignore offline players
@@ -102,7 +96,7 @@ public class ElapsedTimeThread implements Runnable{
 			}
 		}
 
-		if(!gm.getGameState().equals(GameState.ENDED)){
+		if (!gm.getGameState().equals(GameState.ENDED)) {
 			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), task, 20);
 		}
 	}

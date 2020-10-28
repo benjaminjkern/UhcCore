@@ -1,137 +1,148 @@
 # Server in general
 
+- Implement voting
+- Implement Ranks / Patreon
+
+> New features
+
 - Advertise & Get a consistent player base
 - Voting:
   - Add supply crates
   - Add double vote power
-- Make the creative server fancier
-  - Far down the line: Multiple different queues for singles, doubles, and quads
+- Multiple different games
 - Multiple lobby servers - once there are more players
 - Upgrade Server infrastructure - this was done but can always be added to
 - Easy suggestion box
 - A way to keep track of which scenarios are popular
 - Server website
 - Auction: once a week we give stuff away outside of the game and you can put in tickets
-- A Shop! (IDK HOW THIS WILL WORK also I kinda don't wanna do it)
-- Implement Ranks / Patreon
-- When a game finishes it should say who won
-- Voting is broken, will do a double vote
-  - Should be controlled through lobby
-- Afk should opt you out
+- Server-wide nicknames
+- Easy Server-wide group setting
+- Information about being a member
 
 # Lobby
 
+- Breaking blocks doesnt say anything
+  - In spawn it shouldnt say anything but outside of spawn it should say "Yadaydada owns that!"
+- Fire spread should be active in lobby
+- Fix all the gay stuff with griefprevention
+- Dying in lobby says you have no bed, it shouldnt
+- Make patron menu actually take you to patron zone
+- Make spawn town
+- Make top charts work
+
+> New features
+
 - Trying to break restricted land should remind you to donate
-- Make patron menu
-- Add statues that tell you to use /help
 - Make rating only stay if you are a member "Want your ranking to stay when you log off?"
-- Figure out how to do the infobook automatically show to players
+- Figure out how to do the infobook automatically show to new players
+  - Update infobook to be correct
 - Add info around spawn on:
   - What YEUH is
   - What being a member does
   - What being a patron does
   - People with top ratings, kills, wins, and something else I think maybe most time spent on server idk
-- Continue to build out spawn
-- It says players have 100 blocks to claim, it shouldnt say anything
-- Dying in lobby says you have no bed, it shouldnt
-- Trying to build in spawn says "You dont have permission", but it should say something like "You can't build in spawn!"
-- Fire spread should be active in lobby
-- Opt afk players out of queue (unless they have override perm or something)
-- Fix all the gay stuff with griefprevention
 - Make boats float in lava
+- Let members claim 100 blocks to start with
+- Make stats menu
+- Make stats clear and save and clear cache every 30 minutes or so
+  - Save the people who are currently online
+- Make list from console show all players
+- Make stats from console show stats in text form
+- Hide commands that players dont need to see
+- Add bit to the help menu for:
+  - Actually explain the server
+  - Explain being a member
+  - Display what commands you can use
+- Make list menu show whether in-game players are alive or dead
+- Make games menu and show who's in them and a console equivalent
 
 # UHC Game Servers
 
+> Bugs
+
+- Material/UniversalMaterial have bugs that throw exceptions on legacy materials
+  - Causes lag on: Randomized Crafting (?) And flower power
+- A BUNCH of deprecation warnings (452?)
+- Pretty sure that unless lukcy leaves is on, shears dont give apples at all
+- Signs drop when lobby is unloaded
+  - Not a big deal tbh
+- Slowness warnings still happen when loading in lobby
+
+> New features
+
+- Make list menu that allows spectators to teleport
+
+  - Make it so you spectators can teleport to bots - not sure how
+  - I'm thinkin overhaul spectators in general with a menu that can teleport to people including bots
+    - List all players with who's alive and who's not
+  - Spectators shouldnt be able to fly through stuff - switch to invisible flying adventure mode, possibly, although I'm not sure how to make it non-collidable
+  - Spectators cant tp currently
+
+- Make stats menu
+- Command to see which scenarios are currently active more advertised
+- Nicknames and rating in tablist (?)
 - /newmap command with force
-- /rating top [num] - wip
-- Ratings should do a lookup case sensitive
-- Use one of your votes to downvote - Members only
-- Spectators shouldnt be able to fly through stuff - switch to invisible flying adventure mode, possibly
-- Spectators cant tp currently
+- Use one of your votes to downvote - patrons only
 - Advertise that shears give double apples and enderchests are consistent between games
+  - fix shears thing
 - Make enderchest consistent between games but disabled on:
   - Lil Cheat (I cant think of a way around this one)
   - Dont waste your time (Maybe just make it so you cant put god tools in the ender chest)
-- Achievements show in the nether for some reason
 - Add a bigger warning on getting close to UHC wall
-- Compatibility
-  - Randomized Drops should be incompatible with:
-    - specifically the luck power in super powers
-  - Vein Miner should be fully compatible with:
-    - Lag World
-    - king midas
-    - triple ores
-    - king midas
-  - Lag world should be fully compatible with:
-    - Timber
-  - Make sure Vein works with lagworld and midas and cutclean and lagworld works with timber
-- Material/UniversalMaterial have bugs that throw exceptions on legacy materials
-- A BUNCH of deprecation warnings (515)
-- Fix the not finding biome exceptions, its fricken annoying
+- Make the wall move
+  - Give players a map of where the wall is and where they are and where teammates are
+  - Perhaps allow players to pin on map to show team
 - Voting GUI
-  - Make the scenario voter tell you how many votes you have left
+  - Make the scenario voter tell you how many votes you have left - not sure how
   - Rotating text in vote inventory - not sure if its possible
 - When joining, Title or subtitle should splash on screen, also change it to say "Pick" instead of vote, so it doesnt interfere with server voting
-- Item that lets you see your info and stats in an inventory
-  - Rating
-  - Kills
-  - Games played
-  - Deaths (player deaths/environment deaths)
-  - A second page that lets you read about how the rating system works
-- Test Scenarios:
-  - Updated Bleeding Sweets (Disabled for now so isnt a huge deal)
-  - Weakest Link (Disabled for now so isnt a huge deal)
-  - PVE (Disabled for now so isnt a huge deal)
-  - Skyhigh - this should work I've just never tested it
-- Make player render distance further
-- Nicknames and ranking in tablist
-- Should say congrats for winning
-- Command to see which scenarios are currently active more easily showable
-- Make sounds on send back to lobby - May be implemented already
 - If you hit a teammate it should warn you the first time, cancel it, and warn the rest of the team if you do it again but it does damage the second time (maybe put a cooldown in) EITHER DO THIS OR DISABLE FRIENDLYFIRE
-- Signs drop when lobby is unloaded
-- Locations should be preselected before the game starts
-- Paper "SERVER IS SLOW" errors are annoyinga nd should be fixed
-- When a player joins a server it lags and gives players the opportunty to both write in and sign the book menu, and if done so then the menu isn't accesible anymore
-- Still has off chances of spawning players in blocks which is WACK
-- Make it so random picking scenarios cannot pick disabled scenarios
 
 ### Bots
 
-- Bots should either avoid the wall or move toward center of map
-- I dont think mobs target bots as of rn **TEST**
-- Bot range is 20 blocks still **TEST**
-- Make bots have an AI that learns (NO IDEA HOW TO DO THIS)
-  - An easy AI is just give them all increasingly better things as the game goes on
-    - Maybe their inventories can reflect the real player's inventories or something and be set every 2-5 minutes idk
-- Bot's teams don't show up on their name tag - idk if players even do this but whatever **TEST**
-- Bots aren't compatible with most scenarios
-
-> The rest of these aren't as importante
-
-- I dont think the realistic option works for bots
+- Every once in a while bots make the server lag, not entirely sure what it is
+  - killing all entities helps sometimes for a bit, I think bots are causing a shit ton of mobs to spawn
+  - The only thing is this doesn't always happen
+- Bots make server lag at beginning of game - doesnt happen as much anymore
+- Bot's teams don't show up on their name tag initially, but they do show up if they switch teams
+- Bots don't drop anything when killed
+- Bots suffocate in walls a lot and its dumb
+  - They don't run away from the wall
+  - They also still have issues with water and lava
+  - They do it a lot less now
+- Bots should be able to heal themselves if players can - if players have golden apples or potions or whatever
+- Make sure bots are doing appropriate damage when using enchanted tools and also wearing enchanted armor cuz it definitely felt like I was doing like way more damage than I shouldve been
+- Bots shouldn't go for neutral mobs
+- Bots should run from mobs if their health is low
+- Mobs don't target bots on their own
 - Bots don't take fall damage
-- Two games running at once will not update bot scores correctly
-- The tablist is disabled for bots rn but it should:
+- Eggs do damage to teammates and dont cause the bot to stop guarding
+- Having two bots on a team with a player screws it up a bit
+- Sometimes just sorta stop moving and get stuck behind the wall
+  - Could be having issues pathfinding
+- Pretty sure bots just jump into lava
+- Sometimes they still keep the slowness and blindess potion effects on game start
+
+> Future features
+
+- Make bots have an AI that learns (NO IDEA HOW TO DO THIS)
+- The tablist is disabled for bots rn but it should in the future:
   - Show all bots, not just the ones that are loaded
   - Show when bots are respawned in spectator mode
   - Show the bot's teams and health
-- Bot attack rate should be based on the item in the main hand
-  - Right now it's just randomized between 20-40 ticks, this works for now
 
 # Scenarios
 
 - Random: Pick a random scenario for the rest of the vote counts (If a scenario is picked before random, that one stays in)
 - None: Everything here and below gets negated (If a scenario is picked before random, that one stays in)
 
-  > These two could be put in the inventory so that theyre viewed as constants
+> These two could be put in the inventory so that theyre viewed as constants
 
 - Nether Start:
-  - Kicks for flying a lot
+  - Bots SUCK at this one
 - Politics
   - On switch dog should become docile (maybe in general)
-  - doesn’t always end game when one team is alive (Might not be an issue but shold look into it)
-  - throws IllegalArgumentExceptions - don't know why
   - On switch the player should be immortal but also cant do damage for 5 seconds
   - Make it say if you die of natural causes, you don't join another team
 - Super heros
@@ -140,8 +151,8 @@
   - Make it more obvious what your power is (Maybe dont need this but two people have had the same issue)
   - If the player attacks a zombie, a tamed dog will still attack the zombie, not sure if this is fixable
   - make lucky power compatible with ez money (always cook instead of dropping ore) and triple ore (triple ore) and king midas (always drop gold)
-- Ez money
-  - doesnt give infinity experience for enchanting but it also doesnt take away so thats not a huge deal
+  - Give the ability to disable superpowers for the case of like creeper or ice or whatever
+  - Still some errors that happen
 - Shared inventory: throws exceptions that lag the server
 - Ez money, triple ores, randomized drops, etc. all still apply when in creative mode. Across the board they shouldnt work.
 - Randomzied drops:
@@ -153,8 +164,22 @@
   - Make sure frunaces and stuff still work (Not important cuz its not in rn)
 - Dont waste your time:
   - Crafting multiple items doesnt enchant all of them
+- Sky high
+  - Should do actual damage that makes sounds, idk why its not
 
-> The rest of these are new ideas
+### Compatibility
+
+- Randomized Drops should be incompatible with:
+  - specifically the luck power in super powers
+    - actually maybe not cuz the luck power does other things
+- Vein Miner should be fully compatible with:
+  - Lag World
+  - king midas
+  - triple ores
+  - king midas
+- Lag world should be fully compatible with:
+  - Timber
+- Make sure Vein works with lagworld and midas and cutclean and lagworld works with timber
 
 ### Next Week:
 

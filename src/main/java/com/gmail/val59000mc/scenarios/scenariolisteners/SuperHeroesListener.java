@@ -36,6 +36,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -71,6 +72,7 @@ public class SuperHeroesListener extends ScenarioListener {
     @EventHandler
     public void onGameStart(PlayerStartsPlayingEvent e) {
         try {
+            Bukkit.getLogger().info("Making superpower for " + e.getUhcPlayer().getPlayer().getName());
             SuperPower newPower = new SuperPower();
             allPowers.put(e.getUhcPlayer().getPlayer(), newPower);
             e.getUhcPlayer().getPlayer().sendMessage("\u00a75You have been given the power of the \u00a7d\u00a7l"
@@ -156,6 +158,7 @@ public class SuperHeroesListener extends ScenarioListener {
     public void onPlayerDamage(EntityDamageEvent e) {
         if (e.getEntityType() != EntityType.PLAYER) return;
         Player p = (Player) e.getEntity();
+        if (!allPowers.containsKey(p)) return;
 
         // if (e.getCause() == EntityDamageEvent.DamageCause.FALL
         // && allPowers.get(p).powerType == SuperPower.SuperPowerType.SPIDER)
@@ -179,37 +182,44 @@ public class SuperHeroesListener extends ScenarioListener {
 
         if (damagerIsPlayer) {
             Player playerDamager = (Player) damager;
-            SuperPower damagerPower = allPowers.get(playerDamager);
+            if (allPowers.containsKey(playerDamager)) {
+                SuperPower damagerPower = allPowers.get(playerDamager);
 
-            if (entityIsPlayer) {
-                Player p = (Player) e.getEntity();
-                SuperPower power = allPowers.get(p);
+                if (entityIsPlayer) {
+                    Player p = (Player) e.getEntity();
 
-                if (power.powerType == SuperPower.SuperPowerType.NECROMANCER) {
-                    power.use(p, () -> {
-                        Mob m = spawnRandomUndead(p, 0.7, playerDamager);
-                        p.sendMessage("\u00a75Being struck has caused you to summon a \u00a7d\u00a7l" + m.getType()
-                                + "\u00a75!");
-                    }, false);
+                    if (allPowers.containsKey(p)) {
+                        SuperPower power = allPowers.get(p);
+                        Bukkit.getLogger().info(power + "");
+
+                        if (power.powerType == SuperPower.SuperPowerType.NECROMANCER) {
+                            power.use(p, () -> {
+                                Mob m = spawnRandomUndead(p, 0.7, playerDamager);
+                                p.sendMessage("\u00a75Being struck has caused you to summon a \u00a7d\u00a7l"
+                                        + m.getType() + "\u00a75!");
+                            }, false);
+                        }
+                    }
                 }
-            }
 
-            if (damagerPower.powerType == SuperPower.SuperPowerType.NECROMANCER) {
-                findMinionsAndAttack(playerDamager, e.getEntity());
-            }
+                if (damagerPower.powerType == SuperPower.SuperPowerType.NECROMANCER) {
+                    findMinionsAndAttack(playerDamager, e.getEntity());
+                }
 
-            if (damagerPower.powerType == SuperPower.SuperPowerType.ICEMAN && e.getEntity() instanceof LivingEntity) {
-                ((LivingEntity) e.getEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30 * 20, 1));
-                ((LivingEntity) e.getEntity())
-                        .addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 60 * 20, 1));
-            }
+                if (damagerPower.powerType == SuperPower.SuperPowerType.ICEMAN
+                        && e.getEntity() instanceof LivingEntity) {
+                    ((LivingEntity) e.getEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30 * 20, 1));
+                    ((LivingEntity) e.getEntity())
+                            .addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 60 * 20, 1));
+                }
 
-            if (damagerPower.powerType == SuperPower.SuperPowerType.VAMPIRE) {
-                e.getEntity().getWorld().spawnParticle(Particle.BLOCK_CRACK,
-                        e.getEntity().getLocation().clone().add(0, 1, 0), 50, 0, 0, 0,
-                        Bukkit.createBlockData(Material.REDSTONE_BLOCK));
-                playerDamager.setHealth(Math.min(playerDamager.getHealth() + e.getDamage() * 0.05,
-                        playerDamager.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
+                if (damagerPower.powerType == SuperPower.SuperPowerType.VAMPIRE) {
+                    e.getEntity().getWorld().spawnParticle(Particle.BLOCK_CRACK,
+                            e.getEntity().getLocation().clone().add(0, 1, 0), 50, 0, 0, 0,
+                            Bukkit.createBlockData(Material.REDSTONE_BLOCK));
+                    playerDamager.setHealth(Math.min(playerDamager.getHealth() + e.getDamage() * 0.05,
+                            playerDamager.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
+                }
             }
 
         } else {
@@ -228,18 +238,28 @@ public class SuperHeroesListener extends ScenarioListener {
 
         if (entityIsPlayer) {
             Player p = (Player) e.getEntity();
-            SuperPower power = allPowers.get(p);
+            if (allPowers.containsKey(p)) {
+                SuperPower power = allPowers.get(p);
 
-            if (power.powerType != SuperPower.SuperPowerType.NECROMANCER) {
-                // Set zombies to attack for you if they are nearby you
-                findMinionsAndAttack(p, damager);
+                if (power.powerType != SuperPower.SuperPowerType.NECROMANCER) {
+                    // Set zombies to attack for you if they are nearby you
+                    findMinionsAndAttack(p, damager);
+                }
             }
         }
     }
 
     @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent e) {
+        Player p = e.getEntity();
+        if (allPowers.containsKey(p)) allPowers.remove(p);
+    }
+
+    @EventHandler
     public void onArmorEquip(ArmorEquipEvent e) {
         Player p = e.getPlayer();
+        if (!allPowers.containsKey(p)) return;
+
         if (allPowers.get(p).powerType == SuperPower.SuperPowerType.GHOST) {
             e.setCancelled(true);
             p.sendMessage("\u00a75The armor you equipped falls right through your ghostly form!");
@@ -251,6 +271,7 @@ public class SuperHeroesListener extends ScenarioListener {
         Player p = e.getPlayer();
         if (GameManager.getGameManager().getPlayersManager().getUhcPlayer(p).getState() != PlayerState.PLAYING) return;
 
+        if (!allPowers.containsKey(p)) return;
         SuperPower power = allPowers.get(p);
 
         if (!e.isSneaking()) {
@@ -287,24 +308,85 @@ public class SuperHeroesListener extends ScenarioListener {
                     Location loc = p.getLocation();
                     // top and bottom
                     setIce(loc.clone().add(0, -1, 0));
-                    setIce(loc.clone().add(0, 2, 0));
+                    setIce(loc.clone().add(0, -1, 1));
+                    setIce(loc.clone().add(0, -1, -1));
+                    setIce(loc.clone().add(1, -1, 0));
+                    setIce(loc.clone().add(-1, -1, 0));
+
+                    setIce(loc.clone().add(0, 3, 0));
+                    setIce(loc.clone().add(0, 3, 1));
+                    setIce(loc.clone().add(0, 3, -1));
+                    setIce(loc.clone().add(1, 3, 0));
+                    setIce(loc.clone().add(-1, 3, 0));
                     double yaw = loc.getYaw();
 
-                    if (yaw < 270 - 45 || yaw >= 270 + 45) {
-                        setIce(loc.clone().add(-1, 0, 0));
-                        setIce(loc.clone().add(-1, 1, 0));
+                    if (yaw >= 270 - 45 && yaw < 270 + 45) {
+                        setIce(loc.clone().add(1, 0, 1));
+                        setIce(loc.clone().add(1, 1, 1));
+                        setIce(loc.clone().add(1, 2, 1));
+                        setIce(loc.clone().add(1, 0, -1));
+                        setIce(loc.clone().add(1, 1, -1));
+                        setIce(loc.clone().add(1, 2, -1));
+                        setIce(loc.clone().add(2, 0, 0));
+                        setIce(loc.clone().add(2, 1, 0));
+                        setIce(loc.clone().add(2, 2, 0));
+                        setIce(loc.clone().add(0, 0, 2));
+                        setIce(loc.clone().add(0, 1, 2));
+                        setIce(loc.clone().add(0, 2, 2));
+                        setIce(loc.clone().add(0, 0, -2));
+                        setIce(loc.clone().add(0, 1, -2));
+                        setIce(loc.clone().add(0, 2, -2));
                     }
-                    if (yaw < 90 - 45 || yaw >= 90 + 45) {
-                        setIce(loc.clone().add(1, 0, 0));
-                        setIce(loc.clone().add(1, 1, 0));
+                    if (yaw >= 90 - 45 && yaw < 90 + 45) {
+                        setIce(loc.clone().add(-1, 0, 1));
+                        setIce(loc.clone().add(-1, 1, 1));
+                        setIce(loc.clone().add(-1, 2, 1));
+                        setIce(loc.clone().add(-1, 0, -1));
+                        setIce(loc.clone().add(-1, 1, -1));
+                        setIce(loc.clone().add(-1, 2, -1));
+                        setIce(loc.clone().add(-2, 0, 0));
+                        setIce(loc.clone().add(-2, 1, 0));
+                        setIce(loc.clone().add(-2, 2, 0));
+                        setIce(loc.clone().add(0, 0, 2));
+                        setIce(loc.clone().add(0, 1, 2));
+                        setIce(loc.clone().add(0, 2, 2));
+                        setIce(loc.clone().add(0, 0, -2));
+                        setIce(loc.clone().add(0, 1, -2));
+                        setIce(loc.clone().add(0, 2, -2));
                     }
-                    if (yaw < 180 - 45 || yaw >= 180 + 45) {
-                        setIce(loc.clone().add(0, 0, 1));
-                        setIce(loc.clone().add(0, 1, 1));
+                    if (yaw >= 180 - 45 && yaw < 180 + 45) {
+                        setIce(loc.clone().add(1, 0, -1));
+                        setIce(loc.clone().add(1, 1, -1));
+                        setIce(loc.clone().add(1, 2, -1));
+                        setIce(loc.clone().add(-1, 0, -1));
+                        setIce(loc.clone().add(-1, 1, -1));
+                        setIce(loc.clone().add(-1, 2, -1));
+                        setIce(loc.clone().add(0, 0, -2));
+                        setIce(loc.clone().add(0, 1, -2));
+                        setIce(loc.clone().add(0, 2, -2));
+                        setIce(loc.clone().add(2, 0, 0));
+                        setIce(loc.clone().add(2, 1, 0));
+                        setIce(loc.clone().add(2, 2, 0));
+                        setIce(loc.clone().add(-2, 0, 0));
+                        setIce(loc.clone().add(-2, 1, 0));
+                        setIce(loc.clone().add(-2, 2, 0));
                     }
-                    if (yaw < 360 - 45 && yaw >= 0 + 45) {
-                        setIce(loc.clone().add(0, 0, -1));
-                        setIce(loc.clone().add(0, 1, -1));
+                    if (yaw >= 360 - 45 || yaw < 0 + 45) {
+                        setIce(loc.clone().add(1, 0, 1));
+                        setIce(loc.clone().add(1, 1, 1));
+                        setIce(loc.clone().add(1, 2, 1));
+                        setIce(loc.clone().add(-1, 0, 1));
+                        setIce(loc.clone().add(-1, 1, 1));
+                        setIce(loc.clone().add(-1, 2, 1));
+                        setIce(loc.clone().add(0, 0, -2));
+                        setIce(loc.clone().add(0, 1, -2));
+                        setIce(loc.clone().add(0, 2, -2));
+                        setIce(loc.clone().add(2, 0, 0));
+                        setIce(loc.clone().add(2, 1, 0));
+                        setIce(loc.clone().add(2, 2, 0));
+                        setIce(loc.clone().add(-2, 0, 0));
+                        setIce(loc.clone().add(-2, 1, 0));
+                        setIce(loc.clone().add(-2, 2, 0));
                     }
                 });
                 break;
@@ -345,6 +427,8 @@ public class SuperHeroesListener extends ScenarioListener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
+        if (!allPowers.containsKey(p)) return;
+
         if (allPowers.get(p).powerType == SuperPower.SuperPowerType.LUCKY) {
             if (e.getBlock().getType() == Material.STONE
                     && !p.getInventory().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH)
@@ -359,6 +443,8 @@ public class SuperHeroesListener extends ScenarioListener {
     public void onEntityTarget(EntityTargetEvent e) {
         if (!(e.getTarget() instanceof Player)) return;
         Player p = (Player) e.getTarget();
+
+        if (!allPowers.containsKey(p)) return;
 
         if (allPowers.get(p).powerType == SuperPower.SuperPowerType.LUCKY) { e.setTarget(null); }
         if (allPowers.get(p).powerType == SuperPower.SuperPowerType.NECROMANCER) {

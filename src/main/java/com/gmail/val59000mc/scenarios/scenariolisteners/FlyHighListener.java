@@ -7,9 +7,13 @@ import com.gmail.val59000mc.utils.UniversalMaterial;
 import com.gmail.val59000mc.scenarios.Option;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+
+import net.citizensnpcs.api.CitizensAPI;
+
 import org.bukkit.event.EventHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -39,10 +43,12 @@ public class FlyHighListener extends ScenarioListener {
 
     @EventHandler
     public void onGameStart(UhcStartedEvent e) {
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
+        getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player thisPlayer = uhcPlayer.getPlayer();
-                thisPlayer.getInventory().setChestplate(UniversalMaterial.ELYTRA.getStack());
+                if (!thisPlayer.hasMetadata("NPC"))
+                    thisPlayer.getInventory().setChestplate(UniversalMaterial.ELYTRA.getStack());
+                else((LivingEntity) thisPlayer).getEquipment().setChestplate(UniversalMaterial.ELYTRA.getStack());
                 if (thisPlayer.getLocation().getBlockY() > thisPlayer.getWorld()
                         .getHighestBlockYAt(thisPlayer.getLocation()))
                     thisPlayer.teleport(thisPlayer.getLocation().add(0, height, 0));
@@ -67,7 +73,6 @@ public class FlyHighListener extends ScenarioListener {
     @EventHandler
     public void onUnEquip(InventoryClickEvent e) {
         // you can't take that shit off, (I guess if it breaks its fine)
-        Bukkit.getLogger().info(e.getSlot() + "");
         if (e.getSlot() == 38 && e.getCurrentItem().getType() == Material.ELYTRA) e.setCancelled(true);
     }
 

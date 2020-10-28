@@ -179,7 +179,6 @@ public class UhcCore extends JavaPlugin {
 		Bukkit.getServer().getOnlinePlayers().forEach(player -> { player.kickPlayer("Server Restarting"); });
 
 		gameManager.sendInfoToServer("SHUTTINGDOWN", false);
-		gameManager.getPlayersManager().getScoreKeeper().storeData();
 		gameManager.getScenarioManager().disableAllScenarios();
 
 		storeGameRunning();

@@ -119,7 +119,7 @@ public class CutCleanListener extends ScenarioListener {
                 exp += furnaceRecipes.get(drop.getType()).getExperience();
             }
             int amount = TripleOresListener.ores.containsKey(drop.getType()) ? getFortune(hand) : 1;
-            if (isActivated(Scenario.TRIPLEORES) && TripleOresListener.ores.containsKey(drop.getType())) {
+            if (isActivated(Scenario.TRIPLEORES) && TripleOresListener.ores.containsKey(block.getType())) {
                 amount *= 3;
             }
             if (isActivated(Scenario.DOUBLEGOLD) && drop.getType() == Material.GOLD_ORE) { amount *= 2; }

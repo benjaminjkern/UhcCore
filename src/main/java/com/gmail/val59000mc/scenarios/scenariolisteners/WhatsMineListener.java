@@ -34,7 +34,7 @@ public class WhatsMineListener extends ScenarioListener {
         Player player = (Player) e.getEntity();
         Item item = e.getItem();
 
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
+        getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -47,7 +47,7 @@ public class WhatsMineListener extends ScenarioListener {
     @EventHandler
     public void onThrowItem(PlayerDropItemEvent e) {
         Player player = e.getPlayer();
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
+        getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -68,7 +68,7 @@ public class WhatsMineListener extends ScenarioListener {
     @EventHandler
     public void onBreakTool(PlayerItemBreakEvent e) {
         Player player = e.getPlayer();
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
+        getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -86,7 +86,7 @@ public class WhatsMineListener extends ScenarioListener {
     @EventHandler
     public void onBreakTool(PlayerItemConsumeEvent e) {
         Player player = e.getPlayer();
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
+        getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -104,7 +104,7 @@ public class WhatsMineListener extends ScenarioListener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
         Player player = e.getPlayer();
-        getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
+        getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
                 if (otherPlayer == player) return;
@@ -128,7 +128,7 @@ public class WhatsMineListener extends ScenarioListener {
             public void run() {
                 final ItemStack[] contents = player.getInventory().getContents();
 
-                getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
+                getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
                     try {
                         Player otherPlayer = uhcPlayer.getPlayer();
                         if (otherPlayer == player) return;
@@ -150,7 +150,7 @@ public class WhatsMineListener extends ScenarioListener {
             public void run() {
                 final ItemStack[] contents = player.getInventory().getContents();
 
-                getPlayersManager().getOnlinePlayingPlayers().forEach(uhcPlayer -> {
+                getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
                     try {
                         Player otherPlayer = uhcPlayer.getPlayer();
                         if (otherPlayer == player) return;
