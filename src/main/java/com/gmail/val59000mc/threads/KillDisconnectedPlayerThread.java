@@ -54,10 +54,11 @@ public class KillDisconnectedPlayerThread implements Runnable {
 				pm.killOfflineUhcPlayer(uhcPlayer, new HashSet<>());
 			}
 
-			gm.sendInfoToServer("TIMEOUT:" + uhcPlayer.getName(), false);
+			gm.sendInfoToServer("DEATH:" + uhcPlayer.getName(), false);
 		} else {
 			timeLeft -= 5;
-			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), this, 100);
+			if (UhcCore.getPlugin().isEnabled())
+				Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), this, 100);
 		}
 	}
 

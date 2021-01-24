@@ -5,6 +5,7 @@ import com.gmail.val59000mc.configuration.MainConfiguration;
 import com.gmail.val59000mc.configuration.VaultManager;
 import com.gmail.val59000mc.customitems.UhcItems;
 import com.gmail.val59000mc.events.UhcPlayerKillEvent;
+import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.languages.Lang;
@@ -13,6 +14,7 @@ import com.gmail.val59000mc.players.PlayersManager;
 import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioManager;
+import com.gmail.val59000mc.scenarios.scenariolisteners.NineSlotsListener;
 import com.gmail.val59000mc.scenarios.scenariolisteners.SilentNightListener;
 import com.gmail.val59000mc.threads.TimeBeforeSendBungeeThread;
 import com.gmail.val59000mc.utils.UniversalMaterial;
@@ -27,78 +29,14 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.mcmonkey.sentinel.SentinelTrait;
 
-import java.util.HashSet;
+import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.api.CitizensAPI;
+
 import java.util.List;
-import java.util.Set;
 
 public class PlayerDeathListener implements Listener {
-
-	private static Set<String> animalTypes;
-	private static Set<String> monsterTypes;
-
-	static {
-		animalTypes = new HashSet<>();
-		animalTypes.add("Bee");
-		animalTypes.add("Cat");
-		animalTypes.add("Chicken");
-		animalTypes.add("Cow");
-		animalTypes.add("Donkey");
-		animalTypes.add("Fox");
-		animalTypes.add("Hoglin");
-		animalTypes.add("Horse");
-		animalTypes.add("Llama");
-		animalTypes.add("Mule");
-		animalTypes.add("Mushroom Cow");
-		animalTypes.add("Ocelot");
-		animalTypes.add("Panda");
-		animalTypes.add("Parrot");
-		animalTypes.add("Pig");
-		animalTypes.add("Polar Bear");
-		animalTypes.add("Rabbit");
-		animalTypes.add("Sheep");
-		animalTypes.add("Skeleton Horse");
-		animalTypes.add("Strider");
-		animalTypes.add("Chicken");
-		animalTypes.add("Trader Llama");
-		animalTypes.add("Turtle");
-		animalTypes.add("Wolf");
-		animalTypes.add("Zombie Horse");
-
-		monsterTypes = new HashSet<>();
-		monsterTypes.add("Blaze");
-		monsterTypes.add("Cave Spider");
-		monsterTypes.add("Creeper");
-		monsterTypes.add("Drowned");
-		monsterTypes.add("Elder Guardian");
-		monsterTypes.add("Enderman");
-		monsterTypes.add("Endermite");
-		monsterTypes.add("Evoker");
-		monsterTypes.add("Giant");
-		monsterTypes.add("Guardian");
-		monsterTypes.add("Husk");
-		monsterTypes.add("Illager");
-		monsterTypes.add("Illusioner");
-		monsterTypes.add("Piglin");
-		monsterTypes.add("Piglin Brute");
-		monsterTypes.add("Zombified Piglin");
-		monsterTypes.add("Pillager");
-		monsterTypes.add("Raider");
-		monsterTypes.add("Savager");
-		monsterTypes.add("Silverfish");
-		monsterTypes.add("Skeleton");
-		monsterTypes.add("Spellcaster");
-		monsterTypes.add("Spider");
-		monsterTypes.add("Stray");
-		monsterTypes.add("Vex");
-		monsterTypes.add("Vindicator");
-		monsterTypes.add("Witch");
-		monsterTypes.add("Wither");
-		monsterTypes.add("Wither Skeleton");
-		monsterTypes.add("Zoglin");
-		monsterTypes.add("Zombie");
-		monsterTypes.add("Zombie Villager");
-	}
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerDeath(PlayerDeathEvent event) {
@@ -107,6 +45,8 @@ public class PlayerDeathListener implements Listener {
 		PlayersManager pm = gm.getPlayersManager();
 		MainConfiguration cfg = gm.getConfiguration();
 		UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
+
+		// if (gm.getScenarioManager().isActivated(Scenario.SLAYER)) return;
 
 		if (!player.hasMetadata("NPC")
 				&& (gm.getGameState() == GameState.WAITING || gm.getGameState() == GameState.STARTING)) {
@@ -127,11 +67,18 @@ public class PlayerDeathListener implements Listener {
 		}
 
 		pm.setLastDeathTime();
+		String deathMessage = event.getDeathMessage().replaceFirst(player.getName(), uhcPlayer.getDisplayName());
+
+		if (!GameManager.getGameManager().getWorldBorder().isWithinBorder(player.getLocation())) {
+			deathMessage = deathMessage.replaceFirst("suffocated in a wall", "got stuck behind the wall");
+		}
 
 		// kill event
 		Player killer = player.getKiller();
 		if (killer != null) {
 			UhcPlayer uhcKiller = pm.getUhcPlayer(killer);
+
+			deathMessage = replaceLast(deathMessage, killer.getName(), uhcKiller.getDisplayName());
 
 			uhcKiller.kills++;
 
@@ -161,26 +108,7 @@ public class PlayerDeathListener implements Listener {
 					}
 				});
 			}
-		} else if (gm.getStartPlayers() > 1) {
-			boolean found = false;
-
-			for (String s : animalTypes) {
-				if (event.getDeathMessage().contains(s)) {
-					gm.sendInfoToServer("KILL:YEUH-ANIMAL:" + uhcPlayer.getName(), false);
-					found = true;
-					break;
-				}
-			}
-
-			for (String s : monsterTypes) {
-				if (event.getDeathMessage().contains(s) && !found) {
-					found = true;
-					gm.sendInfoToServer("KILL:YEUH-MONSTER:" + uhcPlayer.getName(), false);
-					break;
-				}
-			}
-			if (!found) gm.sendInfoToServer("DEATH:" + uhcPlayer.getName(), false);
-		}
+		} else if (gm.getStartPlayers() > 1) gm.sendInfoToServer("DEATH:" + uhcPlayer.getName(), false);
 
 		// Store drops in case player gets re-spawned.
 		uhcPlayer.getStoredItems().clear();
@@ -190,8 +118,11 @@ public class PlayerDeathListener implements Listener {
 		ScenarioManager sm = gm.getScenarioManager();
 		if (!sm.isActivated(Scenario.SILENTNIGHT)
 				|| !((SilentNightListener) sm.getScenarioListener(Scenario.SILENTNIGHT)).isNightMode()) {
-			gm.broadcastInfoMessage(Lang.PLAYERS_ELIMINATED.replace("%player%", player.getName()));
+			gm.broadcastInfoMessage(deathMessage);
+			event.setDeathMessage(null);
 		}
+
+		if (sm.isActivated(Scenario.WHATSMINE) || sm.isActivated(Scenario.INHERITANCE)) event.getDrops().clear();
 
 		if (!player.hasMetadata("NPC")) {
 
@@ -214,12 +145,27 @@ public class PlayerDeathListener implements Listener {
 			}
 		}
 
+		for (UhcPlayer teamMate : uhcPlayer.getTeam().getMembers()) {
+			if (teamMate.getName().equals("YEUH-BOT") && teamMate.getState().equals(PlayerState.PLAYING)) {
+				Player matePlayer;
+				try {
+					matePlayer = teamMate.getPlayer();
+				} catch (UhcPlayerNotOnlineException haggle) {
+					continue;
+				}
+				NPC npc = CitizensAPI.getNPCRegistry().getNPC(matePlayer);
+				SentinelTrait sentinel = npc.getTrait(SentinelTrait.class);
+				sentinel.setGuarding(null);
+			}
+		}
+
 		if (cfg.getEnableExpDropOnDeath()) { UhcItems.spawnExtraXp(player.getLocation(), cfg.getExpDropOnDeath()); }
 
 		uhcPlayer.setState(PlayerState.DEAD);
+		GameManager.getGameManager().getListInventoryHandler().updatePlayer(uhcPlayer);
 		pm.strikeLightning(uhcPlayer);
-		pm.playSoundPlayerDeath();
-		Bukkit.getLogger().info(UhcCore.PREFIX + player.getName() + " has been eliminated!");
+		// pm.playSoundPlayerDeath();
+		Bukkit.getLogger().info(UhcCore.PREFIX + "\u00a7f" + deathMessage);
 
 		if (!player.hasMetadata("NPC")) {
 
@@ -235,9 +181,26 @@ public class PlayerDeathListener implements Listener {
 					player.kickPlayer(Lang.DISPLAY_MESSAGE_PREFIX + " " + Lang.KICK_DEAD);
 				}
 			}
+		} else {
+			// drop inventory when dead
+			if (!gm.getScenarioManager().isActivated(Scenario.TIMEBOMB) && !sm.isActivated(Scenario.WHATSMINE)
+					&& !sm.isActivated(Scenario.INHERITANCE)) {
+				player.getInventory().forEach((item) -> {
+					if (item != null) {
+						if (gm.getScenarioManager().isActivated(Scenario.NINESLOTS)
+								&& item.isSimilar(NineSlotsListener.fillItem))
+							return;
+						player.getWorld().dropItem(player.getLocation(), item);
+					}
+				});
+			}
 		}
 
 		pm.checkIfRemainingPlayers();
+	}
+
+	public static String replaceLast(String text, String regex, String replacement) {
+		return text.replaceFirst("(?s)" + regex + "(?!.*?" + regex + ")", replacement);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)

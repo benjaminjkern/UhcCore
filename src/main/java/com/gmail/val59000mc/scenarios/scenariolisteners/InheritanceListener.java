@@ -11,6 +11,7 @@ public class InheritanceListener extends ScenarioListener {
     public void onPlayerDeath(PlayerDeathEvent e) {
         // wasn't killed by player
         if (e.getEntity().getKiller() == null) return;
+        e.getDrops().clear();
 
         e.getEntity().getKiller().getInventory().setContents(e.getEntity().getInventory().getContents());
     }

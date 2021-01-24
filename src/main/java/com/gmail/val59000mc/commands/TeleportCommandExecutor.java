@@ -11,18 +11,17 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
-public class TeleportCommandExecutor implements CommandExecutor{
+public class TeleportCommandExecutor implements CommandExecutor {
 
 	private final GameManager gameManager;
 
-	public TeleportCommandExecutor(GameManager gameManager){
-		this.gameManager = gameManager;
-	}
+	public TeleportCommandExecutor(GameManager gameManager) { this.gameManager = gameManager; }
 
 	@Override
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
-		if (!(sender instanceof Player)){
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		if (!(sender instanceof Player)) {
 			sender.sendMessage("Only players can teleport!");
 			return true;
 		}
@@ -30,15 +29,13 @@ public class TeleportCommandExecutor implements CommandExecutor{
 		Player player = (Player) sender;
 
 		UhcPlayer uhcPlayer = gameManager.getPlayersManager().getUhcPlayer(player);
-		if(
-				!player.hasPermission("uhc-core.commands.teleport-admin") &&
-				!(uhcPlayer.getState().equals(PlayerState.DEAD) && gameManager.getConfiguration().getSpectatingTeleport())
-		){
+		if (!player.hasPermission("uhc-core.commands.teleport-admin") && !(uhcPlayer.getState().equals(PlayerState.DEAD)
+				&& gameManager.getConfiguration().getSpectatingTeleport())) {
 			uhcPlayer.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT_ERROR);
 			return true;
 		}
 
-		if (args.length == 3 && player.hasPermission("uhc-core.commands.teleport-admin")){
+		if (args.length == 3 && player.hasPermission("uhc-core.commands.teleport-admin")) {
 			// teleport to coordinates
 			double x, y, z;
 
@@ -46,56 +43,57 @@ public class TeleportCommandExecutor implements CommandExecutor{
 				x = Double.parseDouble(args[0]);
 				y = Double.parseDouble(args[1]);
 				z = Double.parseDouble(args[2]);
-			}catch (NumberFormatException ex){
+			} catch (NumberFormatException ex) {
 				sender.sendMessage(ChatColor.RED + "Invalid coordinates!");
 				return true;
 			}
 
 			Location loc = new Location(player.getWorld(), x, y, z);
-			player.teleport(loc);
+			player.teleport(loc, TeleportCause.COMMAND);
 
 			player.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT.replace("%player%", x + "/" + y + "/" + z));
 			return true;
 		}
 
-		if (args.length == 2 && player.hasPermission("uhc-core.commands.teleport-admin")){
+		if (args.length == 2 && player.hasPermission("uhc-core.commands.teleport-admin")) {
 			// teleport player to player
 			Player player1, player2;
 
 			player1 = Bukkit.getPlayer(args[0]);
 			player2 = Bukkit.getPlayer(args[1]);
 
-			if (player1 == null || player2 == null){
+			if (player1 == null || player2 == null) {
 				sender.sendMessage(ChatColor.RED + "That player can not be found!");
 				return true;
 			}
 
-			player1.teleport(player2.getLocation());
+			player1.teleport(player2.getLocation(), TeleportCause.COMMAND);
 
 			player.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT.replace("%player%", player1.getName()));
 			return true;
 		}
 
-		if (args.length != 1){
+		if (args.length != 1) {
 			uhcPlayer.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT_ERROR);
 			return true;
 		}
 
 		Player target = Bukkit.getPlayer(args[0]);
-		if(target == null){
+		if (target == null) {
 			uhcPlayer.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT_ERROR);
 			return true;
 		}
 
 		UhcPlayer uhcTarget = gameManager.getPlayersManager().getUhcPlayer(target);
 
-		if(!uhcTarget.getState().equals(PlayerState.PLAYING) && !player.hasPermission("uhc-core.commands.teleport-admin")){
+		if (!uhcTarget.getState().equals(PlayerState.PLAYING)
+				&& !player.hasPermission("uhc-core.commands.teleport-admin")) {
 			uhcPlayer.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT_ERROR);
 			return true;
 		}
 
 		uhcPlayer.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT.replace("%player%", uhcTarget.getName()));
-		player.teleport(target);
+		player.teleport(target, TeleportCause.COMMAND);
 		return true;
 	}
 

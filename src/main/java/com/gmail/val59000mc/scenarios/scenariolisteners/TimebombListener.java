@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class TimebombListener extends ScenarioListener {
 
     @Option
-    private long delay = 30;
+    public static long delay = 30;
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent e) {

@@ -56,11 +56,15 @@ public class OneTrickPonyListener extends ScenarioListener {
                         entity.setInvulnerable(true);
                         entity.setSilent(true);
                         ((LivingEntity) entity).setPersistent(false);
+                        ((LivingEntity) entity).getEquipment().clear();
                         ((LivingEntity) entity).setAI(false);
                         ((LivingEntity) entity).setCollidable(false);
+                        ((LivingEntity) entity).getCollidableExemptions().clear();
                         ((LivingEntity) entity)
                                 .addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999, 0));
-
+                        if (entity.getType() == EntityType.SPIDER || entity.getType() == EntityType.CAVE_SPIDER
+                                || entity.getType() == EntityType.ENDERMAN)
+                            entity.remove();
                         entity.getWorld().spawnEntity(entity.getLocation(), chosenType);
                     }
                 }
@@ -81,10 +85,15 @@ public class OneTrickPonyListener extends ScenarioListener {
         e.getEntity().setInvulnerable(true);
         e.getEntity().setSilent(true);
         ((LivingEntity) e.getEntity()).setPersistent(false);
+        ((LivingEntity) e.getEntity()).getEquipment().clear();
         ((LivingEntity) e.getEntity()).setAI(false);
         ((LivingEntity) e.getEntity()).setCollidable(false);
+        ((LivingEntity) e.getEntity()).getCollidableExemptions().clear();
         ((LivingEntity) e.getEntity()).addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999, 0));
 
+        if (e.getEntityType() == EntityType.SPIDER || e.getEntityType() == EntityType.CAVE_SPIDER
+                || e.getEntityType() == EntityType.ENDERMAN)
+            e.getEntity().remove();
         e.getLocation().getWorld().spawnEntity(e.getLocation(), chosenType);
     }
 

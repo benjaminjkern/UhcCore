@@ -42,6 +42,10 @@ public class PreStartThread implements Runnable {
 		return "pause:" + instance.pause + "  " + "force:" + instance.force;
 	}
 
+	public static void restartTimer() {
+		instance.remainingTime = instance.gameManager.getConfiguration().getTimeBeforeStartWhenReady();
+	}
+
 	@Override
 	public void run() {
 		List<UhcTeam> teams = gameManager.getPlayersManager().listUhcTeams();

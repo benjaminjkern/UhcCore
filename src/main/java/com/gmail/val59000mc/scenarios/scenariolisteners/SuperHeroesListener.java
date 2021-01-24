@@ -1,13 +1,9 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.security.auth.callback.NameCallback;
 
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.events.ArmorEquipEvent;
@@ -18,6 +14,7 @@ import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.PlayersManager;
 import com.gmail.val59000mc.players.UhcPlayer;
+import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 import com.gmail.val59000mc.utils.RandomUtils;
 import com.gmail.val59000mc.utils.VersionUtils;
@@ -45,9 +42,12 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+
 public class SuperHeroesListener extends ScenarioListener {
 
-    private Map<Player, SuperPower> allPowers;
+    private static Map<UhcPlayer, SuperPower> allPowers;
 
     private static final List<PotionEffectType> goodEffects = Arrays.asList(new PotionEffectType[] {
             PotionEffectType.ABSORPTION, PotionEffectType.CONDUIT_POWER, PotionEffectType.DAMAGE_RESISTANCE,
@@ -71,19 +71,35 @@ public class SuperHeroesListener extends ScenarioListener {
 
     @EventHandler
     public void onGameStart(PlayerStartsPlayingEvent e) {
-        try {
-            Bukkit.getLogger().info("Making superpower for " + e.getUhcPlayer().getPlayer().getName());
-            SuperPower newPower = new SuperPower();
-            allPowers.put(e.getUhcPlayer().getPlayer(), newPower);
-            e.getUhcPlayer().getPlayer().sendMessage("\u00a75You have been given the power of the \u00a7d\u00a7l"
-                    + newPower.powerType.name() + "\u00a75!");
-            addHeroesEffect(e.getUhcPlayer(), newPower);
-        } catch (Exception ex) {
-            Bukkit.getLogger().warning(ex.toString());
-        }
+        new BukkitRunnable() {
+            public void run() {
+                try {
+                    Bukkit.getLogger().info("Making superpower for " + e.getUhcPlayer().getDisplayName());
+                    SuperPower newPower = new SuperPower();
+                    UhcPlayer uhcPlayer = e.getUhcPlayer();
+                    allPowers.put(uhcPlayer, newPower);
+                    uhcPlayer.getPlayer().sendTitle("",
+                            "\u00a75You have the power of the \u00a7d\u00a7l" + newPower.powerType.name() + "\u00a75!");
+                    addHeroesEffect(uhcPlayer, newPower, true);
+                } catch (Exception ex) {
+                    Bukkit.getLogger().warning(ex.toString());
+                }
+            }
+        }.runTaskLater(UhcCore.getPlugin(), 20);
+
+        new BukkitRunnable() {
+            public void run() {
+                try {
+                    UhcPlayer uhcPlayer = e.getUhcPlayer();
+                    addHeroesEffect(uhcPlayer, getPower(uhcPlayer), false);
+                } catch (Exception ex) {
+                    Bukkit.getLogger().warning(ex.toString());
+                }
+            }
+        }.runTaskTimer(UhcCore.getPlugin(), 20 * 5, 20 * 5);
     }
 
-    private void addHeroesEffect(UhcPlayer uhcPlayer, SuperPower power) {
+    public static void addHeroesEffect(UhcPlayer uhcPlayer, SuperPower power, boolean sendMessage) {
 
         Player player;
 
@@ -97,40 +113,64 @@ public class SuperHeroesListener extends ScenarioListener {
         switch (power.powerType) {
             case TANK:
                 double maxHealth = 40;
-                VersionUtils.getVersionUtils().setPlayerMaxHealth(player, maxHealth);
-                player.setHealth(maxHealth);
+                if (GameManager.getGameManager().getScenarioManager().isActivated(Scenario.SUDDENDEATH)) maxHealth = 6;
+                if (GameManager.getGameManager().getScenarioManager().isActivated(Scenario.ACHIEVEMENTHUNTER))
+                    maxHealth = 10;
+                if (sendMessage) VersionUtils.getVersionUtils().setPlayerMaxHealth(player, maxHealth);
+                if (sendMessage) player.setHealth(maxHealth);
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 999999, 1));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 999999, 1));
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a75You are slow, but strong and sturdy!"));
                 break;
             case GHOST:
                 player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999, 0));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 999999, 1));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 999999, 2));
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a75No one can see you!"));
                 break;
             case BLAZE:
                 player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 999999, 0));
-                player.sendMessage("\u00a75Sneak to use your powers!");
-                player.sendMessage("\u00a75Hold Sneak to use a charged attack!");
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a75Sneak to use your powers, or hold sneak to use a charged attack!"));
                 break;
             // case SPIDER:
             // player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 999999, 1));
             // break;
             case LUCKY:
                 player.addPotionEffect(new PotionEffect(PotionEffectType.LUCK, 999999, 1));
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a75Mining gives you extra goodies, and mobs will leave you alone!"));
                 break;
             case VAMPIRE:
                 player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 999999, 0));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 999999, 0));
-                player.sendMessage("\u00a75Harvest the blood of living beings to regain health!");
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a75Harvest the blood of living beings to regain health!"));
                 break;
             case ICEMAN:
-                player.sendMessage("\u00a75Sneak to use your powers!");
-                player.sendMessage("\u00a75Players should be wary of getting close to you!");
-                new BukkitRunnable() {
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a75Sneak to use your powers, or attack players to freeze them!"));
+                if (sendMessage) new BukkitRunnable() {
                     public void run() {
-                        player.getNearbyEntities(3, 3, 3).forEach(ent -> {
-                            if (!(ent instanceof LivingEntity)) return;
+                        if (uhcPlayer.getState() != PlayerState.PLAYING) {
+                            this.cancel();
+                            return;
+                        }
+                        player.getNearbyEntities(5, 5, 5).forEach(ent -> {
+                            if (!(ent instanceof LivingEntity) || isTeamMate(player, ent)) return;
 
+                            if (ent instanceof Player) {
+                                if (GameManager.getGameManager().getPlayersManager().getUhcPlayer((Player) ent)
+                                        .getState() != PlayerState.PLAYING)
+                                    return;
+                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                                        "\u00a7bYou have been partially frozen because you are near an \u00a7fICE MAN\u00a7b!"));
+                            }
+
+                            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                                    "\u00a7bYou have partially frozen a nearby \u00a7f" + ent.getType() + "\u00a7b!"));
                             ((LivingEntity) ent).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 2 * 20, 3));
                             ((LivingEntity) ent)
                                     .addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 2 * 20, 3));
@@ -140,15 +180,16 @@ public class SuperHeroesListener extends ScenarioListener {
                 }.runTaskTimer(UhcCore.getPlugin(), 20, 20);
                 break;
             case NECROMANCER:
-                player.sendMessage("\u00a75Sneak to use your powers!");
-                player.sendMessage("\u00a75Amass a hoard of the undead!");
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a75Sneak to use your powers! Amass a hoard of the undead!"));
                 break;
             case POTIONMASTER:
-                player.sendMessage("\u00a75Sneak to use your powers!");
-                player.sendMessage("\u00a75Potions vary based on where you're looking!");
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                        "\u00a75Sneak to use your powers! Potions vary based on whether you're looking up or down!"));
                 break;
             case CREEPER:
-                player.sendMessage("\u00a75Sneak to use your powers!");
+                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a75Sneak to use your powers! Have fun!"));
                 break;
             default:
         }
@@ -158,7 +199,9 @@ public class SuperHeroesListener extends ScenarioListener {
     public void onPlayerDamage(EntityDamageEvent e) {
         if (e.getEntityType() != EntityType.PLAYER) return;
         Player p = (Player) e.getEntity();
-        if (!allPowers.containsKey(p)) return;
+        UhcPlayer uhcPlayer = getPlayersManager().getUhcPlayer(p);
+        if (uhcPlayer.getState() != PlayerState.PLAYING) return;
+        SuperPower power = allPowers.get(uhcPlayer);
 
         // if (e.getCause() == EntityDamageEvent.DamageCause.FALL
         // && allPowers.get(p).powerType == SuperPower.SuperPowerType.SPIDER)
@@ -166,8 +209,10 @@ public class SuperHeroesListener extends ScenarioListener {
 
         if ((e.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION
                 || e.getCause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)
-                && allPowers.get(p).powerType == SuperPower.SuperPowerType.CREEPER)
+                && power.powerType == SuperPower.SuperPowerType.CREEPER) {
+            e.setCancelled(true);
             e.setDamage(0);
+        }
     }
 
     @EventHandler
@@ -175,51 +220,63 @@ public class SuperHeroesListener extends ScenarioListener {
         Entity damager = e.getDamager();
         if (damager instanceof Projectile) damager = (Entity) ((Projectile) damager).getShooter();
 
-        boolean entityIsPlayer = e.getEntity() instanceof Player;
-        boolean damagerIsPlayer = damager instanceof Player;
+        boolean damagedIsPlayer = e.getEntity() instanceof Player
+                && getPlayersManager().getUhcPlayer((Player) e.getEntity()).getState() == PlayerState.PLAYING;
+        boolean damagerIsPlayer = damager instanceof Player
+                && getPlayersManager().getUhcPlayer((Player) damager).getState() == PlayerState.PLAYING;
 
-        if (!entityIsPlayer && !damagerIsPlayer) return;
+        if (!damagedIsPlayer && !damagerIsPlayer) return;
 
         if (damagerIsPlayer) {
             Player playerDamager = (Player) damager;
-            if (allPowers.containsKey(playerDamager)) {
-                SuperPower damagerPower = allPowers.get(playerDamager);
+            UhcPlayer uhcDamager = getPlayersManager().getUhcPlayer(playerDamager);
 
-                if (entityIsPlayer) {
-                    Player p = (Player) e.getEntity();
+            SuperPower damagerPower = getPower(uhcDamager);
 
-                    if (allPowers.containsKey(p)) {
-                        SuperPower power = allPowers.get(p);
-                        Bukkit.getLogger().info(power + "");
+            if (damagedIsPlayer) {
+                Player damaged = (Player) e.getEntity();
+                UhcPlayer uhcDamaged = getPlayersManager().getUhcPlayer(damaged);
+                SuperPower damagedPower = getPower(uhcDamaged);
 
-                        if (power.powerType == SuperPower.SuperPowerType.NECROMANCER) {
-                            power.use(p, () -> {
-                                Mob m = spawnRandomUndead(p, 0.7, playerDamager);
-                                p.sendMessage("\u00a75Being struck has caused you to summon a \u00a7d\u00a7l"
-                                        + m.getType() + "\u00a75!");
-                            }, false);
-                        }
-                    }
+                if (damagedPower.powerType == SuperPower.SuperPowerType.NECROMANCER
+                        && !isTeamMate(playerDamager, damaged)) {
+                    damagedPower.use(damaged, () -> {
+                        Mob m = spawnRandomUndead(damaged, 0.7, playerDamager);
+                        damaged.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                new TextComponent("\u00a75Being struck has caused you to summon a \u00a7d\u00a7l"
+                                        + m.getType() + "\u00a75!"));
+                    }, false);
                 }
+            }
 
-                if (damagerPower.powerType == SuperPower.SuperPowerType.NECROMANCER) {
-                    findMinionsAndAttack(playerDamager, e.getEntity());
-                }
+            if (damagerPower.powerType == SuperPower.SuperPowerType.NECROMANCER) {
+                findMinionsAndAttack(playerDamager, e.getEntity());
+            }
 
-                if (damagerPower.powerType == SuperPower.SuperPowerType.ICEMAN
-                        && e.getEntity() instanceof LivingEntity) {
-                    ((LivingEntity) e.getEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30 * 20, 1));
-                    ((LivingEntity) e.getEntity())
-                            .addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 60 * 20, 1));
-                }
+            if (damagerPower.powerType == SuperPower.SuperPowerType.ICEMAN && e.getEntity() instanceof LivingEntity
+                    && !isTeamMate(e.getEntity(), damager)) {
+                if (e.getEntity() instanceof Player) ((Player) e.getEntity()).spigot()
+                        .sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("\u00a7bYou were frozen!"));
+                ((LivingEntity) e.getEntity()).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 2, 100));
+                ((LivingEntity) e.getEntity())
+                        .addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 20 * 2, 1));
+                ((LivingEntity) e.getEntity()).addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * 2, 200));
+            }
 
-                if (damagerPower.powerType == SuperPower.SuperPowerType.VAMPIRE) {
-                    e.getEntity().getWorld().spawnParticle(Particle.BLOCK_CRACK,
-                            e.getEntity().getLocation().clone().add(0, 1, 0), 50, 0, 0, 0,
-                            Bukkit.createBlockData(Material.REDSTONE_BLOCK));
-                    playerDamager.setHealth(Math.min(playerDamager.getHealth() + e.getDamage() * 0.05,
-                            playerDamager.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
-                }
+            if (damagerPower.powerType == SuperPower.SuperPowerType.BLAZE && e.getEntity() instanceof LivingEntity
+                    && !isTeamMate(e.getEntity(), damager)) {
+                if (e.getEntity() instanceof Player) ((Player) e.getEntity()).spigot()
+                        .sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("\u00a7cYou were set ablaze!"));
+                ((LivingEntity) e.getEntity()).setFireTicks(20 * 5);
+            }
+
+            if (damagerPower.powerType == SuperPower.SuperPowerType.VAMPIRE && e.getDamager() instanceof Player
+                    && !isTeamMate(e.getEntity(), damager)) {
+                e.getEntity().getWorld().spawnParticle(Particle.BLOCK_CRACK,
+                        e.getEntity().getLocation().clone().add(0, 1, 0), 50, 0, 0, 0,
+                        Bukkit.createBlockData(Material.REDSTONE_BLOCK));
+                playerDamager.setHealth(Math.min(playerDamager.getHealth() + e.getDamage() * 0.05,
+                        playerDamager.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()));
             }
 
         } else {
@@ -230,49 +287,58 @@ public class SuperHeroesListener extends ScenarioListener {
                 return;
             }
 
+            // if they killed it
             if (e.getDamage() > ((LivingEntity) e.getEntity()).getHealth()) {
                 findNewTarget(damager);
                 return;
             }
         }
 
-        if (entityIsPlayer) {
-            Player p = (Player) e.getEntity();
-            if (allPowers.containsKey(p)) {
-                SuperPower power = allPowers.get(p);
+        if (damagedIsPlayer) {
+            Player damaged = (Player) e.getEntity();
+            UhcPlayer uhcDamaged = getPlayersManager().getUhcPlayer(damaged);
+            SuperPower damagedPower = getPower(uhcDamaged);
 
-                if (power.powerType != SuperPower.SuperPowerType.NECROMANCER) {
-                    // Set zombies to attack for you if they are nearby you
-                    findMinionsAndAttack(p, damager);
+            if (damagedPower.powerType == SuperPower.SuperPowerType.NECROMANCER) {
+                // Set zombies to attack for you if they are nearby you
+                findMinionsAndAttack(damaged, damager);
+            }
+            if (damagedPower.powerType == SuperPower.SuperPowerType.ICEMAN) {
+                if (!(damager instanceof LivingEntity)) return;
+                if (damager instanceof Player) {
+                    ((Player) e.getDamager()).spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                            "\u00a7bYou have been partially frozen because you struck an \u00a7f\u00a7lICE MAN\u00a7b!"));
                 }
+
+                damaged.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a7bYou have partially frozen a nearby \u00a7f" + e.getDamager().getType()
+                                + " \u00a7bafter being struck!"));
+                ((LivingEntity) damager).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 5 * 20, 5));
+                ((LivingEntity) damager).addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 5 * 20, 5));
             }
         }
     }
 
     @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent e) {
-        Player p = e.getEntity();
-        if (allPowers.containsKey(p)) allPowers.remove(p);
-    }
-
-    @EventHandler
     public void onArmorEquip(ArmorEquipEvent e) {
         Player p = e.getPlayer();
-        if (!allPowers.containsKey(p)) return;
+        UhcPlayer uhcPlayer = getPlayersManager().getUhcPlayer(p);
+        if (uhcPlayer.getState() != PlayerState.PLAYING) return;
+        SuperPower power = allPowers.get(uhcPlayer);
 
-        if (allPowers.get(p).powerType == SuperPower.SuperPowerType.GHOST) {
+        if (power.powerType == SuperPower.SuperPowerType.GHOST) {
             e.setCancelled(true);
-            p.sendMessage("\u00a75The armor you equipped falls right through your ghostly form!");
+            p.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    new TextComponent("\u00a75The armor you equipped falls right through your ghostly form!"));
         }
     }
 
     @EventHandler
     public void onSneak(PlayerToggleSneakEvent e) {
         Player p = e.getPlayer();
-        if (GameManager.getGameManager().getPlayersManager().getUhcPlayer(p).getState() != PlayerState.PLAYING) return;
-
-        if (!allPowers.containsKey(p)) return;
-        SuperPower power = allPowers.get(p);
+        UhcPlayer uhcPlayer = getPlayersManager().getUhcPlayer(p);
+        if (uhcPlayer.getState() != PlayerState.PLAYING) return;
+        SuperPower power = allPowers.get(uhcPlayer);
 
         if (!e.isSneaking()) {
             if (power.powerType == SuperPower.SuperPowerType.BLAZE) {
@@ -300,7 +366,9 @@ public class SuperHeroesListener extends ScenarioListener {
             case CREEPER:
                 power.use(p, () -> {
                     Location loc = p.getLocation();
-                    p.getWorld().spawnEntity(loc, EntityType.PRIMED_TNT);
+                    TNTPrimed tnt = (TNTPrimed) p.getWorld().spawnEntity(loc, EntityType.PRIMED_TNT);
+                    tnt.setFuseTicks(30);
+                    tnt.setSource(p);
                 });
                 break;
             case ICEMAN:
@@ -319,6 +387,8 @@ public class SuperHeroesListener extends ScenarioListener {
                     setIce(loc.clone().add(1, 3, 0));
                     setIce(loc.clone().add(-1, 3, 0));
                     double yaw = loc.getYaw();
+                    while (yaw >= 360) yaw -= 360;
+                    while (yaw < 0) yaw += 360;
 
                     if (yaw >= 270 - 45 && yaw < 270 + 45) {
                         setIce(loc.clone().add(1, 0, 1));
@@ -378,9 +448,9 @@ public class SuperHeroesListener extends ScenarioListener {
                         setIce(loc.clone().add(-1, 0, 1));
                         setIce(loc.clone().add(-1, 1, 1));
                         setIce(loc.clone().add(-1, 2, 1));
-                        setIce(loc.clone().add(0, 0, -2));
-                        setIce(loc.clone().add(0, 1, -2));
-                        setIce(loc.clone().add(0, 2, -2));
+                        setIce(loc.clone().add(0, 0, 2));
+                        setIce(loc.clone().add(0, 1, 2));
+                        setIce(loc.clone().add(0, 2, 2));
                         setIce(loc.clone().add(2, 0, 0));
                         setIce(loc.clone().add(2, 1, 0));
                         setIce(loc.clone().add(2, 2, 0));
@@ -393,7 +463,8 @@ public class SuperHeroesListener extends ScenarioListener {
             case NECROMANCER:
                 power.use(p, () -> {
                     Mob m = spawnRandomUndead(p, 0.9, p);
-                    p.sendMessage("\u00a75You summoned a \u00a7d\u00a7l" + m.getType() + "\u00a75!");
+                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            new TextComponent("\u00a75You summoned a \u00a7d\u00a7l" + m.getType() + "\u00a75!"));
                 });
                 break;
             case POTIONMASTER:
@@ -406,6 +477,10 @@ public class SuperHeroesListener extends ScenarioListener {
                     PotionEffect potionEffect = new PotionEffect(
                             effectList.get((int) (Math.random() * effectList.size())),
                             RandomUtils.randomInteger(1, 60) * 20, RandomUtils.randomInteger(0, 2));
+
+                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            new TextComponent("\u00a77You threw a potion of \u00a75"
+                                    + potionEffect.getType().toString().toLowerCase().replace("_", " ") + "\u00a77!"));
 
                     ItemStack itemStack = new ItemStack(Material.SPLASH_POTION);
                     PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
@@ -427,9 +502,11 @@ public class SuperHeroesListener extends ScenarioListener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
         Player p = e.getPlayer();
-        if (!allPowers.containsKey(p)) return;
+        UhcPlayer uhcPlayer = getPlayersManager().getUhcPlayer(p);
+        if (uhcPlayer.getState() != PlayerState.PLAYING) return;
+        SuperPower power = allPowers.get(uhcPlayer);
 
-        if (allPowers.get(p).powerType == SuperPower.SuperPowerType.LUCKY) {
+        if (power.powerType == SuperPower.SuperPowerType.LUCKY) {
             if (e.getBlock().getType() == Material.STONE
                     && !p.getInventory().getItemInMainHand().containsEnchantment(Enchantment.SILK_TOUCH)
                     && Math.random() < 0.1) {
@@ -443,13 +520,12 @@ public class SuperHeroesListener extends ScenarioListener {
     public void onEntityTarget(EntityTargetEvent e) {
         if (!(e.getTarget() instanceof Player)) return;
         Player p = (Player) e.getTarget();
+        UhcPlayer uhcPlayer = getPlayersManager().getUhcPlayer(p);
+        if (uhcPlayer.getState() != PlayerState.PLAYING) return;
+        SuperPower power = allPowers.get(uhcPlayer);
 
-        if (!allPowers.containsKey(p)) return;
-
-        if (allPowers.get(p).powerType == SuperPower.SuperPowerType.LUCKY) { e.setTarget(null); }
-        if (allPowers.get(p).powerType == SuperPower.SuperPowerType.NECROMANCER) {
-            findMinionsAndAttack(p, e.getEntity());
-        }
+        if (power.powerType == SuperPower.SuperPowerType.LUCKY) { e.setTarget(null); }
+        if (power.powerType == SuperPower.SuperPowerType.NECROMANCER) { findMinionsAndAttack(p, e.getEntity()); }
     }
 
     private void setIce(Location l) {
@@ -495,7 +571,7 @@ public class SuperHeroesListener extends ScenarioListener {
         }
     }
 
-    private boolean isTeamMate(Entity checking, Entity toCheck) {
+    private static boolean isTeamMate(Entity checking, Entity toCheck) {
 
         if (checking == toCheck) return true;
 
@@ -518,8 +594,11 @@ public class SuperHeroesListener extends ScenarioListener {
         } else if (toCheck instanceof Mob && toCheck.getCustomName() != null)
             toCheckOwner = Bukkit.getPlayerExact(toCheck.getCustomName().split("'s ")[0]);
         else return false;
+        UhcPlayer uhcCheckingOwner = pm.getUhcPlayer(checkingOwner);
+        UhcPlayer uhcToCheckOwner = pm.getUhcPlayer(toCheckOwner);
 
-        return pm.getUhcPlayer(checkingOwner).getTeam() == pm.getUhcPlayer(toCheckOwner).getTeam();
+        if (uhcCheckingOwner == null || uhcToCheckOwner == null) return false;
+        return uhcCheckingOwner.getTeam() == uhcToCheckOwner.getTeam();
     }
 
     private Mob spawnRandomUndead(Player p, double rate, Entity toTarget) {
@@ -596,6 +675,11 @@ public class SuperHeroesListener extends ScenarioListener {
         }
     }
 
+    public static SuperPower getPower(UhcPlayer uhcPlayer) {
+        if (allPowers.containsKey(uhcPlayer)) return allPowers.get(uhcPlayer);
+        return new SuperPower(SuperPower.SuperPowerType.NONE);
+    }
+
     /*
      * 
      * - Spiderman: - You can climb walls, you fall down walls slowly like ladders,
@@ -605,9 +689,10 @@ public class SuperHeroesListener extends ScenarioListener {
      * THIS IS HARD TO DO IM GONNA WAIT AND LOOK
      */
 
-    private static class SuperPower {
-        private enum SuperPowerType {
-            TANK, GHOST, BLAZE(15, 5), CREEPER(15, 2), ICEMAN(15), NECROMANCER(15), VAMPIRE, POTIONMASTER(15, 5), LUCKY;
+    public static class SuperPower {
+        public enum SuperPowerType {
+            TANK, GHOST, BLAZE(10, 5), CREEPER(5, 3), ICEMAN(3), NECROMANCER(15), VAMPIRE, POTIONMASTER(5, 5), LUCKY,
+            NONE;
             // SPIDER
 
             private final int maxCooldown;
@@ -629,12 +714,19 @@ public class SuperHeroesListener extends ScenarioListener {
 
         private boolean canUse;
         private boolean holding;
-        private SuperPowerType powerType;
+        public SuperPowerType powerType;
         private int timesUsed;
         private double cooldown;
 
+        SuperPower(SuperPowerType type) {
+            powerType = type;
+            canUse = true;
+            timesUsed = 0;
+            cooldown = -1;
+        }
+
         SuperPower() {
-            powerType = SuperPowerType.values()[(int) (Math.random() * SuperPowerType.values().length)];
+            powerType = SuperPowerType.values()[(int) (Math.random() * (SuperPowerType.values().length - 1))];
             canUse = true;
             timesUsed = 0;
             cooldown = -1;
@@ -642,7 +734,8 @@ public class SuperHeroesListener extends ScenarioListener {
 
         void setCanUse(Player p) {
             canUse = true;
-            p.sendMessage(UhcCore.PREFIX + "\u00a7fPower Recharged!");
+
+            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("\u00a7d\u00a7lPower Recharged!"));
         }
 
         void setHolding(Player p, Runnable ifPass) {
@@ -658,8 +751,8 @@ public class SuperHeroesListener extends ScenarioListener {
                                 (int) (20 * cooldown));
                     }
                 }, 20 * powerType.holdCooldown);
-            } else if (cooldown > 1) p.sendMessage(
-                    UhcCore.PREFIX + "\u00a7cYou must wait \u00a7f" + cooldown + " \u00a7cseconds before recharge!");
+            } else if (cooldown > 1) p.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    new TextComponent("\u00a7cYou must wait \u00a7f" + cooldown + " \u00a7cseconds before recharge!"));
         }
 
         void use(Player p, Runnable r) { use(p, r, true); }
@@ -682,12 +775,13 @@ public class SuperHeroesListener extends ScenarioListener {
                     Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
                         if (timesUsed > 0) {
                             timesUsed = 0;
-                            p.sendMessage(UhcCore.PREFIX + "\u00a7fPower Recharged!");
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                    new TextComponent("\u00a7d\u00a7lPower Recharged!"));
                         }
                     }, (int) (20 * powerType.maxCooldown));
                 }
-            } else if (!holding && cooldown > 1 && talk) p.sendMessage(
-                    UhcCore.PREFIX + "\u00a7cYou must wait \u00a7f" + cooldown + " \u00a7cseconds before recharge!");
+            } else if (!holding && cooldown > 1 && talk) p.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    new TextComponent("\u00a7cYou must wait \u00a7f" + cooldown + " \u00a7cseconds before recharge!"));
         }
 
     }

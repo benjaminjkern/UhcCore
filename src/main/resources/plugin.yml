@@ -1,6 +1,6 @@
 name: UhcCore
 main: com.gmail.val59000mc.UhcCore
-version: @version@
+version: 1.18.5
 description: Automates UHC games on a dedicated server
 author: val59000mc, Mezy
 softdepend: [WorldEdit,Vault,ProtocolLib,Citizens,Sentinel]
@@ -84,3 +84,6 @@ commands:
   stats:
     description: "Display player stats"
     usage: /<command> <sub-commands>
+  list:
+    description: List!
+    usage: /<command>

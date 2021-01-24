@@ -46,7 +46,9 @@ public class TimeBeforeSendBungeeThread implements Runnable {
 			// nothing to do for offline players
 		}
 
-		if (remainingTime > 0) { Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), this, 20); }
+		if (remainingTime > 0 && UhcCore.getPlugin().isEnabled()) {
+			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), this, 20);
+		}
 	}
 
 }

@@ -6,6 +6,8 @@ import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.PlayersManager;
 import com.gmail.val59000mc.players.UhcPlayer;
+
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.Player;
@@ -16,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.mcmonkey.sentinel.SentinelTrait;
+import org.mcmonkey.sentinel.targeting.SentinelTargetLabel;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -50,12 +53,14 @@ public class PlayerDamageListener implements Listener {
 			PlayersManager pm = gameManager.getPlayersManager();
 			UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
 
-			PlayerState uhcPlayerState = uhcPlayer.getState();
-			if (uhcPlayerState.equals(PlayerState.WAITING) || uhcPlayerState.equals(PlayerState.DEAD)) {
-				event.setCancelled(true);
-			}
+			GameManager.getGameManager().getListInventoryHandler().updatePlayer(uhcPlayer);
 
-			if (uhcPlayer.isFrozen()) { event.setCancelled(true); }
+			PlayerState uhcPlayerState = uhcPlayer.getState();
+			if (uhcPlayerState.equals(PlayerState.WAITING) || uhcPlayerState.equals(PlayerState.DEAD)
+					|| uhcPlayer.isFrozen()) {
+				event.setCancelled(true);
+				return;
+			}
 		}
 	}
 
@@ -67,30 +72,41 @@ public class PlayerDamageListener implements Listener {
 
 		PlayersManager pm = gameManager.getPlayersManager();
 
-		if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
-			if (!gameManager.getPvp()) {
+		if (event.getDamager() instanceof Player) {
+			Player damager = (Player) event.getDamager();
+			UhcPlayer uhcDamager = pm.getUhcPlayer(damager);
+
+			if (!uhcDamager.getState().equals(PlayerState.PLAYING)) {
 				event.setCancelled(true);
 				return;
 			}
 
-			Player damager = (Player) event.getDamager();
-			Player damaged = (Player) event.getEntity();
-			UhcPlayer uhcDamager = pm.getUhcPlayer(damager);
-			UhcPlayer uhcDamaged = pm.getUhcPlayer(damaged);
+			if (event.getEntity() instanceof Player) {
+				if (!gameManager.getPvp()) {
+					event.setCancelled(true);
+					return;
+				}
 
-			if (uhcDamager.getName().equals("YEUH-BOT") && uhcDamager.getState().equals(PlayerState.PLAYING)
-					&& uhcDamager.isInTeamWith(uhcDamaged)) {
-				NPC npc = CitizensAPI.getNPCRegistry().getNPC(damager);
-				SentinelTrait sentinel = npc.getTrait(SentinelTrait.class);
-				sentinel.setGuarding(damaged.getUniqueId());
-				event.setCancelled(true);
-			}
+				Player damaged = (Player) event.getEntity();
+				UhcPlayer uhcDamaged = pm.getUhcPlayer(damaged);
 
-			if (!friendlyFire && uhcDamager.getState().equals(PlayerState.PLAYING)
-					&& uhcDamager.isInTeamWith(uhcDamaged)) {
-				damager.sendMessage(Lang.PLAYERS_FF_OFF);
-				event.setCancelled(true);
+				if (uhcDamager.getName().equals("YEUH-BOT") && uhcDamager.getState().equals(PlayerState.PLAYING)
+						&& uhcDamager.isInTeamWith(uhcDamaged)) {
+					NPC npc = CitizensAPI.getNPCRegistry().getNPC(damager);
+					SentinelTrait sentinel = npc.getTrait(SentinelTrait.class);
+					if (!damaged.hasMetadata("NPC")) sentinel.setGuarding(damaged.getUniqueId());
+					else new SentinelTargetLabel("npc:" + damaged.getName()).addToList(sentinel.allIgnores);
+					event.setCancelled(true);
+				}
+
+				if (!friendlyFire && uhcDamager.getState().equals(PlayerState.PLAYING)
+						&& uhcDamager.isInTeamWith(uhcDamaged)) {
+					damager.sendMessage(Lang.PLAYERS_FF_OFF);
+					event.setCancelled(true);
+				}
 			}
+		} else {
+
 		}
 	}
 
@@ -104,7 +120,7 @@ public class PlayerDamageListener implements Listener {
 
 		PlayersManager pm = gameManager.getPlayersManager();
 
-		if (event.getEntity() instanceof Player && event.getDamager() instanceof Arrow) {
+		if (event.getEntity() instanceof Player && event.getDamager() instanceof Projectile) {
 			Projectile arrow = (Projectile) event.getDamager();
 			final Player shot = (Player) event.getEntity();
 			if (arrow.getShooter() instanceof Player) {
@@ -116,6 +132,15 @@ public class PlayerDamageListener implements Listener {
 
 				UhcPlayer uhcDamager = pm.getUhcPlayer((Player) arrow.getShooter());
 				UhcPlayer uhcDamaged = pm.getUhcPlayer(shot);
+
+				if (uhcDamager.getName().equals("YEUH-BOT") && uhcDamager.getState().equals(PlayerState.PLAYING)
+						&& uhcDamager.isInTeamWith(uhcDamaged)) {
+					NPC npc = CitizensAPI.getNPCRegistry().getNPC((Player) arrow.getShooter());
+					SentinelTrait sentinel = npc.getTrait(SentinelTrait.class);
+					if (sentinel.getGuardingEntity() == null || sentinel.getGuardingEntity().hasMetadata("NPC"))
+						sentinel.setGuarding(shot.getUniqueId());
+					event.setCancelled(true);
+				}
 
 				if (!friendlyFire && uhcDamager.getState().equals(PlayerState.PLAYING)
 						&& uhcDamager.isInTeamWith(uhcDamaged)) {

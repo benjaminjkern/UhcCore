@@ -9,6 +9,7 @@ import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.scenarios.Scenario;
+import com.gmail.val59000mc.scenarios.scenariolisteners.PoliticsListener;
 import com.gmail.val59000mc.utils.SpigotUtils;
 import com.gmail.val59000mc.utils.TimeUtils;
 import com.gmail.val59000mc.utils.VersionUtils;
@@ -120,7 +121,11 @@ public class UhcPlayer {
 	public String getDisplayName() {
 		if (GameManager.getGameManager().getConfiguration().getUseTeamColors()) {
 			try {
-				return team.getColor() + getPlayer().getName() + ChatColor.RESET;
+				return team.getColor() + getPlayer().getName()
+						+ (GameManager.getGameManager().getScenarioManager().isActivated(Scenario.POLITICS)
+								&& PoliticsListener.getPlayerNode(this) != null
+								&& PoliticsListener.getPlayerNode(this).isLeader() ? "\u00a7e⚜" : "")
+						+ ChatColor.RESET;
 			} catch (UhcPlayerNotOnlineException e) {
 				return team.getColor() + getName() + ChatColor.RESET;
 			}

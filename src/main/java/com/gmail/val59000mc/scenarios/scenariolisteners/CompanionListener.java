@@ -33,16 +33,22 @@ public class CompanionListener extends ScenarioListener {
     }
 
     private DyeColor getDyeColor(String color) {
-        if (color.equals(ChatColor.RED.toString())) return DyeColor.RED;
-        if (color.equals(ChatColor.BLUE.toString())) return DyeColor.LIGHT_BLUE;
-        if (color.equals(ChatColor.DARK_GREEN.toString())) return DyeColor.GREEN;
-        if (color.equals(ChatColor.DARK_AQUA.toString())) return DyeColor.BLUE;
-        if (color.equals(ChatColor.DARK_PURPLE.toString())) return DyeColor.PURPLE;
-        if (color.equals(ChatColor.YELLOW.toString())) return DyeColor.YELLOW;
-        if (color.equals(ChatColor.GOLD.toString())) return DyeColor.ORANGE;
-        if (color.equals(ChatColor.GREEN.toString())) return DyeColor.LIME;
-        if (color.equals(ChatColor.AQUA.toString())) return DyeColor.CYAN;
-        if (color.equals(ChatColor.LIGHT_PURPLE.toString())) return DyeColor.PINK;
+        if (color.contains(ChatColor.RED.toString())) return DyeColor.PINK;
+        if (color.contains(ChatColor.BLUE.toString())) return DyeColor.LIGHT_BLUE;
+        if (color.contains(ChatColor.DARK_GREEN.toString())) return DyeColor.GREEN;
+        if (color.contains(ChatColor.DARK_AQUA.toString())) return DyeColor.CYAN;
+        if (color.contains(ChatColor.DARK_PURPLE.toString())) return DyeColor.PURPLE;
+        if (color.contains(ChatColor.YELLOW.toString())) return DyeColor.YELLOW;
+        if (color.contains(ChatColor.GOLD.toString())) return DyeColor.ORANGE;
+        if (color.contains(ChatColor.GREEN.toString())) return DyeColor.LIME;
+        if (color.contains(ChatColor.AQUA.toString())) return DyeColor.CYAN;
+        if (color.contains(ChatColor.LIGHT_PURPLE.toString())) return DyeColor.MAGENTA;
+        if (color.contains(ChatColor.DARK_BLUE.toString())) return DyeColor.BLUE;
+        if (color.contains(ChatColor.DARK_GRAY.toString())) return DyeColor.GRAY;
+        if (color.contains(ChatColor.DARK_PURPLE.toString())) return DyeColor.PURPLE;
+        if (color.contains(ChatColor.DARK_RED.toString())) return DyeColor.RED;
+        if (color.contains(ChatColor.GRAY.toString())) return DyeColor.LIGHT_GRAY;
+        if (color.contains(ChatColor.WHITE.toString())) return DyeColor.WHITE;
         return DyeColor.BLACK;
     }
 

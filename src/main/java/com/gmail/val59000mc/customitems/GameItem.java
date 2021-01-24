@@ -5,6 +5,7 @@ import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.utils.UniversalMaterial;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -16,7 +17,7 @@ public enum GameItem {
     // Lobby Items
     TEAM_LIST(UniversalMaterial.PLAYER_HEAD), TEAM_SELECTION(UniversalMaterial.IRON_SWORD),
     KIT_SELECTION(UniversalMaterial.IRON_PICKAXE), SCENARIO_VIEWER(UniversalMaterial.WRITABLE_BOOK),
-    BUNGEE_ITEM(UniversalMaterial.PINK_BED),
+    BUNGEE_ITEM(UniversalMaterial.PINK_BED), SCENARIO_READER(UniversalMaterial.ENCHANTED_BOOK),
 
     // Team Setting Items
     TEAM_SETTINGS(UniversalMaterial.ANVIL), TEAM_COLOR_SELECTION(UniversalMaterial.LAPIS_LAZULI),
@@ -31,12 +32,14 @@ public enum GameItem {
 
     // Game Items
     CUSTOM_CRAFT_BOOK(UniversalMaterial.ENCHANTED_BOOK), COMPASS_ITEM(UniversalMaterial.COMPASS),
+    LIST_ITEM(UniversalMaterial.COMPASS),
 
     UNKNOWN(UniversalMaterial.AIR);
 
     private static final String LORE_PREFIX = ChatColor.DARK_GRAY + "UHC Item";
     public static final GameItem[] LOBBY_ITEMS = new GameItem[] { TEAM_LIST, TEAM_SELECTION, KIT_SELECTION,
             CUSTOM_CRAFT_BOOK, SCENARIO_VIEWER, BUNGEE_ITEM };
+    public static final GameItem[] SPECTATOR_ITEMS = new GameItem[] { LIST_ITEM, BUNGEE_ITEM, SCENARIO_READER };
 
     private final UniversalMaterial type;
 
@@ -134,6 +137,10 @@ public enum GameItem {
                 return Lang.ITEMS_TEAM_LIST;
             case TEAM_FILL_BLACK:
                 return ChatColor.RESET.toString();
+            case LIST_ITEM:
+                return "\u00a7fSpectate Players";
+            case SCENARIO_READER:
+                return "\u00a76View Active Scenarios";
         }
         return "Unknown item!";
     }

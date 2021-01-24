@@ -27,19 +27,26 @@ public class ScenarioManager {
     private static final int ROW = 9;
     private final Map<Scenario, ScenarioListener> activeScenarios;
 
+    private List<Scenario> votableScenarios;
+
     private Inventory scenarioVoteInventory;
 
     public ScenarioManager() {
         activeScenarios = new HashMap<>();
 
         Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
-        scenarioVoteInventory = Bukkit.createInventory(null,
-                (int) Math.ceil((Scenario.values().length - blacklist.size()) / ROW) * ROW,
+        scenarioVoteInventory = Bukkit.createInventory(null, 5 * ROW,
                 RandomUtils.randomTextColor() + Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
+
+        votableScenarios = new ArrayList<>();
+        int scenariosLoaded = 0;
 
         for (Scenario scenario : Scenario.values()) {
             // Don't add to menu when blacklisted / not compatible / already enabled.
             if (blacklist.contains(scenario) || !scenario.isCompatibleWithVersion() || isActivated(scenario)) continue;
+            if (scenariosLoaded >= 27) break;
+            votableScenarios.add(scenario);
+            scenariosLoaded++;
 
             ItemStack item = scenario.getScenarioItem();
             ItemMeta meta = item.getItemMeta();
@@ -47,7 +54,30 @@ public class ScenarioManager {
             item.setItemMeta(meta);
             scenarioVoteInventory.addItem(item);
         }
+
+        ItemStack item = Scenario.RANDOM.getScenarioItem();
+        ItemMeta meta = item.getItemMeta();
+        meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", "\u00a77Vote to randomize the scenarios!",
+                Lang.SCENARIO_GLOBAL_ITEM_INFO));
+        item.setItemMeta(meta);
+        scenarioVoteInventory.setItem(42, item);
+
+        item = Scenario.BOTSIN.getScenarioItem();
+        meta = item.getItemMeta();
+        meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", "\u00a77Vote to fill the game with bots!",
+                Lang.SCENARIO_GLOBAL_ITEM_INFO));
+        item.setItemMeta(meta);
+        scenarioVoteInventory.setItem(40, item);
+
+        item = Scenario.NONE.getScenarioItem();
+        meta = item.getItemMeta();
+        meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", "\u00a77Vote to cancel all scenarios!",
+                Lang.SCENARIO_GLOBAL_ITEM_INFO));
+        item.setItemMeta(meta);
+        scenarioVoteInventory.setItem(38, item);
     }
+
+    public List<Scenario> getVotableScenarios() { return votableScenarios; }
 
     public void addScenario(Scenario scenario) {
         if (isActivated(scenario)) return;
@@ -162,13 +192,18 @@ public class ScenarioManager {
         // should be a priority queue, though I think that messes with the randomness of
         // it
 
+        List<Scenario> allValid = new ArrayList<>();
+
         Map<Scenario, Integer> votesMap = new HashMap<>();
         List<List<Scenario>> votesList = new ArrayList<>();
         votesList.add(new ArrayList<>());
 
         Set<Scenario> blacklist = GameManager.getGameManager().getConfiguration().getScenarioBlackList();
+        int i = 0;
         for (Scenario scenario : Scenario.values()) {
+            i++;
             if (!blacklist.contains(scenario)) {
+                if (i <= 27) allValid.add(scenario);
                 votesList.get(0).add(scenario);
                 votesMap.put(scenario, 0);
             }
@@ -184,22 +219,52 @@ public class ScenarioManager {
             }
         }
 
+        if (votesMap.get(Scenario.BOTSIN) >= Bukkit.getOnlinePlayers().size() / 2.)
+            GameManager.getGameManager().setBotsIn(true);
+        else GameManager.getGameManager().setBotsIn(false);
+
         int scenarioCount = GameManager.getGameManager().getConfiguration().getElectedScenaroCount();
         int maxVotes = votesList.size() - 1;
         while (scenarioCount > 0) {
-            List<Scenario> currentList = votesList.get(maxVotes);
+            if (maxVotes == 0) break;
+            List<Scenario> currentList;
+            if (maxVotes < 0) currentList = allValid;
+            else currentList = votesList.get(maxVotes);
             if (currentList.isEmpty()) {
                 maxVotes--;
                 continue;
             }
             Scenario scenario = currentList.get((int) (Math.random() * currentList.size()));
+
+            Bukkit.getLogger().info("[UhcCore] Attempting to load scenario " + scenario.getName());
+
+            if (scenario == Scenario.BOTSIN) {
+                allValid.remove(scenario);
+                currentList.remove(scenario);
+                continue;
+            }
+
+            if (scenario == Scenario.NONE) {
+                if (maxVotes <= 0 || currentList.size() > 1) continue;
+                Bukkit.getLogger().info("[UhcCore] NONE Scenario was selected, cancelling the rest of the scenarios");
+                scenarioCount = 0;
+                break;
+            }
+            if (scenario == Scenario.RANDOM) {
+                if (maxVotes <= 0 || currentList.size() > 1) continue;
+                Bukkit.getLogger()
+                        .info("[UhcCore] RANDOM Scenario was selected, randomizing the rest of the scenarios");
+                maxVotes = -1;
+                continue;
+            }
+            allValid.remove(scenario);
             currentList.remove(scenario);
 
             try {
                 if (scenario.condition.call()) addScenario(scenario);
                 else {
                     Bukkit.getLogger()
-                            .info("[UhcCore] Scenario +" + scenario.getName() + "'s condition was not met, moving on");
+                            .info("[UhcCore] Scenario " + scenario.getName() + "'s condition was not met, moving on");
                     continue;
                 }
             } catch (Exception e) {

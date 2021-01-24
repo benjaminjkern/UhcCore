@@ -5,15 +5,19 @@ import com.gmail.val59000mc.configuration.MainConfiguration;
 import com.gmail.val59000mc.configuration.VaultManager;
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.game.GameManager;
+import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.*;
 import com.gmail.val59000mc.scenarios.Scenario;
+import com.gmail.val59000mc.scenarios.scenariolisteners.PoliticsListener;
 import com.gmail.val59000mc.scenarios.scenariolisteners.SilentNightListener;
+import com.gmail.val59000mc.scenarios.scenariolisteners.SlayerListener;
 import com.gmail.val59000mc.scoreboard.placeholders.BlocksToTeamLeader;
 import com.gmail.val59000mc.scoreboard.placeholders.ScenariosPlaceholder;
 import com.gmail.val59000mc.scoreboard.placeholders.TeamMembersPlaceholder;
 import com.gmail.val59000mc.scoreboard.placeholders.TimersPlaceholder;
 import com.gmail.val59000mc.threads.UpdateScoreboardThread;
+import com.gmail.val59000mc.threads.WorldBorderShrinkThread;
 import com.gmail.val59000mc.utils.TimeUtils;
 import com.gmail.val59000mc.utils.VersionUtils;
 import org.bukkit.Bukkit;
@@ -23,8 +27,12 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ScoreboardManager {
 
@@ -229,27 +237,48 @@ public class ScoreboardManager {
                         if (all.isInTeamWith(uhcPlayer)) {
                             // add to there team with 0 in front
 
-                            Team team = scoreboard.getTeam("0" + uhcPlayer.getTeam().getTeamNumber());
-                            if (team == null) {
-                                team = scoreboard.registerNewTeam("0" + uhcPlayer.getTeam().getTeamNumber());
+                            String teamName = "0" + uhcPlayer.getTeam().getTeamNumber();
+
+                            if (gm.getScenarioManager().isActivated(Scenario.POLITICS)
+                                    && PoliticsListener.getPlayerNode(uhcPlayer).isLeader()) {
+                                teamName += "l";
                             }
+
+                            Team team = scoreboard.getTeam(teamName);
+                            if (team == null) { team = scoreboard.registerNewTeam(teamName); }
                             team.setPrefix(uhcPlayer.getTeam().getPrefix());
-                            team.setSuffix(ChatColor.RESET + "");
+                            if (gm.getScenarioManager().isActivated(Scenario.POLITICS)
+                                    && PoliticsListener.getPlayerNode(uhcPlayer).isLeader()) {
+                                team.setSuffix("\u00a7e⚜" + ChatColor.RESET + "");
+                            } else {
+                                team.setSuffix(ChatColor.RESET + "");
+                            }
                             team.addEntry(uhcPlayer.getPlayer().getName());
 
                         } else {
                             // add to normal team
 
-                            Team team = scoreboard.getTeam("" + uhcPlayer.getTeam().getTeamNumber());
-                            if (team == null) {
-                                team = scoreboard.registerNewTeam("" + uhcPlayer.getTeam().getTeamNumber());
+                            String teamName = "" + uhcPlayer.getTeam().getTeamNumber();
 
+                            if (gm.getScenarioManager().isActivated(Scenario.POLITICS)
+                                    && PoliticsListener.getPlayerNode(uhcPlayer).isLeader()) {
+                                teamName += "l";
+                            }
+
+                            Team team = scoreboard.getTeam(teamName);
+                            if (team == null) {
+                                team = scoreboard.registerNewTeam(teamName);
                                 if (gm.getConfiguration().getDisableEnemyNametags()) {
                                     VersionUtils.getVersionUtils().setTeamNameTagVisibility(team, false);
                                 }
                             }
                             team.setPrefix(uhcPlayer.getTeam().getPrefix());
-                            team.setSuffix(ChatColor.RESET + "");
+                            if (gm.getScenarioManager().isActivated(Scenario.POLITICS)
+                                    && PoliticsListener.getPlayerNode(uhcPlayer).isLeader()) {
+                                team.setSuffix("\u00a7e⚜" + ChatColor.RESET + "");
+                            } else {
+                                team.setSuffix(ChatColor.RESET + "");
+                            }
                             team.addEntry(uhcPlayer.getPlayer().getName());
                         }
                     } catch (UhcPlayerNotOnlineException e) {}
@@ -295,146 +324,231 @@ public class ScoreboardManager {
     }
 
     public String translatePlaceholders(String s, UhcPlayer uhcPlayer, Player bukkitPlayer,
-            ScoreboardType scoreboardType) {
+            ScoreboardType scoreboardType, long k) {
+        try {
 
-        String returnString = s;
-        GameManager gm = GameManager.getGameManager();
-        MainConfiguration cfg = gm.getConfiguration();
+            String returnString = s;
+            GameManager gm = GameManager.getGameManager();
+            MainConfiguration cfg = gm.getConfiguration();
 
-        if (scoreboardType.equals(ScoreboardType.WAITING)) {
-            returnString = returnString.replace("%online%", Bukkit.getOnlinePlayers().size() + "").replace("%needed%",
-                    cfg.getMinPlayersToStart() + "");
-        }
-
-        if (returnString.contains("%kit%")) {
-            if (uhcPlayer.getKit() == null) {
-                returnString = returnString.replace("%kit%", Lang.ITEMS_KIT_SCOREBOARD_NO_KIT);
-            } else {
-                returnString = returnString.replace("%kit%", uhcPlayer.getKit().getName());
-            }
-        }
-
-        if (returnString.contains("%kills%")) { returnString = returnString.replace("%kills%", uhcPlayer.kills + ""); }
-
-        if (returnString.contains("%teamKills%")) {
-            returnString = returnString.replace("%teamKills%", uhcPlayer.getTeam().getKills() + "");
-        }
-
-        if (returnString.contains("%teamColor%")) {
-            returnString = returnString.replace("%teamColor%", uhcPlayer.getTeam().getPrefix());
-        }
-
-        if (returnString.contains("%border%")) {
-
-            int size = (int) bukkitPlayer.getWorld().getWorldBorder().getSize() / 2;
-
-            if (size == 30000000) { size = 0; }
-
-            String borderString = "+" + size + " -" + size;
-
-            int distanceX = size - (int) bukkitPlayer.getLocation().getX();
-            int distanceZ = size - (int) bukkitPlayer.getLocation().getZ();
-
-            if (distanceX <= 5 || distanceZ <= 5) {
-                borderString = ChatColor.RED + borderString;
-            } else if (distanceX <= 50 || distanceZ <= 50) {
-                borderString = ChatColor.YELLOW + borderString;
-            } else {
-                borderString = ChatColor.GREEN + borderString;
+            if (scoreboardType.equals(ScoreboardType.WAITING)) {
+                returnString = returnString.replace("%online%", Bukkit.getOnlinePlayers().size() + "")
+                        .replace("%needed%", cfg.getMinPlayersToStart() + "");
             }
 
-            returnString = returnString.replace("%border%", borderString);
-        }
-
-        if (returnString.contains("%ylayer%")) {
-            returnString = returnString.replace("%ylayer%", (int) bukkitPlayer.getLocation().getY() + "");
-        }
-
-        if (returnString.contains("%xCoordinate%")) {
-            returnString = returnString.replace("%xCoordinate%", (int) bukkitPlayer.getLocation().getX() + "");
-        }
-
-        if (returnString.contains("%zCoordinate%")) {
-            returnString = returnString.replace("%zCoordinate%", (int) bukkitPlayer.getLocation().getZ() + "");
-        }
-
-        if (returnString.contains("%deathmatch%")) {
-            returnString = returnString.replace("%deathmatch%", gm.getFormatedRemainingTime());
-        }
-
-        if (returnString.contains("%time%")) {
-            returnString = returnString.replace("%time%", TimeUtils.getFormattedTime(gm.getElapsedTime()));
-        }
-
-        if (returnString.contains("%pvp%")) {
-            long pvp = cfg.getTimeBeforePvp() - gm.getElapsedTime();
-
-            if (pvp < 0) {
-                returnString = returnString.replace("%pvp%", "-");
-            } else {
-                returnString = returnString.replace("%pvp%", TimeUtils.getFormattedTime(pvp));
+            if (returnString.contains("%kit%")) {
+                if (uhcPlayer.getKit() == null) {
+                    returnString = returnString.replace("%kit%", Lang.ITEMS_KIT_SCOREBOARD_NO_KIT);
+                } else {
+                    returnString = returnString.replace("%kit%", uhcPlayer.getKit().getName());
+                }
             }
-        }
 
-        if (returnString.contains("%alive%")) {
-            if (gm.getScenarioManager().isActivated(Scenario.SILENTNIGHT)
-                    && ((SilentNightListener) gm.getScenarioManager().getScenarioListener(Scenario.SILENTNIGHT))
-                            .isNightMode()) {
-                returnString = returnString.replace("%alive%", "?");
-            } else {
-                returnString = returnString.replace("%alive%",
-                        gm.getPlayersManager().getAllPlayingPlayers().size() + "");
+            if (returnString.contains("%kills%")) {
+                returnString = returnString.replace("%kills%", uhcPlayer.kills + "");
             }
+
+            if (returnString.contains("%teamKills%")) {
+                returnString = returnString.replace("%teamKills%", uhcPlayer.getTeam().getPlayingKills() + "");
+            }
+
+            if (returnString.contains("%teamColor%")) {
+                returnString = returnString.replace("%teamColor%", uhcPlayer.getTeam().getPrefix());
+            }
+
+            if (returnString.contains("%border%")) {
+
+                int size = (int) bukkitPlayer.getWorld().getWorldBorder().getSize();
+
+                if (size == 30000000) { size = 0; }
+
+                String borderString = size + "";
+
+                int distanceX = (int) (size / 2 - Math.abs(bukkitPlayer.getLocation().getX()
+                        - bukkitPlayer.getWorld().getWorldBorder().getCenter().getX()));
+                int distanceZ = (int) (size / 2 - Math.abs(bukkitPlayer.getLocation().getZ()
+                        - bukkitPlayer.getWorld().getWorldBorder().getCenter().getZ()));
+
+                if (WorldBorderShrinkThread.isShrinking) {
+                    if (distanceX == 0 || distanceZ == 0 || size / distanceX >= 50 || size / distanceZ >= 50) {
+                        borderString = ChatColor.RED + borderString;
+                        if (uhcPlayer.getState() == PlayerState.PLAYING) {
+                            bukkitPlayer.sendTitle("",
+                                    "\u00a7cYou are " + Math.min(distanceX, distanceZ) + " blocks from the wall!");
+
+                            bukkitPlayer.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(""));
+                        }
+                    } else if (size / distanceX >= 10 || size / distanceZ >= 10) {
+                        borderString = ChatColor.RED + borderString;
+
+                        if (uhcPlayer.getState() == PlayerState.PLAYING) {
+                            bukkitPlayer.sendTitle("", "");
+                            bukkitPlayer.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                                    "\u00a7eYou are " + Math.min(distanceX, distanceZ) + " blocks from the wall"));
+                        }
+                    }
+                    borderString = ChatColor.YELLOW + borderString;
+                } else {
+                    borderString = ChatColor.GREEN + borderString;
+                }
+
+                returnString = returnString.replace("%border%", borderString);
+            }
+
+            if (returnString.contains("%ylayer%")) {
+                returnString = returnString.replace("%ylayer%", (int) bukkitPlayer.getLocation().getY() + "");
+            }
+
+            if (returnString.contains("%xCoordinate%")) {
+                returnString = returnString.replace("%xCoordinate%", (int) bukkitPlayer.getLocation().getX() + "");
+            }
+
+            if (returnString.contains("%zCoordinate%")) {
+                returnString = returnString.replace("%zCoordinate%", (int) bukkitPlayer.getLocation().getZ() + "");
+            }
+
+            if (returnString.contains("%deathmatch%")) {
+                returnString = returnString.replace("%deathmatch%", gm.getFormatedRemainingTime());
+            }
+
+            if (returnString.contains("%time%")) {
+                returnString = returnString.replace("%time%", TimeUtils.getFormattedTime(gm.getElapsedTime()));
+            }
+
+            if (returnString.contains("%timeLeft%")) {
+                long timeLeft = (gm.getConfiguration().getBorderTimeBeforeShrink()
+                        + gm.getConfiguration().getBorderTimeToShrink()) - gm.getElapsedTime();
+                returnString = returnString.replace("%timeLeft%", TimeUtils.getFormattedTime(timeLeft));
+            }
+
+            if (returnString.contains("%pvp%")) {
+                long pvp = cfg.getTimeBeforePvp() - gm.getElapsedTime();
+
+                if (pvp < 0) {
+                    returnString = returnString.replace("%pvp%", "-");
+                } else {
+                    returnString = returnString.replace("%pvp%", TimeUtils.getFormattedTime(pvp));
+                }
+            }
+
+            if (returnString.contains("%alive%")) {
+                if (gm.getScenarioManager().isActivated(Scenario.SILENTNIGHT)
+                        && ((SilentNightListener) gm.getScenarioManager().getScenarioListener(Scenario.SILENTNIGHT))
+                                .isNightMode()) {
+                    returnString = returnString.replace("%alive%", "?");
+                } else {
+                    returnString = returnString.replace("%alive%",
+                            gm.getPlayersManager().getAllPlayingPlayers().size() + "");
+                }
+            }
+
+            if (returnString.contains("%episode%")) {
+                returnString = returnString.replace("%episode%", gm.getEpisodeNumber() + "");
+            }
+
+            if (returnString.contains("%nextEpisode%")) {
+                returnString = returnString.replace("%nextEpisode%",
+                        TimeUtils.getFormattedTime(gm.getTimeUntilNextEpisode()) + "");
+            }
+
+            if (returnString.contains("%teamAlive%")) {
+                returnString = returnString.replace("%teamAlive%",
+                        String.valueOf(gm.getTeamManager().getPlayingUhcTeams().size()));
+            }
+
+            if (returnString.contains("%playerAlive%")) {
+                returnString = returnString.replace("%playerAlive%",
+                        String.valueOf(gm.getPlayersManager().getAllPlayingPlayers().size()));
+            }
+
+            if (returnString.contains("%playerSpectator%")) {
+                returnString = returnString.replace("%playerSpectator%",
+                        String.valueOf(gm.getPlayersManager().getOnlineSpectatingPlayers().size()));
+            }
+
+            if (returnString.contains("%money%")) {
+                returnString = returnString.replace("%money%",
+                        String.format("%.2f", VaultManager.getPlayerMoney(bukkitPlayer)));
+            }
+
+            if (returnString.contains("%maxPlayers%"))
+                returnString = returnString.replace("%maxPlayers%", Bukkit.getMaxPlayers() + "");
+
+            if (returnString.contains("%userScore%")) returnString = returnString.replace("%userScore%", String
+                    .format("%.2f", gm.getPlayersManager().getScoreKeeper().getStats(uhcPlayer.getName()).rating));
+
+            if (returnString.contains("%bots%")) {
+                returnString = returnString.replace("%bots%",
+                        (Bukkit.getMaxPlayers() - Bukkit.getOnlinePlayers().size()) + "");
+            }
+            if (returnString.contains("%chainOfCommand%")) {
+                List<UhcPlayer> chain = PoliticsListener.getPlayerNode(uhcPlayer).chainOfCommand().stream()
+                        .map(node -> node.player).collect(Collectors.toList());
+                int newK = (int) (k % (long) chain.size());
+                returnString = returnString.replace("%chainOfCommand%",
+                        !chain.isEmpty() ? ((chain.size() - newK) + ". " + chain.get(newK).getDisplayName()) : "-");
+            }
+
+            if (returnString.contains("%topTeam%") || returnString.contains("%topTeamKills%")) {
+                List<UhcTeam> top = new ArrayList<>();
+                int kills = 0;
+                for (UhcTeam team : gm.getTeamManager().getUhcTeams()) {
+                    int teamKills = team.getPlayingKills();
+                    if (teamKills > kills) {
+                        top.clear();
+                        kills = teamKills;
+                    }
+                    if (teamKills >= kills && kills > 0) top.add(team);
+                }
+                returnString = returnString
+                        .replace("%topTeam%", !top.isEmpty() ? top.get((int) (k % (long) top.size())).getPrefix() : "-")
+                        .replace("%topTeamKills%", kills + "");
+            }
+
+            if (returnString.contains("%top%") || returnString.contains("%topKills%")) {
+                List<UhcPlayer> top = new ArrayList<>();
+                int kills = 0;
+                for (UhcPlayer u : gm.getPlayersManager().getAllPlayingPlayers()) {
+                    if (u.kills > kills) {
+                        top.clear();
+                        kills = u.kills;
+                    }
+                    if (u.kills >= kills && kills > 0) top.add(u);
+                }
+                returnString = returnString
+                        .replace("%top%",
+                                !top.isEmpty() ? top.get((int) (k % (long) top.size())).getDisplayName() : "-")
+                        .replace("%topKills%", kills + "");
+            }
+
+            if (returnString.contains("%deaths%")) {
+                returnString = returnString.replace("%deaths%", SlayerListener.getDeaths(uhcPlayer) + "");
+            }
+
+            if (returnString.contains("%teamLeader%")) {
+                returnString = returnString.replace("%teamLeader%",
+                        PoliticsListener.getPlayerNode(uhcPlayer).getTeamLeader().player.getDisplayName());
+            }
+
+            if (returnString.contains("%teammatesAlive%")) {
+                returnString = returnString.replace("%teammatesAlive%",
+                        uhcPlayer.getTeam().getPlayingMembers().size() + "");
+            }
+
+            // Parse custom placeholders
+            for (Placeholder placeholder : placeholders) {
+                returnString = placeholder.parseString(returnString, uhcPlayer, bukkitPlayer, scoreboardType);
+            }
+
+            if (returnString.length() > 32) {
+                Bukkit.getLogger().warning("[UhcCore] Scoreboard line is too long: '" + returnString + "'!");
+                returnString = "";
+            }
+
+            return returnString;
+        } catch (Exception e) {
+            return s;
         }
-
-        if (returnString.contains("%episode%")) {
-            returnString = returnString.replace("%episode%", gm.getEpisodeNumber() + "");
-        }
-
-        if (returnString.contains("%nextEpisode%")) {
-            returnString = returnString.replace("%nextEpisode%",
-                    TimeUtils.getFormattedTime(gm.getTimeUntilNextEpisode()) + "");
-        }
-
-        if (returnString.contains("%teamAlive%")) {
-            returnString = returnString.replace("%teamAlive%",
-                    String.valueOf(gm.getTeamManager().getPlayingUhcTeams().size()));
-        }
-
-        if (returnString.contains("%playerAlive%")) {
-            returnString = returnString.replace("%playerAlive%",
-                    String.valueOf(gm.getPlayersManager().getAllPlayingPlayers().size()));
-        }
-
-        if (returnString.contains("%playerSpectator%")) {
-            returnString = returnString.replace("%playerSpectator%",
-                    String.valueOf(gm.getPlayersManager().getOnlineSpectatingPlayers().size()));
-        }
-
-        if (returnString.contains("%money%")) {
-            returnString = returnString.replace("%money%",
-                    String.format("%.2f", VaultManager.getPlayerMoney(bukkitPlayer)));
-        }
-
-        if (returnString.contains("%userScore%")) returnString = returnString.replace("%userScore%",
-                String.format("%.2f", gm.getPlayersManager().getScoreKeeper().getStats(uhcPlayer.getName()).rating));
-
-        if (returnString.contains("%bots%")) {
-            returnString = returnString.replace("%bots%",
-                    (Bukkit.getMaxPlayers() - Bukkit.getOnlinePlayers().size()) + "");
-        }
-
-        // Parse custom placeholders
-        for (Placeholder placeholder : placeholders) {
-            returnString = placeholder.parseString(returnString, uhcPlayer, bukkitPlayer, scoreboardType);
-        }
-
-        if (returnString.length() > 32) {
-            Bukkit.getLogger().warning("[UhcCore] Scoreboard line is too long: '" + returnString + "'!");
-            returnString = "";
-        }
-
-        return returnString;
     }
 
     /**

@@ -19,7 +19,7 @@ public class EnablePVPThread implements Runnable {
 
 	@Override
 	public void run() {
-		if (!gameManager.getGameState().equals(GameState.PLAYING)) {
+		if (!gameManager.getGameState().equals(GameState.PLAYING) || !UhcCore.getPlugin().isEnabled()) {
 			return; // Stop thread
 		}
 

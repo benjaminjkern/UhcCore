@@ -6,15 +6,17 @@ import com.gmail.val59000mc.configuration.MainConfiguration;
 import com.gmail.val59000mc.customitems.UhcItems;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
-import com.gmail.val59000mc.utils.RandomUtils;
+import com.gmail.val59000mc.players.PlayerState;
+import com.gmail.val59000mc.players.PlayersManager;
+import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.utils.UniversalMaterial;
 import com.gmail.val59000mc.scenarios.Scenario;
-import com.gmail.val59000mc.scenarios.ScenarioListener;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -39,12 +41,34 @@ public class BlockListener implements Listener {
 
 	@EventHandler
 	public void onBlockBreak(final BlockBreakEvent event) {
+		Player player = event.getPlayer();
+		PlayersManager pm = GameManager.getGameManager().getPlayersManager();
+		UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
+
+		PlayerState uhcPlayerState = uhcPlayer.getState();
+		if (uhcPlayerState.equals(PlayerState.WAITING) || uhcPlayerState.equals(PlayerState.DEAD)
+				|| uhcPlayer.isFrozen()) {
+			event.setCancelled(true);
+			return;
+		}
 		handleBlockLoot(event);
 		handleShearedLeaves(event);
 	}
 
 	@EventHandler
-	public void onBlockPlace(final BlockPlaceEvent event) { handleMaxBuildingHeight(event); }
+	public void onBlockPlace(final BlockPlaceEvent event) {
+		Player player = event.getPlayer();
+		PlayersManager pm = GameManager.getGameManager().getPlayersManager();
+		UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
+
+		PlayerState uhcPlayerState = uhcPlayer.getState();
+		if (uhcPlayerState.equals(PlayerState.WAITING) || uhcPlayerState.equals(PlayerState.DEAD)
+				|| uhcPlayer.isFrozen()) {
+			event.setCancelled(true);
+			return;
+		}
+		handleMaxBuildingHeight(event);
+	}
 
 	@EventHandler
 	public void onLeavesDecay(LeavesDecayEvent event) { handleAppleDrops(event); }
@@ -71,11 +95,10 @@ public class BlockListener implements Listener {
 	}
 
 	private void handleShearedLeaves(BlockBreakEvent e) {
-		if (!configuration.getAppleDropsFromShearing()) { return; }
 
-		if (!UniversalMaterial.isLeaves(e.getBlock().getType())) { return; }
+		if (!UniversalMaterial.isLeaves(e.getBlock().getType())) return;
 
-		if (e.getPlayer().getItemInHand().getType() == Material.SHEARS) {
+		if (e.getPlayer().getInventory().getItemInMainHand().getType() == Material.SHEARS) {
 			Bukkit.getPluginManager().callEvent(new LeavesDecayEvent(e.getBlock()));
 		}
 	}

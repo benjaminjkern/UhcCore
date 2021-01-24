@@ -409,5 +409,59 @@
         "description": [
             "All blocks can be ignited as if they are tnt. Be careful!"
         ]
+    },
+    "FISHGANG": {
+        "name": "Fish Gang",
+        "description": [
+            "Players can breathe under water, but they lose breathe when they're out of water!"
+        ]
+    },
+    "CHICKENFIGHT": {
+        "name": "Chicken Fight",
+        "description": [
+            "Its duos, but chicken fight style. Chicken teams share health and inventory."
+        ]
+    },
+    "DEATHMATCH": {
+        "name": "Deathmatch",
+        "description": [
+            "When the game reaches 20 minutes, or when there are 2 players left, all players are teleported into a deathmatch arena."
+        ]
+    },
+    "FIFTY": {
+        "name": "50 v 50",
+        "description": [
+            "Its a 50 v 50 battle. Have fun!"
+        ]
+    },
+    "SLAYER": {
+        "name": "Slayer",
+        "description": [
+            "The game isn't about surviving, its just about getting kills. The person or team with the most kills at the end is the winner!"
+        ]
+    },
+    "SPECIALTNT": {
+        "name": "Special Explosions",
+        "description": [
+            "Every explosion replaces the blocks with a randomized block."
+        ]
+    },
+    "HOESMAD": {
+        "name": "Hoes Mad",
+        "description": [
+            "Hoes shoot lazers."
+        ]
+    },
+    "RANDOM": {
+        "name": "Randomize Scenarios",
+        "description": ["Voting for this will pick random scenarios from the list!", "If a scenario gets more votes than the randomize selection, then that scenario is put in the game regardless."]
+    },
+    "NONE": {
+        "name": "No Scenarios",
+        "description": ["Play a game with no scenarios, if you want to be a little more competitive!", "If a scenario gets more votes than the none selection, then that scenario is put in the game regardless."]
+    },
+    "BOTSIN": {
+        "name": "Bots",
+        "description": ["Fill the rest of the game with bots!", "Use this if you want the game to be full!"]
     }
 }

@@ -19,6 +19,7 @@ public class PlayerStats {
     int nemesisKills;
     int lastKilledByKills;
     long lastSeen;
+    int rank;
 
     public PlayerStats(String player) {
         if (player != null) this.player = player.toLowerCase();
@@ -63,8 +64,6 @@ public class PlayerStats {
 
         try {
             Player p = Bukkit.getPlayerExact(newStats.player);
-            if (rating != newStats.rating) p.sendMessage(
-                    "Your Player Rating has been updated to \u00a76" + String.format("%.2f", newStats.rating));
             if (nemesis.equals("null")) nemesis = null;
             if (newStats.nemesis.equals("null")) newStats.nemesis = null;
 

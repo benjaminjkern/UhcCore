@@ -66,6 +66,7 @@ public class PlayerConnectionListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		gameManager.sendInfoToServer("CURRENTSIZE:" + (Bukkit.getOnlinePlayers().size()), false);
+		gameManager.getBossBar().addPlayer(event.getPlayer());
 		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
 				() -> playersManager.playerJoinsTheGame(event.getPlayer()), 1);
 	}
@@ -88,16 +89,39 @@ public class PlayerConnectionListener implements Listener {
 
 			Inventory scenarioInventory = gameManager.getScenarioManager().getScenarioVoteInventory(uhcPlayer);
 			for (ItemStack item : scenarioInventory.getContents()) {
+				if (item == null) continue;
 				ItemMeta meta = item.getItemMeta();
 				Scenario scenario = Scenario.getScenario(meta.getDisplayName());
 				if (uhcPlayer.getScenarioVotes().contains(scenario)) {
 					uhcPlayer.getScenarioVotes().remove(scenario);
 					if (item.getAmount() == 1) {
-						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						switch (scenario) {
+							case RANDOM:
+								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0",
+										"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+								break;
+							case NONE:
+								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0",
+										"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+								break;
+							default:
+								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						}
 						meta.removeEnchant(Enchantment.DURABILITY);
 					} else {
-						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						switch (scenario) {
+							case RANDOM:
+								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+										"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+								break;
+							case NONE:
+								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+										"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+								break;
+							default:
+								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+										Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						}
 						item.setAmount(item.getAmount() - 1);
 					}
 					item.setItemMeta(meta);
@@ -132,14 +156,11 @@ public class PlayerConnectionListener implements Listener {
 		}
 
 		Player p = event.getPlayer();
+
 		if (sendingToLobby.contains(p)) {
 			event.setQuitMessage("\u00a70(\u00a7d\u00a7l<\u00a70) \u00a77" + p.getDisplayName());
 			sendingToLobby.remove(p);
-		} else
-			if ((gameManager.getGameState() == GameState.PLAYING || gameManager.getGameState() == GameState.DEATHMATCH)
-					&& gameManager.getPlayersManager().getUhcPlayer(p).getState() == PlayerState.PLAYING) {
-						gameManager.sendInfoToServer("DISCONNECTED:" + p.getName(), false);
-					}
+		} else gameManager.sendInfoToServer("DISCONNECTED:" + p.getName(), false);
 	}
 
 	public static void addToSendingToLobby(Player p) { sendingToLobby.add(p); }

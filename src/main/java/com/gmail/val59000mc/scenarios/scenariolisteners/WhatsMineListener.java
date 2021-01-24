@@ -1,17 +1,15 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
-import com.gmail.val59000mc.events.UhcStartingEvent;
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
-import com.gmail.val59000mc.players.UhcTeam;
+import com.gmail.val59000mc.game.GameManager;
+import com.gmail.val59000mc.players.PlayerState;
+import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
-import com.gmail.val59000mc.utils.RandomUtils;
 import com.gmail.val59000mc.UhcCore;
 import org.bukkit.event.EventHandler;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
 import org.bukkit.entity.Player;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Item;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -23,15 +21,14 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.List;
-
 public class WhatsMineListener extends ScenarioListener {
 
-    // I'm not entirely sure how to do this
     @EventHandler
     public void onPickUpItem(EntityPickupItemEvent e) {
         if (!(e.getEntity() instanceof Player)) return;
         Player player = (Player) e.getEntity();
+        UhcPlayer up = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
+        if (up.getState() != PlayerState.PLAYING) return;
         Item item = e.getItem();
 
         getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
@@ -47,6 +44,8 @@ public class WhatsMineListener extends ScenarioListener {
     @EventHandler
     public void onThrowItem(PlayerDropItemEvent e) {
         Player player = e.getPlayer();
+        UhcPlayer up = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
+        if (up.getState() != PlayerState.PLAYING) return;
         getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
@@ -68,6 +67,8 @@ public class WhatsMineListener extends ScenarioListener {
     @EventHandler
     public void onBreakTool(PlayerItemBreakEvent e) {
         Player player = e.getPlayer();
+        UhcPlayer up = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
+        if (up.getState() != PlayerState.PLAYING) return;
         getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
@@ -75,9 +76,9 @@ public class WhatsMineListener extends ScenarioListener {
 
                 int slot = player.getInventory().getHeldItemSlot();
                 ItemStack items = otherPlayer.getInventory().getItem(slot);
-                MaterialData md = items.getData();
+                ItemMeta im = items.getItemMeta();
                 ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
-                newItems.setData(md);
+                newItems.setItemMeta(im);
                 otherPlayer.getInventory().setItem(slot, newItems);
             } catch (UhcPlayerNotOnlineException p) {}
         });
@@ -86,6 +87,8 @@ public class WhatsMineListener extends ScenarioListener {
     @EventHandler
     public void onBreakTool(PlayerItemConsumeEvent e) {
         Player player = e.getPlayer();
+        UhcPlayer up = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
+        if (up.getState() != PlayerState.PLAYING) return;
         getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
@@ -93,9 +96,9 @@ public class WhatsMineListener extends ScenarioListener {
 
                 int slot = player.getInventory().getHeldItemSlot();
                 ItemStack items = otherPlayer.getInventory().getItem(slot);
-                MaterialData md = items.getData();
+                ItemMeta im = items.getItemMeta();
                 ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
-                newItems.setData(md);
+                newItems.setItemMeta(im);
                 otherPlayer.getInventory().setItem(slot, newItems);
             } catch (UhcPlayerNotOnlineException p) {}
         });
@@ -104,6 +107,8 @@ public class WhatsMineListener extends ScenarioListener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
         Player player = e.getPlayer();
+        UhcPlayer up = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
+        if (up.getState() != PlayerState.PLAYING) return;
         getPlayersManager().getAllPlayingPlayers().forEach(uhcPlayer -> {
             try {
                 Player otherPlayer = uhcPlayer.getPlayer();
@@ -111,9 +116,9 @@ public class WhatsMineListener extends ScenarioListener {
 
                 int slot = player.getInventory().getHeldItemSlot();
                 ItemStack items = otherPlayer.getInventory().getItem(slot);
-                MaterialData md = items.getData();
+                ItemMeta im = items.getItemMeta();
                 ItemStack newItems = new ItemStack(items.getType(), items.getAmount() - 1);
-                newItems.setData(md);
+                newItems.setItemMeta(im);
                 otherPlayer.getInventory().setItem(slot, newItems);
             } catch (UhcPlayerNotOnlineException p) {}
         });
@@ -123,6 +128,8 @@ public class WhatsMineListener extends ScenarioListener {
     public void onInventoryAction(InventoryClickEvent e) {
         final Player player = (Player) e.getWhoClicked();
 
+        UhcPlayer up = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
+        if (up.getState() != PlayerState.PLAYING) return;
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -145,6 +152,8 @@ public class WhatsMineListener extends ScenarioListener {
     public void onInventoryAction(InventoryDragEvent e) {
         final Player player = (Player) e.getWhoClicked();
 
+        UhcPlayer up = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
+        if (up.getState() != PlayerState.PLAYING) return;
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -167,6 +176,8 @@ public class WhatsMineListener extends ScenarioListener {
     public void onPlayerInteract(PlayerInteractEvent e) {
         final Player player = e.getPlayer();
 
+        UhcPlayer up = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
+        if (up.getState() != PlayerState.PLAYING) return;
         new BukkitRunnable() {
             @Override
             public void run() {

@@ -43,9 +43,9 @@ public class UhcTeam {
 
 	public void setTeamName(String teamName) { this.teamName = teamName; }
 
-	public String getPrefix() { return prefix + "\u25A0 "; }
+	public String getPrefix() { return prefix + " "; }
 
-	public String getColor() { return prefix; }
+	public String getColor() { return prefix + " "; }
 
 	public void setPrefix(String prefix) { this.prefix = prefix; }
 
@@ -78,6 +78,12 @@ public class UhcTeam {
 	public int getKills() {
 		int i = 0;
 		for (UhcPlayer uhcPlayer : members) { i += uhcPlayer.kills; }
+		return i;
+	}
+
+	public int getPlayingKills() {
+		int i = 0;
+		for (UhcPlayer uhcPlayer : members) { if (uhcPlayer.getState() == PlayerState.PLAYING) i += uhcPlayer.kills; }
 		return i;
 	}
 

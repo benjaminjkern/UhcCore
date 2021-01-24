@@ -28,16 +28,20 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -45,7 +49,10 @@ public class ItemsListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onRightClickItem(PlayerInteractEvent event) {
-		if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
+		if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.LEFT_CLICK_AIR
+				&& event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK)
+			return;
 
 		Player player = event.getPlayer();
 		GameManager gm = GameManager.getGameManager();
@@ -53,6 +60,7 @@ public class ItemsListener implements Listener {
 		ItemStack hand = player.getInventory().getItemInMainHand();
 
 		if (GameItem.isGameItem(hand)) {
+			if (uhcPlayer.getState() == PlayerState.PLAYING) hand.setAmount(0);
 			event.setCancelled(true);
 			GameItem gameItem = GameItem.getGameItem(hand);
 			handleGameItemInteract(gameItem, player, uhcPlayer, hand);
@@ -99,6 +107,8 @@ public class ItemsListener implements Listener {
 
 		// Only handle clicked items.
 		if (item == null) { return; }
+
+		if (uhcPlayer.getState() == PlayerState.DEAD) event.setCancelled(true);
 
 		// Listen for GameItems
 		if (gm.getGameState() == GameState.WAITING) {
@@ -297,6 +307,12 @@ public class ItemsListener implements Listener {
 			case TEAM_LIST:
 				UhcItems.openTeamsListInventory(player);
 				break;
+			case LIST_ITEM:
+				Bukkit.dispatchCommand(player, "list");
+				break;
+			case SCENARIO_READER:
+				Bukkit.dispatchCommand(player, "game");
+				break;
 		}
 	}
 
@@ -393,7 +409,10 @@ public class ItemsListener implements Listener {
 	public void onPlayerDropItem(PlayerDropItemEvent event) {
 		GameManager gm = GameManager.getGameManager();
 
-		if (gm.getGameState() == GameState.WAITING) { event.setCancelled(true); }
+		if (gm.getGameState() == GameState.WAITING
+				|| gm.getPlayersManager().getUhcPlayer(event.getPlayer()).getState() == PlayerState.DEAD) {
+			event.setCancelled(true);
+		}
 	}
 
 	@EventHandler
@@ -412,7 +431,7 @@ public class ItemsListener implements Listener {
 	}
 
 	private void handleScenarioInventory(InventoryClickEvent e) {
-		if (!(e.getWhoClicked() instanceof Player)) { return; }
+		if (!(e.getWhoClicked() instanceof Player)) return;
 
 		InventoryView clickedInv = e.getView();
 
@@ -432,14 +451,15 @@ public class ItemsListener implements Listener {
 		boolean mainInventory = clickedInv.getTitle().equals(Lang.SCENARIO_GLOBAL_INVENTORY);
 		boolean editInventory = clickedInv.getTitle().equals(Lang.SCENARIO_GLOBAL_INVENTORY_EDIT);
 		boolean voteInventory = clickedInv.getTitle().substring(2).equals(Lang.SCENARIO_GLOBAL_INVENTORY_VOTE);
+		boolean listInventory = clickedInv.getTitle().startsWith(InventoryGUIListener.LIST_TITLE);
 		// No scenario inventory!
-		if (!mainInventory && !editInventory && !voteInventory) { return; }
-
-		e.setCancelled(true); // might be redundant
-		player.closeInventory();
+		if (!mainInventory && !editInventory && !voteInventory && !listInventory) { return; }
 
 		// Get scenario info when right click or when on the global inventory menu.
 		if (e.getClick() == ClickType.RIGHT || mainInventory) {
+
+			e.setCancelled(true); // might be redundant
+			player.closeInventory();
 			// Handle edit item
 			if (meta.getDisplayName().equals(Lang.SCENARIO_GLOBAL_ITEM_EDIT)) {
 				Inventory inv = scenarioManager.getScenarioEditInventory();
@@ -457,6 +477,9 @@ public class ItemsListener implements Listener {
 			player.sendMessage(Lang.SCENARIO_GLOBAL_DESCRIPTION_HEADER.replace("%scenario%", scenario.getName()));
 			scenario.getDescription().forEach(s -> player.sendMessage(Lang.SCENARIO_GLOBAL_DESCRIPTION_PREFIX + s));
 		} else if (editInventory) {
+
+			e.setCancelled(true); // might be redundant
+			player.closeInventory();
 			// Handle back item
 			if (item.getItemMeta().getDisplayName().equals(Lang.SCENARIO_GLOBAL_ITEM_BACK)) {
 				Inventory inv = scenarioManager.getScenarioMainInventory(true);
@@ -473,6 +496,9 @@ public class ItemsListener implements Listener {
 			// Open edit inventory
 			player.openInventory(scenarioManager.getScenarioEditInventory());
 		} else if (voteInventory) {
+
+			e.setCancelled(true); // might be redundant
+			player.closeInventory();
 			UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
 
 			if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) return;
@@ -484,28 +510,103 @@ public class ItemsListener implements Listener {
 			if (uhcPlayer.getScenarioVotes().contains(scenario)) {
 				uhcPlayer.getScenarioVotes().remove(scenario);
 				if (item.getAmount() == 1) {
-					meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					switch (scenario) {
+						case RANDOM:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0",
+									"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							break;
+						case NONE:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", "\u00a77Vote to cancel all scenarios!",
+									Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							break;
+						case BOTSIN:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0",
+									"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							if (0 >= Bukkit.getOnlinePlayers().size() / 2.)
+								GameManager.getGameManager().setBotsIn(true);
+							else GameManager.getGameManager().setBotsIn(false);
+							break;
+						default:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					}
 					meta.removeEnchant(Enchantment.DURABILITY);
 				} else {
-					meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-							Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					switch (scenario) {
+						case RANDOM:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+									"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							break;
+						case NONE:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+									"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							break;
+						case BOTSIN:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+									"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							if (item.getAmount() - 1 >= Bukkit.getOnlinePlayers().size() / 2.)
+								GameManager.getGameManager().setBotsIn(true);
+							else GameManager.getGameManager().setBotsIn(false);
+							break;
+						default:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+									Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					}
 					item.setAmount(item.getAmount() - 1);
 				}
 				item.setItemMeta(meta);
 			} else {
 				int maxVotes = gm.getConfiguration().getMaxScenarioVotes();
-				if (uhcPlayer.getScenarioVotes().size() == maxVotes) {
+				int nonScenarios = (int) uhcPlayer.getScenarioVotes().stream()
+						.filter(scen -> scen == Scenario.RANDOM || scen == Scenario.NONE || scen == Scenario.BOTSIN)
+						.count();
+				if (uhcPlayer.getScenarioVotes().size() - nonScenarios >= maxVotes) {
 					player.sendMessage(Lang.SCENARIO_GLOBAL_VOTE_MAX.replace("%max%", String.valueOf(maxVotes)));
 					return;
 				}
 				uhcPlayer.getScenarioVotes().add(scenario);
 
 				if (item.getAmount() == 1 && !meta.hasEnchant(Enchantment.DURABILITY)) {
-					meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					switch (scenario) {
+						case RANDOM:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1",
+									"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							break;
+						case NONE:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", "\u00a77Vote to cancel all scenarios!",
+									Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							break;
+						case BOTSIN:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1",
+									"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							if (1 >= Bukkit.getOnlinePlayers().size() / 2.)
+								GameManager.getGameManager().setBotsIn(true);
+							else GameManager.getGameManager().setBotsIn(false);
+							break;
+						default:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					}
 					meta.addEnchant(Enchantment.DURABILITY, 1, true);
 				} else {
-					meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
-							Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					switch (scenario) {
+						case RANDOM:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+									"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							break;
+						case NONE:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+									"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							break;
+						case BOTSIN:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+									"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+							if (item.getAmount() + 1 >= Bukkit.getOnlinePlayers().size() / 2.)
+								GameManager.getGameManager().setBotsIn(true);
+							else GameManager.getGameManager().setBotsIn(false);
+							break;
+						default:
+							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+									Lang.SCENARIO_GLOBAL_ITEM_INFO));
+					}
 					item.setAmount(item.getAmount() + 1);
 				}
 
@@ -518,7 +619,54 @@ public class ItemsListener implements Listener {
 				else player.getInventory().clear(i);
 			}
 			player.openInventory(scenarioManager.getScenarioVoteInventory(uhcPlayer));
+		} else if (listInventory) {
+			if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) {
+				if (e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) e.setCancelled(true);
+				return;
+			}
+			e.setCancelled(true);
+
+			int page = Integer.parseInt(clickedInv.getTitle().substring(InventoryGUIListener.LIST_TITLE.length() + 11,
+					clickedInv.getTitle().length() - 3)) - 1;
+			// Bukkit.getLogger().info(page + "");
+			UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
+
+			item = e.getCurrentItem();
+			if (item == null) return;
+			switch (item.getType()) {
+				case BARRIER:
+					e.getView().close();
+					break;
+				case PLAYER_HEAD:
+					try {
+						UhcPlayer u = GameManager.getGameManager().getPlayersManager()
+								.getUhcPlayer(((SkullMeta) item.getItemMeta()).getOwner());
+
+						if (u.getState() == PlayerState.PLAYING && (uhcPlayer.getState() == PlayerState.DEAD
+								|| player.hasPermission("uhc-core.commands.teleport-admin"))) {
+							player.teleport(u.getPlayer().getLocation(), TeleportCause.NETHER_PORTAL);
+							player.closeInventory();
+						}
+					} catch (Exception hasdflkj) {
+
+					}
+					break;
+				case ARROW:
+					player.closeInventory();
+					player.openInventory(GameManager.getGameManager().getListInventoryHandler()
+							.getListInventory(uhcPlayer, page - 1));
+					break;
+				case SPECTRAL_ARROW:
+					player.closeInventory();
+					player.openInventory(GameManager.getGameManager().getListInventoryHandler()
+							.getListInventory(uhcPlayer, page + 1));
+					break;
+				default:
+			}
 		}
 	}
+
+	@EventHandler
+	public void onNPCPickup(EntityPickupItemEvent e) { if (e.getEntity().hasMetadata("NPC")) e.setCancelled(false); }
 
 }

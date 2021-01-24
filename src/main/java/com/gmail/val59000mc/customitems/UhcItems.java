@@ -26,11 +26,15 @@ public class UhcItems {
 
 	public static void giveGameItemTo(Player player, GameItem gameItem) {
 		if (!gameItem.meetsUsageRequirements()) { return; }
-		player.getInventory().addItem(gameItem.getItem());
+		player.getInventory().addItem(gameItem.getItem().clone());
 	}
 
 	public static void giveLobbyItemsTo(Player player) {
 		for (GameItem lobbyItem : GameItem.LOBBY_ITEMS) { giveGameItemTo(player, lobbyItem); }
+	}
+
+	public static void giveSpectatorItemsTo(Player player) {
+		for (GameItem spectatorItem : GameItem.SPECTATOR_ITEMS) { giveGameItemTo(player, spectatorItem); }
 	}
 
 	public static void openTeamMainInventory(Player player, UhcPlayer uhcPlayer) {
