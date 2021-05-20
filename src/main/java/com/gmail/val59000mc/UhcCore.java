@@ -30,7 +30,7 @@ public class UhcCore extends JavaPlugin {
 	private GameManager gameManager;
 	private Updater updater;
 
-	public static final String PREFIX = "\u00a75(\u00a7d\u00a7lYEUH\u00a75) ";
+	public static final String PREFIX = "\u00a75(\u00a7d\u00a7lYEUH\u00a75) \u00a7f";
 
 	@Override
 	public void onEnable() {

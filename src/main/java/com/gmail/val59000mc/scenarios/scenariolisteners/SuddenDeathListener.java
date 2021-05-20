@@ -11,6 +11,7 @@ import com.gmail.val59000mc.utils.VersionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.mcmonkey.sentinel.SentinelTrait;
@@ -28,7 +29,6 @@ public class SuddenDeathListener extends ScenarioListener {
 
     @EventHandler
     public void onGameStart(UhcStartedEvent e) {
-
         for (UhcPlayer uhcPlayer : e.getPlayersManager().getAllPlayingPlayers()) {
             try {
                 Player player = uhcPlayer.getPlayer();
@@ -43,9 +43,11 @@ public class SuddenDeathListener extends ScenarioListener {
                 // Don't set max health for offline players.
             }
         }
+        Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> { getGameManager().setPvp(false); }, 20);
         canTakeDamage = false;
         Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
             canTakeDamage = true;
+            getGameManager().setPvp(true);
             getGameManager().broadcastMessage("You are no longer invulnerable!");
         }, 20 * time);
     }
@@ -58,7 +60,7 @@ public class SuddenDeathListener extends ScenarioListener {
         e.setDamage(0);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOW)
     public void onDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player) || !(e.getDamager() instanceof Player)) return;
         if (canTakeDamage) return;

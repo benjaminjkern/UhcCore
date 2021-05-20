@@ -4,6 +4,7 @@ import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.PlayersManager;
+import com.gmail.val59000mc.players.SpawnLocations;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.utils.VersionUtils;
 import org.bukkit.Bukkit;
@@ -77,7 +78,7 @@ public class TeleportListener implements Listener {
 				&& e.getFrom().getName().equals(gm.getConfiguration().getTheEndUuid())) {
 			World world = Bukkit.getServer().getWorld(gm.getConfiguration().getOverworldUuid());
 
-			Location loc = PlayersManager.findRandomSafeLocation(world);
+			Location loc = SpawnLocations.findRandomSafeLocation(world);
 
 			player.teleport(loc);
 		}

@@ -21,7 +21,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 public class SwapListener extends ScenarioListener {
 

@@ -1,9 +1,11 @@
 package com.gmail.val59000mc.listeners;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import com.gmail.val59000mc.UhcCore;
@@ -26,9 +28,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PlayerConnectionListener implements Listener {
@@ -69,11 +68,32 @@ public class PlayerConnectionListener implements Listener {
 		gameManager.getBossBar().addPlayer(event.getPlayer());
 		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
 				() -> playersManager.playerJoinsTheGame(event.getPlayer()), 1);
+
+		if (Bukkit.getOnlinePlayers().size() <= 1) gameManager.setBotsIn(true);
+		else {
+			int botsInVotes = 0;
+			for (Player p : Bukkit.getOnlinePlayers()) {
+				UhcPlayer uhcPlayer = gameManager.getPlayersManager().getUhcPlayer(p);
+				botsInVotes += uhcPlayer.getScenarioVotes().contains(Scenario.BOTSIN) ? 1 : 0;
+			}
+			gameManager.setBotsIn(botsInVotes >= Bukkit.getOnlinePlayers().size() / 2.);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerDisconnect(PlayerQuitEvent event) {
 		gameManager.sendInfoToServer("CURRENTSIZE:" + (Bukkit.getOnlinePlayers().size() - 1), false);
+
+		if (Bukkit.getOnlinePlayers().size() <= 2) gameManager.setBotsIn(true);
+		else {
+			int botsInVotes = 0;
+			for (Player p : Bukkit.getOnlinePlayers()) {
+				if (p.equals(event.getPlayer())) continue;
+				UhcPlayer uhcPlayer = gameManager.getPlayersManager().getUhcPlayer(p);
+				botsInVotes += uhcPlayer.getScenarioVotes().contains(Scenario.BOTSIN) ? 1 : 0;
+			}
+			gameManager.setBotsIn(botsInVotes >= (Bukkit.getOnlinePlayers().size() - 1) / 2.);
+		}
 
 		if (gameManager.getGameState().equals(GameState.WAITING)
 				|| gameManager.getGameState().equals(GameState.STARTING)) {
@@ -87,45 +107,12 @@ public class PlayerConnectionListener implements Listener {
 			// playersManager.strikeLightning(uhcPlayer);
 			// }
 
-			Inventory scenarioInventory = gameManager.getScenarioManager().getScenarioVoteInventory(uhcPlayer);
-			for (ItemStack item : scenarioInventory.getContents()) {
-				if (item == null) continue;
-				ItemMeta meta = item.getItemMeta();
-				Scenario scenario = Scenario.getScenario(meta.getDisplayName());
-				if (uhcPlayer.getScenarioVotes().contains(scenario)) {
-					uhcPlayer.getScenarioVotes().remove(scenario);
-					if (item.getAmount() == 1) {
-						switch (scenario) {
-							case RANDOM:
-								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0",
-										"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-								break;
-							case NONE:
-								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0",
-										"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-								break;
-							default:
-								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-						}
-						meta.removeEnchant(Enchantment.DURABILITY);
-					} else {
-						switch (scenario) {
-							case RANDOM:
-								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-										"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-								break;
-							case NONE:
-								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-										"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-								break;
-							default:
-								meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-										Lang.SCENARIO_GLOBAL_ITEM_INFO));
-						}
-						item.setAmount(item.getAmount() - 1);
-					}
-					item.setItemMeta(meta);
-				}
+			// unvote for everything
+			List<Scenario> scenariosVotedFor = new ArrayList<>(uhcPlayer.getScenarioVotes());
+			for (Scenario scenario : scenariosVotedFor) { ItemsListener.voteForScenario(uhcPlayer, scenario); }
+			GameManager.getGameManager().getListInventoryHandler().updatePlayer(uhcPlayer);
+			if (uhcPlayer.getState() != PlayerState.PLAYING) {
+				GameManager.getGameManager().getListInventoryHandler().removePlayer(event.getPlayer().getName());
 			}
 
 			try {
@@ -158,7 +145,7 @@ public class PlayerConnectionListener implements Listener {
 		Player p = event.getPlayer();
 
 		if (sendingToLobby.contains(p)) {
-			event.setQuitMessage("\u00a70(\u00a7d\u00a7l<\u00a70) \u00a77" + p.getDisplayName());
+			event.setQuitMessage("\u00a70(\u00a7d\u00a7l<\u00a70) \u00a77" + p.getName());
 			sendingToLobby.remove(p);
 		} else gameManager.sendInfoToServer("DISCONNECTED:" + p.getName(), false);
 	}

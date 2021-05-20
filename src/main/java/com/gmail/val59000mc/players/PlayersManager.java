@@ -13,10 +13,10 @@ import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.exceptions.UhcTeamException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
-import com.gmail.val59000mc.game.UhcWorldBorder;
 import com.gmail.val59000mc.languages.Lang;
-import com.gmail.val59000mc.listeners.EntityHider;
+import com.gmail.val59000mc.listeners.ItemsListener;
 import com.gmail.val59000mc.listeners.PlayerConnectionListener;
+import com.gmail.val59000mc.listeners.PlayerDeathListener;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioManager;
 import com.gmail.val59000mc.scenarios.scenariolisteners.SilentNightListener;
@@ -44,8 +44,6 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
 import org.mcmonkey.sentinel.SentinelTrait;
 import org.mcmonkey.sentinel.targeting.SentinelTargetLabel;
 
@@ -56,35 +54,31 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PlayersManager {
 
 	private final List<UhcPlayer> players;
 	private long lastDeathTime;
 	private ScoreKeeper scoreKeeper;
-	private static Queue<Location> randLocs;
-
-	private static Set<Material> nonoBlocks;
-
 	private Set<String> winners;
+	private static Set<String> seen;
+
+	public static SpawnLocations spawnLocations;
+
+	private boolean lastTeam;
 
 	public PlayersManager() {
 		players = Collections.synchronizedList(new ArrayList<>());
 		scoreKeeper = new ScoreKeeper();
 		winners = new HashSet<>();
-		nonoBlocks = new HashSet<>();
-		nonoBlocks.add(Material.LAVA);
-		nonoBlocks.add(Material.WATER);
-		nonoBlocks.add(Material.MAGMA_BLOCK);
-		nonoBlocks.add(Material.CACTUS);
+		spawnLocations = new SpawnLocations();
+		seen = new HashSet<>();
+
+		lastTeam = false;
 	}
 
-	public static void createSpawnLocations(int num) {
-		GameManager gm = GameManager.getGameManager();
-		World world = Bukkit.getWorld(gm.getConfiguration().getOverworldUuid());
-		randLocs = getRandomSafeLocations(world, num, 400 / Math.sqrt(num));
-		gm.finishLoad("GENERATESPAWNPOINTS");
-	}
+	public SpawnLocations getSpawnLocations() { return spawnLocations; }
 
 	public void setLastDeathTime() { lastDeathTime = System.currentTimeMillis(); }
 
@@ -258,8 +252,7 @@ public class PlayersManager {
 					// Only player in team so create random spawn location.
 					if (onlinePlayingMembers.size() <= 1) {
 						World world = gm.getLobby().getLoc().getWorld();
-						double maxDistance = 0.9 * gm.getWorldBorder().getCurrentSize();
-						uhcPlayer.getTeam().setStartingLocation(findRandomSafeLocation(world));
+						uhcPlayer.getTeam().setStartingLocation(SpawnLocations.findRandomSafeLocation(world));
 					}
 					// Set spawn location at team mate.
 					else {
@@ -324,7 +317,10 @@ public class PlayersManager {
 	public void setPlayerWaitsAtLobby(UhcPlayer uhcPlayer) {
 		uhcPlayer.setState(PlayerState.WAITING);
 		GameManager gm = GameManager.getGameManager();
-		PreStartThread.restartTimer();
+		if (!seen.contains(uhcPlayer.getName())) {
+			PreStartThread.restartTimer();
+			seen.add(uhcPlayer.getName());
+		}
 
 		GameManager.getGameManager().getListInventoryHandler().updatePlayer(uhcPlayer);
 
@@ -347,6 +343,8 @@ public class PlayersManager {
 		} catch (UhcPlayerNotOnlineException e) {
 			// Do nothing beacause WAITING is a safe state
 		}
+
+		ItemsListener.voteForScenario(uhcPlayer, Scenario.BOTSIN);
 
 	}
 
@@ -407,7 +405,9 @@ public class PlayersManager {
 
 	}
 
-	public void setPlayerSpectateAtLobby(UhcPlayer uhcPlayer) {
+	public void setPlayerSpectateAtLobby(UhcPlayer uhcPlayer) { setPlayerSpectateAtLobby(uhcPlayer, true); }
+
+	public void setPlayerSpectateAtLobby(UhcPlayer uhcPlayer, boolean teleportToCenter) {
 
 		uhcPlayer.setState(PlayerState.DEAD);
 		uhcPlayer.sendPrefixedMessage(Lang.PLAYERS_WELCOME_BACK_SPECTATING);
@@ -447,10 +447,12 @@ public class PlayersManager {
 			}
 
 			for (PotionEffect effect : player.getActivePotionEffects()) { player.removePotionEffect(effect.getType()); }
-			if (GameManager.getGameManager().getGameState().equals(GameState.DEATHMATCH)) {
-				player.teleport(GameManager.getGameManager().getArena().getLoc());
-			} else {
-				player.teleport(GameManager.getGameManager().getLobby().getLoc());
+			if (teleportToCenter) {
+				if (GameManager.getGameManager().getGameState().equals(GameState.DEATHMATCH)) {
+					player.teleport(GameManager.getGameManager().getArena().getLoc());
+				} else {
+					player.teleport(GameManager.getGameManager().getLobby().getLoc());
+				}
 			}
 
 			UhcItems.giveSpectatorItemsTo(player);
@@ -563,10 +565,16 @@ public class PlayersManager {
 			}
 		}
 
-		Bukkit.getOnlinePlayers()
-				.forEach(player -> { player.sendTitle("", "\u00a77Game starting momentarily...", 0, 6000, 0); });
+		Bukkit.getOnlinePlayers().forEach(player -> {
+			player.sendTitle("", "\u00a77Game starting momentarily...", 0, 6000, 0);
+			player.sendMessage(UhcCore.PREFIX + "\u00a7fScenarios for this game: "
+					+ gm.getScenarioManager().getActiveScenarios().stream()
+							.map(scenario -> "\u00a7d" + scenario.getName() + "\u00a7f")
+							.collect(Collectors.joining(", ")));
+			player.sendMessage(UhcCore.PREFIX + "\u00a77(Use \u00a7d/game \u00a77for more info)");
+		});
 
-		for (UhcTeam team : listUhcTeams()) { team.setStartingLocation(randLocs.poll()); }
+		for (UhcTeam team : listUhcTeams()) { team.setStartingLocation(SpawnLocations.getStoredLocs().poll()); }
 
 		Bukkit.getPluginManager().callEvent(new UhcPreTeleportEvent());
 
@@ -588,161 +596,6 @@ public class PlayersManager {
 
 		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new StartGameTimerThread(), delayTeleportByTeam + 20);
 
-	}
-
-	public static Location newRandomLocation(World world) {
-		return newRandomLocation(world, Math.min(world.getWorldBorder().getSize() / 2.,
-				GameManager.getGameManager().getConfiguration().getBorderStartSize()));
-	}
-
-	public static Location newRandomLocation(World world, double range) {
-		Random r = new Random();
-		WorldBorder wb = world.getWorldBorder();
-		double x = range * (r.nextDouble() * 2 - 1) + wb.getCenter().getX();
-		double z = range * (r.nextDouble() * 2 - 1) + wb.getCenter().getZ();
-		return new Location(world, x, 0, z);
-	}
-
-	/**
-	 * Returns location of ground.
-	 * 
-	 * @param loc        Location to look for ground.
-	 * @param allowCaves When set to true, the first location on the y axis is
-	 *                   returned. This will include caves.
-	 * @return Ground location.
-	 */
-	private static Location getGroundLocation(Location loc, boolean allowCaves) {
-		World w = loc.getWorld();
-
-		Location setLoc = loc.clone();
-
-		if (allowCaves) {
-			setLoc.setY(0);
-			setLoc.setX((int) (setLoc.getX()) + 0.5);
-			setLoc.setZ((int) (setLoc.getZ()) + 0.5);
-			while (setLoc.getBlock().getType() != Material.AIR
-					|| setLoc.clone().add(0, 1, 0).getBlock().getType() != Material.AIR
-					|| setLoc.clone().add(0, 2, 0).getBlock().getType() != Material.AIR
-					|| setLoc.clone().add(0, 3, 0).getBlock().getType() != Material.AIR) {
-				setLoc.add(0, 1, 0);
-			}
-		} else {
-			setLoc = w.getHighestBlockAt(setLoc).getLocation().clone().add(0.5, 1, 0.5);
-		}
-		return setLoc;
-	}
-
-	public static Queue<Location> getRandomSafeLocations(World world, int num, double minDist) {
-		return getRandomSafeLocations(world, num, minDist, 20);
-	}
-
-	public static Queue<Location> getRandomSafeLocations(World world, int num, double minDist, int bailout) {
-		List<Location> checkedLocations = new LinkedList<>();
-
-		for (int i = 0; i < num; i++) {
-			Location randomLoc = findRandomSafeLocation(world);
-
-			boolean verified = false;
-			for (int j = 0; j < bailout && !verified; j++) {
-				verified = true;
-				for (Location l : checkedLocations) {
-					if (l.distanceSquared(randomLoc) < minDist * minDist) {
-						verified = false;
-						// Bukkit.getLogger().info("[UhcCore] Location " + randomLoc.toString() + " was
-						// within " + minDist
-						// + " of another team");
-						randomLoc = findRandomSafeLocation(world);
-						break;
-					}
-				}
-			}
-
-			if (!verified) Bukkit.getLogger().info("[UhcCore] Location " + randomLoc.toString() + " was within "
-					+ minDist + " blocks of another team, but the bailout was reached.");
-			else Bukkit.getLogger().info("[UhcCore] Spawn location " + (i + 1) + "/" + num + " found.");
-			checkedLocations.add(randomLoc);
-		}
-
-		return new LinkedList<>(checkedLocations);
-	}
-
-	public static Location findRandomSafeLocation(World world) { return findRandomSafeLocation(world, 20); }
-
-	public static Location findRandomSafeLocation(World world, int bailout) {
-		for (int i = 0; i < bailout; i++) {
-			Location loc = verifySafe(newRandomLocation(world));
-			if (loc != null) return loc;
-		}
-		Bukkit.getLogger().info("[UHCCore] Bailout reached, returning random location");
-		boolean nether = world.getEnvironment() == World.Environment.NETHER;
-		return getGroundLocation(newRandomLocation(world), nether);
-	}
-
-	public static Location verifySafe(Location loc) {
-		boolean nether = loc.getWorld().getEnvironment() == World.Environment.NETHER;
-		Location ground = getGroundLocation(loc, nether);
-
-		ground.setPitch(0);
-		ground.setYaw(0);
-
-		if (nether && ground.getBlockY() > 120) return null;
-
-		Material material = ground.clone().add(0, -1, 0).getBlock().getType();
-		while (material == Material.BARRIER) {
-			ground = getBelow(ground);
-			if (ground == null) return null;
-			material = ground.clone().add(0, -1, 0).getBlock().getType();
-		}
-		if (!material.isSolid() || nonoBlocks.contains(material)
-				|| !GameManager.getGameManager().getWorldBorder().isWithinBorder(ground))
-			return null;
-		return ground;
-	}
-
-	private static Location getBelow(Location loc) {
-		int y = -2;
-		while (loc.getBlockY() + y > 0 && loc.getWorld()
-				.getBlockAt(loc.getBlockX(), loc.getBlockY() + y, loc.getBlockZ()).getType() == Material.AIR) {
-			if (loc.getBlockY() + y <= 0) return null;
-			y--;
-		}
-		return loc.clone().add(0, y + 1, 0);
-	}
-
-	@Nullable
-	public static Location findSafeLocationAround(Location loc, int range) {
-		Location betterLocation = verifySafe(loc);
-		if (betterLocation != null) return betterLocation;
-
-		Location testLoc = loc.clone();
-
-		int i = 1;
-		Vector dir = new Vector(0, 0, 1);
-		// dear god I hope it never gets to full map size
-		while (i < range * 2) {
-			for (int j = 0; j < i; j++) {
-				betterLocation = verifySafe(testLoc);
-				if (betterLocation != null) return betterLocation;
-				testLoc.add(dir);
-			}
-
-			dir = new Vector(dir.getZ(), 0, -dir.getX());
-
-			for (int j = 0; j < i; j++) {
-				betterLocation = verifySafe(testLoc);
-				if (betterLocation != null) return betterLocation;
-				testLoc.add(dir);
-			}
-
-			dir = new Vector(dir.getZ(), 0, -dir.getX());
-			i++;
-		}
-
-		// Bukkit.getLogger().info("[UhcCore] Could not find any safe spawn spot near "
-		// + loc.toString() + " within "
-		// + range + " blocks!");
-
-		return null;
 	}
 
 	public void strikeLightning(UhcPlayer uhcPlayer) {
@@ -779,62 +632,128 @@ public class PlayersManager {
 	}
 
 	public void checkIfRemainingPlayers() {
-		int playingBots = 0;
-		int playingPlayers = 0;
-		int playingPlayersOnline = 0;
-		int playingTeams = 0;
-		int playingTeamsOnline = 0;
+		int aliveBots = 0;
+		int alivePlayers = 0;
+		int alivePlayersOnline = 0;
+
+		int alivePlayerTeams = 0;
+		int aliveOnlyBotTeams = 0;
+		int alivePlayerTeamsOnline = 0;
+
+		boolean botsin = false;
+
+		for (UhcPlayer player : getPlayersList()) {
+			if (player.getName().equals("YEUH-BOT")) {
+				botsin = true;
+				break;
+			}
+		}
 
 		for (UhcTeam team : listUhcTeams()) {
 
 			int teamIsOnline = 0;
 			int teamIsPlaying = 0;
+			int botTeam = botsin ? 1 : 0;
 
 			for (UhcPlayer player : team.getMembers()) {
 				if (player.getState().equals(PlayerState.PLAYING)) {
-					playingPlayers++;
+
 					teamIsPlaying = 1;
 
-					if (player.getName().equals("YEUH-BOT")) playingBots++;
+					if (player.getName().equals("YEUH-BOT")) aliveBots++;
+					else {
+						botTeam = 0;
+						alivePlayers++;
 
-					try {
-						player.getPlayer();
-						playingPlayersOnline++;
-						teamIsOnline = 1;
-					} catch (UhcPlayerNotOnlineException e) {
-						// Player isn't online
+						try {
+							player.getPlayer();
+							alivePlayersOnline++;
+							teamIsOnline = 1;
+						} catch (UhcPlayerNotOnlineException e) {
+							// Player isn't online
+						}
 					}
 				}
 			}
 
-			playingTeamsOnline += teamIsOnline;
-			playingTeams += teamIsPlaying;
+			alivePlayerTeamsOnline += teamIsOnline;
+			alivePlayerTeams += (1 - botTeam) * teamIsPlaying;
+			aliveOnlyBotTeams += botTeam * teamIsPlaying;
 		}
+
+		int aliveTeams = alivePlayerTeams + aliveOnlyBotTeams;
 
 		GameManager gm = GameManager.getGameManager();
 		MainConfiguration cfg = gm.getConfiguration();
+
 		if (cfg.getEnableTimeLimit() && gm.getRemainingTime() <= 0 && gm.getGameState().equals(GameState.PLAYING)) {
+			// start deathmatch if time limit (I dont think I need this)
 			gm.startDeathmatch();
-		} else if (playingPlayers == 0 || (Bukkit.getOnlinePlayers().size() == 0 && playingPlayers == playingBots)) {
-			gm.endGame();
-		} else if (gm.getGameState() == GameState.DEATHMATCH && cfg.getEnableDeathmatchForceEnd() && gm.getPvp()
+			return;
+		}
+
+		if (gm.getGameState() == GameState.DEATHMATCH && cfg.getEnableDeathmatchForceEnd() && gm.getPvp()
 				&& (lastDeathTime + (cfg.getDeathmatchForceEndDelay() * TimeUtils.SECOND)) < System
 						.currentTimeMillis()) {
-							gm.endGame();
-						} else
-			if (playingPlayers > 0 && playingPlayersOnline == 0) {
-				// Check if all playing players have left the game
-				if (cfg.getEndGameWhenAllPlayersHaveLeft()) { gm.startEndGameThread(); }
-			} else if (playingPlayers > 0 && playingPlayersOnline > 0 && playingTeamsOnline == 1 && playingTeams == 1
-					&& gm.getStartPlayers() > 1) {
-						// Check if one playing team remains
-						gm.endGame();
-					} else
-				if (playingPlayers > 0 && playingPlayersOnline > 0 && playingTeamsOnline == 1 && playingTeams > 1) {
-					// Check if one playing team remains
-					if (cfg.getEndGameWhenAllPlayersHaveLeft() && !cfg.getOnePlayerMode()) { gm.startEndGameThread(); }
-				} else if (gm.getGameIsEnding()) { gm.stopEndGameThread(); }
+			// if deathmatch last death time runs out, end game
+			gm.endGame();
+			return;
+		}
 
+		if (alivePlayers == 0 || alivePlayerTeams == 0) {
+			if (alivePlayers > 0 || alivePlayerTeams > 0)
+				Bukkit.getLogger().warning("Something went wrong when counting alive players and teams");
+
+			// there are no alive real players, end game
+			gm.endGame();
+			return;
+		}
+
+		if (aliveTeams == 1) {
+			// win game
+			gm.endGame();
+			return;
+		}
+
+		if (alivePlayerTeams == 1) {
+			// only one team that has players in it exists, give them the option to end game
+			// or continue playing
+			if (!lastTeam && gm.getStartRealTeams() > 1) {
+				Bukkit.getScheduler().runTaskTimer(UhcCore.getPlugin(), () -> {
+					for (UhcTeam team : gm.getTeamManager().getUhcTeams()) {
+						if (team.getMembers().stream().allMatch(member -> member.getState() != PlayerState.PLAYING
+								|| member.getName().equalsIgnoreCase("YEUH-BOT")))
+							continue;
+						team.sendMessage("");
+						if (!team.isSolo()) team.sendMessage(UhcCore.PREFIX
+								+ "Your team is the last team that has real players in it! You can continue to play if you like,");
+						else team.sendMessage(UhcCore.PREFIX
+								+ "You are the last real player alive! You can continue to play if you like,");
+						team.sendMessage(UhcCore.PREFIX
+								+ "But if you die it will count as a loss for you. Otherwise, use \u00a7d/end \u00a7fto end the game and claim your victory!");
+						team.sendMessage("");
+					}
+				}, 0, 30 * 20);
+				lastTeam = true;
+			}
+		}
+
+		if (alivePlayersOnline == 0 || alivePlayerTeamsOnline == 0) {
+			if (alivePlayersOnline > 0 || alivePlayerTeamsOnline > 0)
+				Bukkit.getLogger().warning("Something went wrong when counting alive players and teams online");
+			// If all alive players have logged out mid game, start a countdown
+			if (cfg.getEndGameWhenAllPlayersHaveLeft()) gm.startEndGameThread();
+			return;
+		}
+
+		if ((aliveBots == 0 || aliveOnlyBotTeams == 0) && alivePlayerTeamsOnline == 1) {
+			// If all competition has left, start a countdown
+			if (cfg.getEndGameWhenAllPlayersHaveLeft() && !cfg.getOnePlayerMode()) gm.startEndGameThread();
+			return;
+		}
+
+		// stop game ending if it gets here
+		if (gm.getGameIsEnding()) gm.stopEndGameThread();
 	}
 
 	public void startWatchPlayerPlayingThread() {
@@ -902,7 +821,7 @@ public class PlayersManager {
 
 		// DeathMatch at 0 0
 		else {
-			Queue<Location> randomLocations = getRandomSafeLocations(gm.getLobby().getLoc().getWorld(),
+			Queue<Location> randomLocations = SpawnLocations.getRandomSafeLocations(gm.getLobby().getLoc().getWorld(),
 					listUhcTeams().size(), cfg.getDeathmatchStartSize() - 10, 10);
 
 			for (UhcTeam team : listUhcTeams()) {
@@ -947,88 +866,24 @@ public class PlayersManager {
 			@Nullable Player killer) {
 		GameManager gm = GameManager.getGameManager();
 		PlayersManager pm = gm.getPlayersManager();
-		MainConfiguration cfg = gm.getConfiguration();
 
 		if (uhcPlayer.getState() != PlayerState.PLAYING) {
 			Bukkit.getLogger().warning("[UhcCore] " + uhcPlayer.getName() + " died while already in 'DEAD' mode!");
 			return;
 		}
 
+		Player killedUnsafe = uhcPlayer.getPlayerUnsafe();
+		if (location != null) killedUnsafe.teleport(location);
+
 		// kill event
 		if (killer != null) {
 			UhcPlayer uhcKiller = pm.getUhcPlayer(killer);
 
-			uhcKiller.kills++;
-
-			gm.sendInfoToServer("KILL:" + uhcKiller.getName() + ":" + uhcPlayer.getName(), false);
-
-			// Call Bukkit event
-			UhcPlayerKillEvent killEvent = new UhcPlayerKillEvent(uhcKiller, uhcPlayer);
-			Bukkit.getServer().getPluginManager().callEvent(killEvent);
-
-			if (cfg.getEnableKillEvent()) {
-				double reward = cfg.getRewardKillEvent();
-				List<String> killCommands = cfg.getKillCommands();
-				if (reward > 0) {
-					VaultManager.addMoney(killer, reward);
-					if (!Lang.EVENT_KILL_REWARD.isEmpty()) {
-						killer.sendMessage(Lang.EVENT_KILL_REWARD.replace("%money%", "" + reward));
-					}
-				}
-
-				killCommands.forEach(cmd -> {
-					try {
-						Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%name%", killer.getName()));
-					} catch (CommandException exception) {
-						Bukkit.getLogger().warning("[UhcCore] Failed to execute kill reward command: " + cmd);
-						exception.printStackTrace();
-					}
-				});
-
-			}
-		} else if (gm.getStartPlayers() > 1) { gm.sendInfoToServer("DEATH:" + uhcPlayer.getName(), false); }
-
-		// Store drops in case player gets re-spawned.
-		uhcPlayer.getStoredItems().clear();
-		uhcPlayer.getStoredItems().addAll(playerDrops);
-
-		// eliminations
-		ScenarioManager sm = gm.getScenarioManager();
-		if (!sm.isActivated(Scenario.SILENTNIGHT)
-				|| !((SilentNightListener) sm.getScenarioListener(Scenario.SILENTNIGHT)).isNightMode()) {
-			gm.broadcastInfoMessage(Lang.PLAYERS_ELIMINATED.replace("%player%", uhcPlayer.getName()));
+			PlayerDeathListener.handleKill(uhcPlayer.getPlayerUnsafe(), killer,
+					uhcPlayer.getDisplayName() + " was slain by " + uhcKiller.getDisplayName());
+		} else if (gm.getStartPlayers() > 1) {
+			PlayerDeathListener.handleNaturalDeath(uhcPlayer.getPlayerUnsafe(), uhcPlayer.getName() + " died", "Death");
 		}
-
-		if (cfg.getRegenHeadDropOnPlayerDeath()) { playerDrops.add(UhcItems.createRegenHead(uhcPlayer)); }
-
-		if (location != null && cfg.getEnableGoldenHeads()) {
-			if (cfg.getPlaceHeadOnFence() && !gm.getScenarioManager().isActivated(Scenario.TIMEBOMB)) {
-				// place head on fence
-				Location loc = location.clone().add(1, 0, 0);
-				loc.getBlock().setType(UniversalMaterial.OAK_FENCE.getType());
-				loc.add(0, 1, 0);
-				loc.getBlock().setType(UniversalMaterial.PLAYER_HEAD_BLOCK.getType());
-
-				Skull skull = (Skull) loc.getBlock().getState();
-				VersionUtils.getVersionUtils().setSkullOwner(skull, uhcPlayer);
-				skull.setRotation(BlockFace.NORTH);
-				skull.update();
-			} else {
-				playerDrops.add(UhcItems.createGoldenHeadPlayerSkull(uhcPlayer.getName(), uhcPlayer.getUuid()));
-			}
-		}
-
-		if (location != null && cfg.getEnableExpDropOnDeath()) {
-			UhcItems.spawnExtraXp(location, cfg.getExpDropOnDeath());
-		}
-
-		if (location != null) { playerDrops.forEach(item -> location.getWorld().dropItem(location, item)); }
-
-		uhcPlayer.setState(PlayerState.DEAD);
-		pm.strikeLightning(uhcPlayer);
-		// pm.playSoundPlayerDeath();
-
-		pm.checkIfRemainingPlayers();
 	}
 
 	public void spawnOfflineZombieFor(Player player) {

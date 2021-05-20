@@ -5,6 +5,7 @@ import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.PlayersManager;
+import com.gmail.val59000mc.players.SpawnLocations;
 import com.gmail.val59000mc.scenarios.Scenario;
 
 import org.bukkit.Bukkit;
@@ -33,7 +34,8 @@ public class WorldBorderShrinkThread implements Runnable {
 
     public WorldBorderShrinkThread(int endSize, long timeToShrink, long interval, long waitPeriod) {
         this.endSize = GameManager.getGameManager().getScenarioManager().isActivated(Scenario.SLAYER)
-                || GameManager.getGameManager().getScenarioManager().isActivated(Scenario.POLITICS) ? 50 : endSize;
+                || GameManager.getGameManager().getScenarioManager().isActivated(Scenario.POLITICS)
+                || GameManager.getGameManager().getScenarioManager().isActivated(Scenario.KINGOFTHEHILL) ? 50 : endSize;
         this.timeToShrink = 20 * timeToShrink;
         this.interval = 20 * interval;
         this.waitPeriod = 20 * waitPeriod;
@@ -78,7 +80,8 @@ public class WorldBorderShrinkThread implements Runnable {
                 netherBorder.setSize(newSize, interval / 20);
             }
 
-            Location newCenter = PlayersManager.newRandomLocation(overworld, overworldBorder.getSize() / 10. + 20);
+            Location newCenter = SpawnLocations.newRandomLocation(overworld, overworldBorder.getSize() / 10. + 20,
+                    true);
             toMove = newCenter.toVector().subtract(overworld.getWorldBorder().getCenter().toVector())
                     .multiply(1 / (double) interval);
 

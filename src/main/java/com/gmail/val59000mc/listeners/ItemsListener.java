@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.customitems.*;
+import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.exceptions.UhcTeamException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
@@ -34,7 +35,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.Inventory;
@@ -46,6 +47,14 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class ItemsListener implements Listener {
+
+	@EventHandler
+	public void onSwitchToOffHand(PlayerSwapHandItemsEvent event) {
+		Player player = event.getPlayer();
+		GameManager gm = GameManager.getGameManager();
+		UhcPlayer uhcPlayer = gm.getPlayersManager().getUhcPlayer(player);
+		if (uhcPlayer.getState() != PlayerState.PLAYING) event.setCancelled(true);
+	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onRightClickItem(PlayerInteractEvent event) {
@@ -506,118 +515,8 @@ public class ItemsListener implements Listener {
 			// Clicked scenario
 			Scenario scenario = Scenario.getScenario(meta.getDisplayName());
 
-			// toggle scenario
-			if (uhcPlayer.getScenarioVotes().contains(scenario)) {
-				uhcPlayer.getScenarioVotes().remove(scenario);
-				if (item.getAmount() == 1) {
-					switch (scenario) {
-						case RANDOM:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0",
-									"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							break;
-						case NONE:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", "\u00a77Vote to cancel all scenarios!",
-									Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							break;
-						case BOTSIN:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0",
-									"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							if (0 >= Bukkit.getOnlinePlayers().size() / 2.)
-								GameManager.getGameManager().setBotsIn(true);
-							else GameManager.getGameManager().setBotsIn(false);
-							break;
-						default:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-					}
-					meta.removeEnchant(Enchantment.DURABILITY);
-				} else {
-					switch (scenario) {
-						case RANDOM:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-									"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							break;
-						case NONE:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-									"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							break;
-						case BOTSIN:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-									"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							if (item.getAmount() - 1 >= Bukkit.getOnlinePlayers().size() / 2.)
-								GameManager.getGameManager().setBotsIn(true);
-							else GameManager.getGameManager().setBotsIn(false);
-							break;
-						default:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
-									Lang.SCENARIO_GLOBAL_ITEM_INFO));
-					}
-					item.setAmount(item.getAmount() - 1);
-				}
-				item.setItemMeta(meta);
-			} else {
-				int maxVotes = gm.getConfiguration().getMaxScenarioVotes();
-				int nonScenarios = (int) uhcPlayer.getScenarioVotes().stream()
-						.filter(scen -> scen == Scenario.RANDOM || scen == Scenario.NONE || scen == Scenario.BOTSIN)
-						.count();
-				if (uhcPlayer.getScenarioVotes().size() - nonScenarios >= maxVotes) {
-					player.sendMessage(Lang.SCENARIO_GLOBAL_VOTE_MAX.replace("%max%", String.valueOf(maxVotes)));
-					return;
-				}
-				uhcPlayer.getScenarioVotes().add(scenario);
+			voteForScenario(uhcPlayer, scenario);
 
-				if (item.getAmount() == 1 && !meta.hasEnchant(Enchantment.DURABILITY)) {
-					switch (scenario) {
-						case RANDOM:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1",
-									"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							break;
-						case NONE:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", "\u00a77Vote to cancel all scenarios!",
-									Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							break;
-						case BOTSIN:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1",
-									"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							if (1 >= Bukkit.getOnlinePlayers().size() / 2.)
-								GameManager.getGameManager().setBotsIn(true);
-							else GameManager.getGameManager().setBotsIn(false);
-							break;
-						default:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-					}
-					meta.addEnchant(Enchantment.DURABILITY, 1, true);
-				} else {
-					switch (scenario) {
-						case RANDOM:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
-									"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							break;
-						case NONE:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
-									"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							break;
-						case BOTSIN:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
-									"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
-							if (item.getAmount() + 1 >= Bukkit.getOnlinePlayers().size() / 2.)
-								GameManager.getGameManager().setBotsIn(true);
-							else GameManager.getGameManager().setBotsIn(false);
-							break;
-						default:
-							meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
-									Lang.SCENARIO_GLOBAL_ITEM_INFO));
-					}
-					item.setAmount(item.getAmount() + 1);
-				}
-
-				item.setItemMeta(meta);
-			}
-			// add to
-			Iterator<Scenario> it = uhcPlayer.getScenarioVotes().iterator();
-			for (int i = 8; i > 1; i--) {
-				if (it.hasNext()) player.getInventory().setItem(i, it.next().getScenarioItem());
-				else player.getInventory().clear(i);
-			}
 			player.openInventory(scenarioManager.getScenarioVoteInventory(uhcPlayer));
 		} else if (listInventory) {
 			if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) {
@@ -666,7 +565,170 @@ public class ItemsListener implements Listener {
 		}
 	}
 
-	@EventHandler
+	@EventHandler // idk why this is here
 	public void onNPCPickup(EntityPickupItemEvent e) { if (e.getEntity().hasMetadata("NPC")) e.setCancelled(false); }
+
+	public static void voteForScenario(UhcPlayer uhcPlayer, Scenario scenario) {
+		ItemStack item = null;
+		ItemMeta meta = null;
+		for (ItemStack scenItem : GameManager.getGameManager().getScenarioManager().getScenarioVoteInventory(uhcPlayer)
+				.getContents()) {
+			if (scenItem == null || !scenItem.hasItemMeta()) continue;
+			meta = scenItem.getItemMeta();
+			if (scenario.equals(scenItem.getItemMeta().getDisplayName())) {
+				item = scenItem;
+				break;
+			}
+		}
+		if (item == null || meta == null)
+			throw new IllegalArgumentException("Scenario " + scenario.getName() + " is not in the voting inventory!");
+
+		Player player;
+		try {
+			player = uhcPlayer.getPlayer();
+		} catch (UhcPlayerNotOnlineException e) {
+			return;
+		}
+		GameManager gm = GameManager.getGameManager();
+		// toggle scenario
+		if (uhcPlayer.getScenarioVotes().contains(scenario)) {
+			uhcPlayer.getScenarioVotes().remove(scenario);
+			if (item.getAmount() == 1) {
+				switch (scenario) {
+					case RANDOM:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", "\u00a77Vote to randomize the scenarios!",
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						break;
+					case NONE:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", "\u00a77Vote to cancel all scenarios!",
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						break;
+					case BOTSIN:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", "\u00a77Vote to fill the game with bots!",
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						if (0 >= Bukkit.getOnlinePlayers().size() / 2. || Bukkit.getOnlinePlayers().size() <= 1)
+							GameManager.getGameManager().setBotsIn(true);
+						else GameManager.getGameManager().setBotsIn(false);
+						break;
+					default:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7c0", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+				}
+				meta.removeEnchant(Enchantment.DURABILITY);
+			} else {
+				switch (scenario) {
+					case RANDOM:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+								"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						break;
+					case NONE:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+								"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						break;
+					case BOTSIN:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+								"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						if (item.getAmount() - 1 >= Bukkit.getOnlinePlayers().size() / 2.
+								|| Bukkit.getOnlinePlayers().size() <= 1)
+							GameManager.getGameManager().setBotsIn(true);
+						else GameManager.getGameManager().setBotsIn(false);
+						break;
+					default:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() - 1),
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+				}
+				item.setAmount(item.getAmount() - 1);
+			}
+			item.setItemMeta(meta);
+		} else {
+			int maxVotes = gm.getConfiguration().getMaxScenarioVotes();
+			int nonScenarios = (int) uhcPlayer.getScenarioVotes().stream()
+					.filter(scen -> scen == Scenario.RANDOM || scen == Scenario.NONE || scen == Scenario.BOTSIN)
+					.count();
+			if (scenario != Scenario.RANDOM && scenario != Scenario.NONE && scenario != Scenario.BOTSIN
+					&& uhcPlayer.getScenarioVotes().size() - nonScenarios >= maxVotes) {
+				player.sendMessage(Lang.SCENARIO_GLOBAL_VOTE_MAX.replace("%max%", String.valueOf(maxVotes)));
+				return;
+			}
+
+			if (uhcPlayer.getScenarioVotes().contains(Scenario.NONE) && scenario == Scenario.RANDOM) {
+				ItemsListener.voteForScenario(uhcPlayer, Scenario.NONE);
+			}
+			if (uhcPlayer.getScenarioVotes().contains(Scenario.RANDOM) && scenario == Scenario.NONE) {
+				ItemsListener.voteForScenario(uhcPlayer, Scenario.RANDOM);
+			}
+			uhcPlayer.getScenarioVotes().add(scenario);
+
+			if (item.getAmount() == 1 && !meta.hasEnchant(Enchantment.DURABILITY)) {
+				switch (scenario) {
+					case RANDOM:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", "\u00a77Vote to randomize the scenarios!",
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						break;
+					case NONE:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", "\u00a77Vote to cancel all scenarios!",
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						break;
+					case BOTSIN:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", "\u00a77Vote to fill the game with bots!",
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						if (1 >= Bukkit.getOnlinePlayers().size() / 2. || Bukkit.getOnlinePlayers().size() <= 1)
+							GameManager.getGameManager().setBotsIn(true);
+						else GameManager.getGameManager().setBotsIn(false);
+						break;
+					default:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d1", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+				}
+				meta.addEnchant(Enchantment.DURABILITY, 1, true);
+			} else {
+				switch (scenario) {
+					case RANDOM:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+								"\u00a77Vote to randomize the scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						break;
+					case NONE:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+								"\u00a77Vote to cancel all scenarios!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						break;
+					case BOTSIN:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+								"\u00a77Vote to fill the game with bots!", Lang.SCENARIO_GLOBAL_ITEM_INFO));
+						if (item.getAmount() + 1 >= Bukkit.getOnlinePlayers().size() / 2.
+								|| Bukkit.getOnlinePlayers().size() <= 1)
+							GameManager.getGameManager().setBotsIn(true);
+						else GameManager.getGameManager().setBotsIn(false);
+						break;
+					default:
+						meta.setLore(Arrays.asList("\u00a7fVotes: \u00a7d" + (item.getAmount() + 1),
+								Lang.SCENARIO_GLOBAL_ITEM_INFO));
+				}
+				item.setAmount(item.getAmount() + 1);
+			}
+
+			item.setItemMeta(meta);
+		}
+		if (uhcPlayer.getScenarioVotes().contains(Scenario.BOTSIN)) {
+			player.getInventory().setItem(4, Scenario.BOTSIN.getScenarioItem());
+		} else {
+			player.getInventory().clear(4);
+		}
+
+		if (uhcPlayer.getScenarioVotes().contains(Scenario.NONE)) {
+			player.getInventory().setItem(3, Scenario.NONE.getScenarioItem());
+		} else if (uhcPlayer.getScenarioVotes().contains(Scenario.RANDOM)) {
+			player.getInventory().setItem(3, Scenario.RANDOM.getScenarioItem());
+		} else {
+			player.getInventory().clear(3);
+		}
+		// add to
+		Iterator<Scenario> it = uhcPlayer.getScenarioVotes().iterator();
+		for (int i = 8; i > 5; i--) {
+			if (it.hasNext()) {
+				Scenario scen = it.next();
+				if (scen != Scenario.BOTSIN && scen != Scenario.NONE && scen != Scenario.RANDOM)
+					player.getInventory().setItem(i, scen.getScenarioItem());
+				else i++;
+			} else player.getInventory().clear(i);
+		}
+	}
 
 }

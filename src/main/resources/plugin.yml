@@ -3,7 +3,7 @@ main: com.gmail.val59000mc.UhcCore
 version: 1.18.5
 description: Automates UHC games on a dedicated server
 author: val59000mc, Mezy
-softdepend: [WorldEdit,Vault,ProtocolLib,Citizens,Sentinel]
+softdepend: [WorldEdit, Vault, ProtocolLib, Citizens, Sentinel]
 api-version: 1.13
 commands:
   uhccore:
@@ -29,6 +29,9 @@ commands:
     description: "This command is used to open team inventory."
     usage: /<command>
     aliases: [ti, backpack, bp]
+  end:
+    description: "End the game!"
+    usage: /<command>
   hub:
     description: "This command is used to return back to the hub."
     usage: /<command>
@@ -87,3 +90,6 @@ commands:
   list:
     description: List!
     usage: /<command>
+  killbots:
+    description: Kills all bots, perhaps leave some
+    usage: /<command> <sub-commands>

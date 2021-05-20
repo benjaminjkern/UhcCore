@@ -8,9 +8,11 @@ import java.util.Map;
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.events.ArmorEquipEvent;
 import com.gmail.val59000mc.events.PlayerStartsPlayingEvent;
+import com.gmail.val59000mc.events.UhcPlayerDeathEvent;
 import com.gmail.val59000mc.events.UhcStartingEvent;
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.game.GameManager;
+import com.gmail.val59000mc.listeners.PlayerDeathListener;
 import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.PlayersManager;
 import com.gmail.val59000mc.players.UhcPlayer;
@@ -20,6 +22,7 @@ import com.gmail.val59000mc.utils.RandomUtils;
 import com.gmail.val59000mc.utils.VersionUtils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -32,8 +35,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -80,6 +83,8 @@ public class SuperHeroesListener extends ScenarioListener {
                     allPowers.put(uhcPlayer, newPower);
                     uhcPlayer.getPlayer().sendTitle("",
                             "\u00a75You have the power of the \u00a7d\u00a7l" + newPower.powerType.name() + "\u00a75!");
+                    uhcPlayer.getPlayer().sendMessage(
+                            "\u00a75You have the power of the \u00a7d\u00a7l" + newPower.powerType.name() + "\u00a75!");
                     addHeroesEffect(uhcPlayer, newPower, true);
                 } catch (Exception ex) {
                     Bukkit.getLogger().warning(ex.toString());
@@ -120,78 +125,142 @@ public class SuperHeroesListener extends ScenarioListener {
                 if (sendMessage) player.setHealth(maxHealth);
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 999999, 1));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 999999, 1));
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        new TextComponent("\u00a75You are slow, but strong and sturdy!"));
+                if (sendMessage) for (int i = 0; i < 10; i++) {
+                    Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                new TextComponent("\u00a75You are slow, but strong and sturdy!"));
+                    }, 20 * i);
+                }
                 break;
             case GHOST:
                 player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 999999, 0));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 999999, 1));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 999999, 2));
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        new TextComponent("\u00a75No one can see you!"));
+                if (sendMessage) for (int i = 0; i < 10; i++) {
+                    Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(),
+                            () -> {
+                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                        new TextComponent("\u00a75No one can see you!"));
+                            }, 20 * i);
+                }
                 break;
             case BLAZE:
                 player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 999999, 0));
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        new TextComponent("\u00a75Sneak to use your powers, or hold sneak to use a charged attack!"));
+                if (sendMessage) for (int i = 0; i < 10; i++) {
+                    Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                                "\u00a75Sneak to use your powers, or hold sneak to use a charged attack!"));
+                    }, 20 * i);
+                }
                 break;
             // case SPIDER:
             // player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 999999, 1));
             // break;
             case LUCKY:
                 player.addPotionEffect(new PotionEffect(PotionEffectType.LUCK, 999999, 1));
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        new TextComponent("\u00a75Mining gives you extra goodies, and mobs will leave you alone!"));
+                if (sendMessage) for (int i = 0; i < 10; i++) {
+                    Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                                "\u00a75Mining gives you extra goodies, and mobs will leave you alone!"));
+                    }, 20 * i);
+                }
                 break;
             case VAMPIRE:
                 player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 999999, 0));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 999999, 0));
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        new TextComponent("\u00a75Harvest the blood of living beings to regain health!"));
+                if (sendMessage) for (int i = 0; i < 10; i++) {
+                    Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                new TextComponent("\u00a75Harvest the blood of living beings to regain health!"));
+                    }, 20 * i);
+                }
                 break;
             case ICEMAN:
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        new TextComponent("\u00a75Sneak to use your powers, or attack players to freeze them!"));
-                if (sendMessage) new BukkitRunnable() {
-                    public void run() {
-                        if (uhcPlayer.getState() != PlayerState.PLAYING) {
-                            this.cancel();
-                            return;
-                        }
-                        player.getNearbyEntities(5, 5, 5).forEach(ent -> {
-                            if (!(ent instanceof LivingEntity) || isTeamMate(player, ent)) return;
-
-                            if (ent instanceof Player) {
-                                if (GameManager.getGameManager().getPlayersManager().getUhcPlayer((Player) ent)
-                                        .getState() != PlayerState.PLAYING)
-                                    return;
-                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
-                                        "\u00a7bYou have been partially frozen because you are near an \u00a7fICE MAN\u00a7b!"));
-                            }
-
+                if (sendMessage) {
+                    for (int i = 0; i < 10; i++) {
+                        Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
                             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
-                                    "\u00a7bYou have partially frozen a nearby \u00a7f" + ent.getType() + "\u00a7b!"));
-                            ((LivingEntity) ent).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 2 * 20, 3));
-                            ((LivingEntity) ent)
-                                    .addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 2 * 20, 3));
-                        });
-
+                                    "\u00a75Sneak to use your powers, or attack players to freeze them!"));
+                        }, 20 * i);
                     }
-                }.runTaskTimer(UhcCore.getPlugin(), 20, 20);
+                    new BukkitRunnable() {
+                        public void run() {
+                            if (uhcPlayer.getState() != PlayerState.PLAYING) {
+                                this.cancel();
+                                return;
+                            }
+                            player.getNearbyEntities(5, 5, 5).forEach(ent -> {
+                                if (!(ent instanceof LivingEntity) || isTeamMate(player, ent)) return;
+
+                                if (ent instanceof Player) {
+                                    if (GameManager.getGameManager().getPlayersManager().getUhcPlayer((Player) ent)
+                                            .getState() != PlayerState.PLAYING)
+                                        return;
+                                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                                            "\u00a7bYou have been partially frozen because you are near an \u00a7fICE MAN\u00a7b!"));
+                                }
+
+                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                        new TextComponent("\u00a7bYou have partially frozen a nearby \u00a7f"
+                                                + ent.getType() + "\u00a7b!"));
+                                ((LivingEntity) ent)
+                                        .addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 2 * 20, 3));
+                                ((LivingEntity) ent)
+                                        .addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 2 * 20, 3));
+                            });
+
+                        }
+                    }.runTaskTimer(UhcCore.getPlugin(), 20, 20);
+                }
                 break;
             case NECROMANCER:
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        new TextComponent("\u00a75Sneak to use your powers! Amass a hoard of the undead!"));
+                if (sendMessage) for (int i = 0; i < 10; i++) {
+                    Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                new TextComponent("\u00a75Sneak to use your powers! Amass a hoard of the undead!"));
+                    }, 20 * i);
+                }
                 break;
             case POTIONMASTER:
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
-                        "\u00a75Sneak to use your powers! Potions vary based on whether you're looking up or down!"));
+                if (sendMessage) for (int i = 0; i < 10; i++) {
+                    Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(
+                                "\u00a75Sneak to use your powers! Potions vary based on whether you're looking up or down!"));
+                    }, 20 * i);
+                }
                 break;
             case CREEPER:
-                if (sendMessage) player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        new TextComponent("\u00a75Sneak to use your powers! Have fun!"));
+                if (sendMessage) for (int i = 0; i < 10; i++) {
+                    Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> {
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                new TextComponent("\u00a75Sneak to use your powers! Have fun!"));
+                    }, 20 * i);
+                }
                 break;
             default:
+        }
+    }
+
+    @EventHandler
+    public void onDeath(UhcPlayerDeathEvent e) {
+        if (PlayerDeathListener.autoRespawn) addHeroesEffect(e.getKilled(), getPower(e.getKilled()), false);
+    }
+
+    @EventHandler
+    public void onPlayerDamage(EntityPotionEffectEvent e) {
+        if (e.getEntityType() != EntityType.PLAYER) return;
+        Player p = (Player) e.getEntity();
+        UhcPlayer uhcPlayer = getPlayersManager().getUhcPlayer(p);
+        if (uhcPlayer.getState() != PlayerState.PLAYING) return;
+        SuperPower power = allPowers.get(uhcPlayer);
+
+        // if (e.getCause() == EntityDamageEvent.DamageCause.FALL
+        // && allPowers.get(p).powerType == SuperPower.SuperPowerType.SPIDER)
+        // e.setCancelled(true);
+
+        if (e.getNewEffect() != null && badEffects.contains(e.getNewEffect().getType())
+                && power.powerType == SuperPower.SuperPowerType.POTIONMASTER) {
+            e.setCancelled(true);
         }
     }
 
@@ -233,7 +302,7 @@ public class SuperHeroesListener extends ScenarioListener {
 
             SuperPower damagerPower = getPower(uhcDamager);
 
-            if (damagedIsPlayer) {
+            if (damagedIsPlayer && getGameManager().getPvp()) {
                 Player damaged = (Player) e.getEntity();
                 UhcPlayer uhcDamaged = getPlayersManager().getUhcPlayer(damaged);
                 SuperPower damagedPower = getPower(uhcDamaged);
@@ -480,10 +549,12 @@ public class SuperHeroesListener extends ScenarioListener {
 
                     p.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                             new TextComponent("\u00a77You threw a potion of \u00a75"
-                                    + potionEffect.getType().toString().toLowerCase().replace("_", " ") + "\u00a77!"));
+                                    + potionEffect.getType().getName().replace("_", " ") + "\u00a77!"));
 
                     ItemStack itemStack = new ItemStack(Material.SPLASH_POTION);
                     PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
+                    potionMeta.setColor(Color.fromRGB((int) (Math.random() * 256), (int) (Math.random() * 256),
+                            (int) (Math.random() * 256)));
 
                     potionMeta.addCustomEffect(potionEffect, true);
 
@@ -594,6 +665,9 @@ public class SuperHeroesListener extends ScenarioListener {
         } else if (toCheck instanceof Mob && toCheck.getCustomName() != null)
             toCheckOwner = Bukkit.getPlayerExact(toCheck.getCustomName().split("'s ")[0]);
         else return false;
+
+        if (checkingOwner == null || toCheckOwner == null) return false;
+
         UhcPlayer uhcCheckingOwner = pm.getUhcPlayer(checkingOwner);
         UhcPlayer uhcToCheckOwner = pm.getUhcPlayer(toCheckOwner);
 

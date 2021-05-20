@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.events.UhcStartedEvent;
+import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 
 import org.bukkit.Bukkit;
@@ -47,11 +48,16 @@ public class OneTrickPonyListener extends ScenarioListener {
 
         new BukkitRunnable() {
             public void run() {
-
                 for (World w : Bukkit.getWorlds()) {
                     for (Entity entity : w.getEntities()) {
+                        if (isActivated(Scenario.WITHERRUSH) && WitherRushListener.gameWither != null
+                                && entity.getCustomName().equals(WitherRushListener.gameWither.getCustomName()))
+                            continue;
                         if (entity.getType() == chosenType) ((LivingEntity) entity).setPersistent(false);
-                        if (!mobSet.contains(entity.getType()) || entity.isInvulnerable()) continue;
+                        if (!mobSet.contains(entity.getType())) continue;
+
+                        entity.setFireTicks(0);
+                        if (entity.isInvulnerable()) continue;
 
                         entity.setInvulnerable(true);
                         entity.setSilent(true);
@@ -78,6 +84,7 @@ public class OneTrickPonyListener extends ScenarioListener {
 
     @EventHandler
     public void onSpawn(EntitySpawnEvent e) {
+        if (isActivated(Scenario.WITHERRUSH) && e.getEntityType() == EntityType.WITHER) return;
         if (chosenType == null) return;
         if (e.getEntityType() == chosenType) ((LivingEntity) e.getEntity()).setPersistent(false);
         if (!mobSet.contains(e.getEntityType())) return;

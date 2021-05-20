@@ -1,11 +1,5 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,15 +10,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
-
-import com.gmail.val59000mc.UhcCore;
-import com.gmail.val59000mc.utils.FileUtils;
-import com.gmail.val59000mc.utils.VersionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -34,7 +22,6 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.gmail.val59000mc.scenarios.ScenarioListener;
-import com.gmail.val59000mc.utils.RandomUtils;
 
 public class RandomizedDropsListener extends ScenarioListener {
 
@@ -43,8 +30,8 @@ public class RandomizedDropsListener extends ScenarioListener {
 	// private File datapack;
 
 	private Set<Material> bannedMaterials;
-	private Queue<Material> items;
-	private final Map<Material, ItemStack> dropList;
+	private static Queue<Material> items;
+	private static Map<Material, ItemStack> dropList;
 
 	public RandomizedDropsListener() {
 		// datapack = null;
@@ -94,25 +81,8 @@ public class RandomizedDropsListener extends ScenarioListener {
 		event.setCancelled(true);
 		Location dropLocation = block.getLocation().add(.5, 0, .5);
 
-		ItemStack blockDrop;
+		dropLocation.getWorld().dropItemNaturally(dropLocation, getItem(block.getType()));
 
-		if (dropList.containsKey(block.getType())) {
-			dropLocation.getWorld().dropItemNaturally(dropLocation, dropList.get(block.getType()));
-		} else {
-			boolean allGood = false;
-			while (!allGood) {
-				try {
-					Material material = items.poll();
-					Bukkit.getLogger().info(material + "");
-					blockDrop = new ItemStack(material);
-					dropList.put(block.getType(), blockDrop);
-					dropLocation.getWorld().dropItemNaturally(dropLocation, blockDrop);
-					allGood = true;
-				} catch (Exception e) {
-					allGood = false;
-				}
-			}
-		}
 		block.setType(Material.AIR);
 
 		Player player = event.getPlayer();
@@ -123,6 +93,18 @@ public class RandomizedDropsListener extends ScenarioListener {
 			((Damageable) im).setDamage(((Damageable) im).getDamage() - 1);
 			tool.setItemMeta(im);
 			player.getInventory().setItemInMainHand(tool);
+		}
+	}
+
+	public static ItemStack getItem(Material m) {
+		if (dropList.containsKey(m)) return dropList.get(m);
+		while (true) {
+			Material material = items.poll();
+			ItemStack blockDrop = new ItemStack(material);
+			if (blockDrop.getType() == Material.AIR) continue;
+			Bukkit.getLogger().info(m + " -> " + material);
+			dropList.put(m, blockDrop);
+			return blockDrop;
 		}
 	}
 

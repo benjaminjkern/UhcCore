@@ -2,11 +2,13 @@ package com.gmail.val59000mc.scenarios.scenariolisteners;
 
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.game.GameManager;
+import com.gmail.val59000mc.listeners.PlayerDeathListener;
 import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 import com.gmail.val59000mc.UhcCore;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.entity.Player;
@@ -22,6 +24,9 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class WhatsMineListener extends ScenarioListener {
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEnable() { PlayerDeathListener.dropItems = false; }
 
     @EventHandler
     public void onPickUpItem(EntityPickupItemEvent e) {

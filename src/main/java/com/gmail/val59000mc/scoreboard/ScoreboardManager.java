@@ -9,6 +9,7 @@ import com.gmail.val59000mc.game.GameState;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.*;
 import com.gmail.val59000mc.scenarios.Scenario;
+import com.gmail.val59000mc.scenarios.scenariolisteners.KingOfTheHillListener;
 import com.gmail.val59000mc.scenarios.scenariolisteners.PoliticsListener;
 import com.gmail.val59000mc.scenarios.scenariolisteners.SilentNightListener;
 import com.gmail.val59000mc.scenarios.scenariolisteners.SlayerListener;
@@ -38,6 +39,7 @@ public class ScoreboardManager {
 
     private final ScoreboardLayout scoreboardLayout;
     private final List<Placeholder> placeholders;
+    private final SuperLayout superLayout;
 
     public ScoreboardManager() {
         scoreboardLayout = new ScoreboardLayout();
@@ -47,9 +49,14 @@ public class ScoreboardManager {
         placeholders.add(new TeamMembersPlaceholder());
         placeholders.add(new ScenariosPlaceholder());
         placeholders.add(new TimersPlaceholder());
+
+        superLayout = new SuperLayout();
+        superLayout.loadLayout(null);
     }
 
     public ScoreboardLayout getScoreboardLayout() { return scoreboardLayout; }
+
+    public SuperLayout getSuperLayout() { return superLayout; }
 
     public void setUpPlayerScoreboard(UhcPlayer scoreboardPlayer) {
 
@@ -239,16 +246,16 @@ public class ScoreboardManager {
 
                             String teamName = "0" + uhcPlayer.getTeam().getTeamNumber();
 
-                            if (gm.getScenarioManager().isActivated(Scenario.POLITICS)
-                                    && PoliticsListener.getPlayerNode(uhcPlayer).isLeader()) {
+                            if (gm.getScenarioManager().isActivated(Scenario.KINGOFTHEHILL)
+                                    && KingOfTheHillListener.king == uhcPlayer) {
                                 teamName += "l";
                             }
 
                             Team team = scoreboard.getTeam(teamName);
                             if (team == null) { team = scoreboard.registerNewTeam(teamName); }
                             team.setPrefix(uhcPlayer.getTeam().getPrefix());
-                            if (gm.getScenarioManager().isActivated(Scenario.POLITICS)
-                                    && PoliticsListener.getPlayerNode(uhcPlayer).isLeader()) {
+                            if (gm.getScenarioManager().isActivated(Scenario.KINGOFTHEHILL)
+                                    && KingOfTheHillListener.king == uhcPlayer) {
                                 team.setSuffix("\u00a7e⚜" + ChatColor.RESET + "");
                             } else {
                                 team.setSuffix(ChatColor.RESET + "");
@@ -260,8 +267,8 @@ public class ScoreboardManager {
 
                             String teamName = "" + uhcPlayer.getTeam().getTeamNumber();
 
-                            if (gm.getScenarioManager().isActivated(Scenario.POLITICS)
-                                    && PoliticsListener.getPlayerNode(uhcPlayer).isLeader()) {
+                            if (gm.getScenarioManager().isActivated(Scenario.KINGOFTHEHILL)
+                                    && KingOfTheHillListener.king == uhcPlayer) {
                                 teamName += "l";
                             }
 
@@ -273,8 +280,8 @@ public class ScoreboardManager {
                                 }
                             }
                             team.setPrefix(uhcPlayer.getTeam().getPrefix());
-                            if (gm.getScenarioManager().isActivated(Scenario.POLITICS)
-                                    && PoliticsListener.getPlayerNode(uhcPlayer).isLeader()) {
+                            if (gm.getScenarioManager().isActivated(Scenario.KINGOFTHEHILL)
+                                    && KingOfTheHillListener.king == uhcPlayer) {
                                 team.setSuffix("\u00a7e⚜" + ChatColor.RESET + "");
                             } else {
                                 team.setSuffix(ChatColor.RESET + "");
@@ -481,12 +488,18 @@ public class ScoreboardManager {
                 returnString = returnString.replace("%bots%",
                         (Bukkit.getMaxPlayers() - Bukkit.getOnlinePlayers().size()) + "");
             }
-            if (returnString.contains("%chainOfCommand%")) {
-                List<UhcPlayer> chain = PoliticsListener.getPlayerNode(uhcPlayer).chainOfCommand().stream()
-                        .map(node -> node.player).collect(Collectors.toList());
-                int newK = (int) (k % (long) chain.size());
-                returnString = returnString.replace("%chainOfCommand%",
-                        !chain.isEmpty() ? ((chain.size() - newK) + ". " + chain.get(newK).getDisplayName()) : "-");
+            // if (returnString.contains("%chainOfCommand%")) {
+            // List<UhcPlayer> chain =
+            // PoliticsListener.getPlayerNode(uhcPlayer).chainOfCommand().stream()
+            // .map(node -> node.player).collect(Collectors.toList());
+            // int newK = (int) (k % (long) chain.size());
+            // returnString = returnString.replace("%chainOfCommand%",
+            // !chain.isEmpty() ? ((chain.size() - newK) + ". " +
+            // chain.get(newK).getDisplayName()) : "-");
+            // }
+            if (returnString.contains("%king%")) {
+                returnString = returnString.replace("%king%",
+                        KingOfTheHillListener.king != null ? KingOfTheHillListener.king.getDisplayName() : "-");
             }
 
             if (returnString.contains("%topTeam%") || returnString.contains("%topTeamKills%")) {
@@ -522,13 +535,13 @@ public class ScoreboardManager {
             }
 
             if (returnString.contains("%deaths%")) {
-                returnString = returnString.replace("%deaths%", SlayerListener.getDeaths(uhcPlayer) + "");
+                returnString = returnString.replace("%deaths%", uhcPlayer.deaths + "");
             }
 
-            if (returnString.contains("%teamLeader%")) {
-                returnString = returnString.replace("%teamLeader%",
-                        PoliticsListener.getPlayerNode(uhcPlayer).getTeamLeader().player.getDisplayName());
-            }
+            // if (returnString.contains("%teamLeader%")) {
+            // returnString = returnString.replace("%teamLeader%",
+            // PoliticsListener.getPlayerNode(uhcPlayer).getTeamLeader().player.getDisplayName());
+            // }
 
             if (returnString.contains("%teammatesAlive%")) {
                 returnString = returnString.replace("%teammatesAlive%",

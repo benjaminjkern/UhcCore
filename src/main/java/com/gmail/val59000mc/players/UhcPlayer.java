@@ -9,6 +9,7 @@ import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.scenarios.Scenario;
+import com.gmail.val59000mc.scenarios.scenariolisteners.KingOfTheHillListener;
 import com.gmail.val59000mc.scenarios.scenariolisteners.PoliticsListener;
 import com.gmail.val59000mc.utils.SpigotUtils;
 import com.gmail.val59000mc.utils.TimeUtils;
@@ -43,8 +44,10 @@ public class UhcPlayer {
 	private final Set<Scenario> scenarioVotes;
 	private final Set<ItemStack> storedItems;
 	private Zombie offlineZombie;
+	private Player lastPlayer;
 
 	public int kills = 0;
+	public int deaths = 0;
 
 	private UhcPlayer compassPlayingCurrentPlayer;
 	private long compassPlayingLastUpdate;
@@ -62,6 +65,8 @@ public class UhcPlayer {
 		scenarioVotes = new HashSet<>();
 		storedItems = new HashSet<>();
 		offlineZombie = null;
+		lastPlayer = null;
+		lastPlayer = getPlayerUnsafe();
 
 		compassPlayingCurrentPlayer = this;
 	}
@@ -73,8 +78,21 @@ public class UhcPlayer {
 			Entity e = Bukkit.getEntity(uuid);
 			if (e instanceof Player) player = (Player) e;
 		}
-		if (player != null) return player;
+		if (player != null) {
+			lastPlayer = player;
+			return player;
+		}
 		throw new UhcPlayerNotOnlineException(name);
+	}
+
+	// return most recently used player object, player might be online and might
+	// return a null object (It shouldnt but it might)
+	public Player getPlayerUnsafe() {
+		try {
+			return getPlayer();
+		} catch (UhcPlayerNotOnlineException e) {
+			return lastPlayer;
+		}
 	}
 
 	public Boolean isOnline() {
@@ -122,9 +140,8 @@ public class UhcPlayer {
 		if (GameManager.getGameManager().getConfiguration().getUseTeamColors()) {
 			try {
 				return team.getColor() + getPlayer().getName()
-						+ (GameManager.getGameManager().getScenarioManager().isActivated(Scenario.POLITICS)
-								&& PoliticsListener.getPlayerNode(this) != null
-								&& PoliticsListener.getPlayerNode(this).isLeader() ? "\u00a7e⚜" : "")
+						+ ((GameManager.getGameManager().getScenarioManager().isActivated(Scenario.KINGOFTHEHILL)
+								&& KingOfTheHillListener.king == this) ? "\u00a7e⚜" : "")
 						+ ChatColor.RESET;
 			} catch (UhcPlayerNotOnlineException e) {
 				return team.getColor() + getName() + ChatColor.RESET;

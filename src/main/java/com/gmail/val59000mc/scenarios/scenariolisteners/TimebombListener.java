@@ -1,7 +1,9 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
 import com.gmail.val59000mc.UhcCore;
+import com.gmail.val59000mc.events.UhcPlayerDeathEvent;
 import com.gmail.val59000mc.languages.Lang;
+import com.gmail.val59000mc.listeners.PlayerDeathListener;
 import com.gmail.val59000mc.scenarios.Option;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
@@ -12,6 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -30,17 +33,31 @@ public class TimebombListener extends ScenarioListener {
     @Option
     public static long delay = 30;
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerDeath(PlayerDeathEvent e) {
-        Player p = e.getEntity().getPlayer();
-        List<ItemStack> drops = Arrays.asList(p.getInventory().getContents()).stream()
-                .filter(item -> item != null
-                        && (!isActivated(Scenario.NINESLOTS) || item.getType() != Material.GRAY_STAINED_GLASS))
-                .collect(Collectors.toList());
-        e.getDrops().clear();
+    @Override
+    public void onEnable() { PlayerDeathListener.dropItems = false; }
+
+    @EventHandler
+    public void onPlayerDeath(UhcPlayerDeathEvent e) {
+        Player p = e.getKilled().getPlayerUnsafe();
+        List<ItemStack> drops = e.getDrops();
+
+        for (int i = 0; i <= 40; i++) {
+            ItemStack slot = p.getInventory().getItem(i);
+            if (slot == null) continue;
+            ItemStack item = slot.clone();
+            if (item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+                p.getInventory().setItem(i, null);
+                continue;
+            }
+            if (!PlayerDeathListener.autoRespawn || Math.random() >= PlayerDeathListener.keepInventory) {
+                drops.add(item);
+                p.getInventory().setItem(i, null);
+            }
+        }
 
         TimebombThread timebombThread = new TimebombThread(drops, p.getLocation().getBlock().getLocation(), p.getName(),
                 delay);
+
         Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), timebombThread, 1L);
     }
 

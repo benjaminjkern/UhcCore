@@ -12,7 +12,9 @@ public class ScenarioCommandExecutor implements CommandExecutor {
 
     private final ScenarioManager scenarioManager;
 
-    public ScenarioCommandExecutor(ScenarioManager scenarioManager) { this.scenarioManager = scenarioManager; }
+    public ScenarioCommandExecutor(ScenarioManager scenarioManager) {
+        this.scenarioManager = scenarioManager;
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {

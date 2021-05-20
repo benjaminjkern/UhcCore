@@ -1,5 +1,7 @@
 package com.gmail.val59000mc.threads;
 
+import java.util.stream.Collectors;
+
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.game.GameManager;
 
@@ -14,7 +16,6 @@ public class StartGameTimerThread implements Runnable {
     public StartGameTimerThread() {
         task = this;
         time = 10;
-
     }
 
     @Override

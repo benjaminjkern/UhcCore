@@ -259,36 +259,41 @@ public class FlowerPowerListener extends ScenarioListener {
             block.setType(Material.AIR);
             UhcItems.spawnExtraXp(blockLoc, expPerFlower);
 
-            Material m = flowerDrops.get((int) (Math.random() * flowerDrops.size()));
-            ItemStack drop = new ItemStack(m, (int) (Math.random() * DROPS.get(m) + 1));
-            if (m == Material.ENCHANTED_BOOK) {
-                EnchantmentStorageMeta im = (EnchantmentStorageMeta) drop.getItemMeta();
-                double r = 0;
-                while (r < 0.5) {
-                    List<Enchantment> allEnchants = new ArrayList<>(Arrays.asList(Enchantment.values()));
-                    Enchantment ench = allEnchants.get((int) (Math.random() * allEnchants.size()));
-                    im.addStoredEnchant(ench, (int) Math.ceil(Math.random() * ench.getMaxLevel()), true);
-                    r = Math.random();
-                }
-                drop.setItemMeta(im);
-            } else if (m == Material.TIPPED_ARROW) {
-                PotionMeta pm = (PotionMeta) drop.getItemMeta();
-                List<PotionEffectType> allEnchants = new ArrayList<>(Arrays.asList(PotionEffectType.values()));
-                PotionEffectType potionType = allEnchants.get((int) (Math.random() * allEnchants.size()));
-                pm.addCustomEffect(
-                        new PotionEffect(potionType, (int) (Math.random() * 20 * 20), (int) (Math.random() * 2)), true);
-                drop.setItemMeta(pm);
-            } else if (m == Material.CAT_SPAWN_EGG) {
-                List<Material> allEnchants = new ArrayList<>(Arrays.asList(Material.values())).stream()
-                        .filter(material -> material.name().contains("SPAWN_EGG")).collect(Collectors.toList());
-                drop.setType(allEnchants.get((int) (Math.random() * allEnchants.size())));
-            } else if (m == Material.MUSIC_DISC_FAR) {
-                List<Material> allEnchants = new ArrayList<>(Arrays.asList(Material.values())).stream()
-                        .filter(material -> material.name().contains("MUSIC_DISC")).collect(Collectors.toList());
-                drop.setType(allEnchants.get((int) (Math.random() * allEnchants.size())));
-            }
+            ItemStack drop = flowerDrop();
             blockLoc.getWorld().dropItem(blockLoc, drop);
         }
+    }
+
+    public static ItemStack flowerDrop() {
+        Material m = flowerDrops.get((int) (Math.random() * flowerDrops.size()));
+        ItemStack drop = new ItemStack(m, (int) (Math.random() * DROPS.get(m) + 1));
+        if (m == Material.ENCHANTED_BOOK) {
+            EnchantmentStorageMeta im = (EnchantmentStorageMeta) drop.getItemMeta();
+            double r = 0;
+            while (r < 0.5) {
+                List<Enchantment> allEnchants = new ArrayList<>(Arrays.asList(Enchantment.values()));
+                Enchantment ench = allEnchants.get((int) (Math.random() * allEnchants.size()));
+                im.addStoredEnchant(ench, (int) Math.ceil(Math.random() * ench.getMaxLevel()), true);
+                r = Math.random();
+            }
+            drop.setItemMeta(im);
+        } else if (m == Material.TIPPED_ARROW) {
+            PotionMeta pm = (PotionMeta) drop.getItemMeta();
+            List<PotionEffectType> allEnchants = new ArrayList<>(Arrays.asList(PotionEffectType.values()));
+            PotionEffectType potionType = allEnchants.get((int) (Math.random() * allEnchants.size()));
+            pm.addCustomEffect(new PotionEffect(potionType, (int) (Math.random() * 20 * 20), (int) (Math.random() * 2)),
+                    true);
+            drop.setItemMeta(pm);
+        } else if (m == Material.CAT_SPAWN_EGG) {
+            List<Material> allEnchants = new ArrayList<>(Arrays.asList(Material.values())).stream()
+                    .filter(material -> material.name().contains("SPAWN_EGG")).collect(Collectors.toList());
+            drop.setType(allEnchants.get((int) (Math.random() * allEnchants.size())));
+        } else if (m == Material.MUSIC_DISC_FAR) {
+            List<Material> allEnchants = new ArrayList<>(Arrays.asList(Material.values())).stream()
+                    .filter(material -> material.name().contains("MUSIC_DISC")).collect(Collectors.toList());
+            drop.setType(allEnchants.get((int) (Math.random() * allEnchants.size())));
+        }
+        return drop;
     }
 
     private boolean isFlower(Block block) { return FLOWERS.contains(block.getType()); }

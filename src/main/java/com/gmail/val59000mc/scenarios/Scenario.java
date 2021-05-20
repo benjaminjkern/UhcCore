@@ -20,9 +20,8 @@ public enum Scenario {
         CUTCLEAN(UniversalMaterial.IRON_INGOT, CutCleanListener.class,
                         () -> !GameManager.getGameManager().getScenarioManager().isActivated("RANDOMIZEDDROPS")),
         TIMEBOMB(UniversalMaterial.TRAPPED_CHEST, TimebombListener.class),
-        TRIPLEORES(UniversalMaterial.REDSTONE_ORE, TripleOresListener.class,
+        LUCKYLEAVES(UniversalMaterial.OAK_LEAVES, LuckyLeavesListener.class,
                         () -> !GameManager.getGameManager().getScenarioManager().isActivated("RANDOMIZEDDROPS")),
-        LUCKYLEAVES(UniversalMaterial.OAK_LEAVES, LuckyLeavesListener.class),
         FLOWERPOWER(UniversalMaterial.SUNFLOWER, FlowerPowerListener.class,
                         () -> !GameManager.getGameManager().getScenarioManager().isActivated("RANDOMIZEDDROPS")),
         EGGS(UniversalMaterial.EGG, EggsScenarioListener.class),
@@ -30,17 +29,13 @@ public enum Scenario {
                 public Boolean call() {
                         ScenarioManager sm = GameManager.getGameManager().getScenarioManager();
                         return !sm.isActivated("FLOWERPOWER") && !sm.isActivated("CUTCLEAN")
-                                        && !sm.isActivated("TRIPLEORES") && !sm.isActivated("KINGMIDAS");
+                                        && !sm.isActivated("TRIPLEORES") && !sm.isActivated("KINGMIDAS")
+                                        && !sm.isActivated("LUCKYLEAVES");
                 }
-        }),
-        POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class,
-                        () -> GameManager.getGameManager().getPlayersManager().getPlayersList().size() > 2
-                                        && !GameManager.getGameManager().getScenarioManager().isActivated("SLAYER")),
-        LAGWORLD(UniversalMaterial.DIRT, LagWorldListener.class),
+        }), LAGWORLD(UniversalMaterial.DIRT, LagWorldListener.class),
         LILCHEAT(UniversalMaterial.DIAMOND_BLOCK, LilCheatListener.class),
         SWAP(UniversalMaterial.RAW_PORK, SwapListener.class),
         COMPANION(UniversalMaterial.BONE, CompanionListener.class),
-        DONTWASTETIME(UniversalMaterial.DIAMOND_PICKAXE, DontWasteTimeListener.class),
         KINGMIDAS(UniversalMaterial.GOLD_NUGGET, KingMidasListener.class,
                         () -> !GameManager.getGameManager().getScenarioManager().isActivated("RANDOMIZEDDROPS")),
         WHATSMINE(UniversalMaterial.ENDER_CHEST, WhatsMineListener.class),
@@ -55,10 +50,17 @@ public enum Scenario {
                                         .getGameManager().getScenarioManager().isActivated("DEATHMATCH")),
         BLEEDINGSWEETS(UniversalMaterial.BEETROOT_SOUP, BleedingSweetsListener.class,
                         () -> !GameManager.getGameManager().getScenarioManager().isActivated("INHERITANCE")),
-        HOESMAD(UniversalMaterial.GOLDEN_HOE, HoesMadListener.class, true),
+        HOESMAD(UniversalMaterial.GOLDEN_HOE, HoesMadListener.class),
+        SPECIALTNT(UniversalMaterial.GUNPOWDER, SpecialTNTListener.class),
         FIFTY(UniversalMaterial.DIAMOND_SHOVEL, FiftyListener.class,
-                        () -> !GameManager.getGameManager().getScenarioManager().isActivated("DUOS"), true),
-        SPECIALTNT(UniversalMaterial.GUNPOWDER, SpecialTNTListener.class, true),
+                        () -> !GameManager.getGameManager().getScenarioManager().isActivated("DUOS")),
+        NOSTACK(UniversalMaterial.OAK_LOG, NoStackListener.class, true),
+        KINGOFTHEHILL(UniversalMaterial.GOLDEN_HELMET, KingOfTheHillListener.class,
+                        () -> GameManager.getGameManager().getPlayersManager().getPlayersList().size() > 2
+                                        && !GameManager.getGameManager().getScenarioManager().isActivated("SLAYER")
+                                        && !GameManager.getGameManager().getScenarioManager().isActivated("POLITICS"),
+                        true),
+        WITHERRUSH(UniversalMaterial.WITHER_SKELETON_SKULL, WitherRushListener.class, true),
         DEATHMATCH(UniversalMaterial.BEDROCK, DeathmatchListener.class,
                         () -> !GameManager.getGameManager().getScenarioManager().isActivated("SLAYER")),
         SUPERHEROES(UniversalMaterial.NETHER_STAR, SuperHeroesListener.class),
@@ -66,6 +68,7 @@ public enum Scenario {
                         () -> !GameManager.getGameManager().getScenarioManager().isActivated("ACHIEVEMENTHUNTER")),
 
         // ONES THAT ARENT ENTIRELY LAME AND CAN BE USED (DISABLED IN CONFIG)
+        DONTWASTETIME(UniversalMaterial.DIAMOND_PICKAXE, DontWasteTimeListener.class),
         GOLDLESS(UniversalMaterial.GOLD_ORE, GoldLessListener.class),
         DOUBLEORES(UniversalMaterial.REDSTONE_ORE, DoubleOresListener.class),
         NOCLEAN(UniversalMaterial.QUARTZ, NoCleanListener.class),
@@ -84,12 +87,17 @@ public enum Scenario {
         UPSIDEDOWNCRAFTING(UniversalMaterial.SCAFFOLDING, UpsideDownCraftsListener.class, 13),
         CHICKENFIGHT(UniversalMaterial.COOKED_CHICKEN, ChickenFightListener.class),
         NETHERSTART(UniversalMaterial.LAVA_BUCKET, NetherStartListener.class),
+        TRIPLEORES(UniversalMaterial.REDSTONE_ORE, TripleOresListener.class,
+                        () -> !GameManager.getGameManager().getScenarioManager().isActivated("RANDOMIZEDDROPS")),
         FISHGANG(UniversalMaterial.COD, FishGangListener.class),
         PASSIVE(UniversalMaterial.SNOWBALL, PassiveListener.class),
         FLYHIGH(UniversalMaterial.ELYTRA, FlyHighListener.class, 9),
         ACHIEVEMENTHUNTER(UniversalMaterial.BOOK, AchievementHunter.class,
                         () -> !GameManager.getGameManager().getScenarioManager().isActivated("SUDDENDEATH")),
         NINESLOTS(UniversalMaterial.BARRIER, NineSlotsListener.class),
+        POLITICS(UniversalMaterial.IRON_SWORD, PoliticsListener.class,
+                        () -> GameManager.getGameManager().getPlayersManager().getPlayersList().size() > 2
+                                        && !GameManager.getGameManager().getScenarioManager().isActivated("SLAYER")),
         // LAME/USELESS ONES
         // PERMAKILL(UniversalMaterial.IRON_SWORD, PermaKillListener.class),
         // INFINITEENCHANTS(UniversalMaterial.ENCHANTING_TABLE,

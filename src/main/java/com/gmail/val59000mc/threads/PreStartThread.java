@@ -43,7 +43,8 @@ public class PreStartThread implements Runnable {
 	}
 
 	public static void restartTimer() {
-		instance.remainingTime = instance.gameManager.getConfiguration().getTimeBeforeStartWhenReady();
+		if (!Bukkit.getOnlinePlayers().isEmpty())
+			instance.remainingTime = instance.gameManager.getConfiguration().getTimeBeforeStartWhenReady();
 	}
 
 	@Override

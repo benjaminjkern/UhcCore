@@ -69,6 +69,10 @@ public class MapLoader {
 		WorldCreator wc = new WorldCreator(worldName);
 		wc.generateStructures(true);
 		wc.environment(env);
+		if (env == Environment.NORMAL)
+			wc.generator("Terra:DEFAULT");
+		else if (env == Environment.NETHER)
+			wc.generator("Terra:NETHER");
 
 		if (gm.getConfiguration().getPickRandomSeedFromList() && !gm.getConfiguration().getSeeds().isEmpty()) {
 			if (mapSeed == -1) {
@@ -79,17 +83,19 @@ public class MapLoader {
 			wc.seed(mapSeed);
 		} else if (gm.getConfiguration().getPickRandomWorldFromList()
 				&& !gm.getConfiguration().getWorldsList().isEmpty()) {
-					if (mapName == null) {
-						Random r = new Random();
-						mapName = gm.getConfiguration().getWorldsList()
-								.get(r.nextInt(gm.getConfiguration().getWorldsList().size()));
-					}
+			if (mapName == null) {
+				Random r = new Random();
+				mapName = gm.getConfiguration().getWorldsList()
+						.get(r.nextInt(gm.getConfiguration().getWorldsList().size()));
+			}
 
-					String copyWorld = mapName;
-					if (env != Environment.NORMAL) { copyWorld = copyWorld + "_" + env.name().toLowerCase(); }
+			String copyWorld = mapName;
+			if (env != Environment.NORMAL) {
+				copyWorld = copyWorld + "_" + env.name().toLowerCase();
+			}
 
-					copyWorld(copyWorld, worldName);
-				}
+			copyWorld(copyWorld, worldName);
+		}
 
 		if (env.equals(Environment.NORMAL)) {
 			gm.getConfiguration().setOverworldUuid(worldName);
@@ -138,14 +144,18 @@ public class MapLoader {
 	private void copyWorld(String randomWorldName, String worldName) {
 		Bukkit.getLogger().info("[UhcCore] Copying " + randomWorldName + " to " + worldName);
 		File worldDir = new File(randomWorldName);
-		if (worldDir.exists() && worldDir.isDirectory()) { recursiveCopy(worldDir, new File(worldName)); }
+		if (worldDir.exists() && worldDir.isDirectory()) {
+			recursiveCopy(worldDir, new File(worldName));
+		}
 	}
 
 	private void recursiveCopy(File fSource, File fDest) {
 		try {
 			if (fSource.isDirectory()) {
 				// A simple validation, if the destination is not exist then create it
-				if (!fDest.exists()) { fDest.mkdirs(); }
+				if (!fDest.exists()) {
+					fDest.mkdirs();
+				}
 
 				// Create list of files and directories on the current source
 				// Note: with the recursion 'fSource' changed accordingly
@@ -171,12 +181,18 @@ public class MapLoader {
 				int iBytesReads;
 
 				// In each successful read, write back to the source
-				while ((iBytesReads = fInStream.read(buffer)) >= 0) { fOutStream.write(buffer, 0, iBytesReads); }
+				while ((iBytesReads = fInStream.read(buffer)) >= 0) {
+					fOutStream.write(buffer, 0, iBytesReads);
+				}
 
 				// Safe exit
-				if (fInStream != null) { fInStream.close(); }
+				if (fInStream != null) {
+					fInStream.close();
+				}
 
-				if (fOutStream != null) { fOutStream.close(); }
+				if (fOutStream != null) {
+					fOutStream.close();
+				}
 			}
 		} catch (Exception ex) {
 			// Please handle all the relevant exceptions here
@@ -239,7 +255,9 @@ public class MapLoader {
 							if (isGenerateVeins) {
 								veinsGenerated += veinGenerator.generateVeinsInChunk(world.getChunkAt(i, j));
 							}
-							if (!world.isChunkInUse(i, j)) { world.unloadChunk(i, j); }
+							if (!world.isChunkInUse(i, j)) {
+								world.unloadChunk(i, j);
+							}
 							loaded++;
 							j++;
 						}
@@ -259,7 +277,9 @@ public class MapLoader {
 								String message = "[UhcCore] Loading map " + getLoadingState() + "% - "
 										+ Math.floor(chunksLoaded) + "/" + Math.floor(totalChunksToLoad)
 										+ " chunks loaded";
-								if (isGenerateVeins) { message += " - " + veinsGenerated + " veins generated"; }
+								if (isGenerateVeins) {
+									message += " - " + veinsGenerated + " veins generated";
+								}
 								Bukkit.getLogger().info(message);
 							}
 

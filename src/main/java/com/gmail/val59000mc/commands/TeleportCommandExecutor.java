@@ -1,5 +1,8 @@
 package com.gmail.val59000mc.commands;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.PlayerState;
@@ -12,6 +15,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPCRegistry;
 
 public class TeleportCommandExecutor implements CommandExecutor {
 
@@ -79,6 +85,15 @@ public class TeleportCommandExecutor implements CommandExecutor {
 		}
 
 		Player target = Bukkit.getPlayer(args[0]);
+		if (target == null) {
+			try {
+				target = gameManager.getPlayersManager().getUhcPlayer(args[0]).getPlayerUnsafe();
+			} catch (Exception e) {
+				uhcPlayer.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT_ERROR);
+				return true;
+			}
+		}
+
 		if (target == null) {
 			uhcPlayer.sendMessage(Lang.COMMAND_SPECTATING_TELEPORT_ERROR);
 			return true;

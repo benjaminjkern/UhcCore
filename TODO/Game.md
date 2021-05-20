@@ -1,68 +1,89 @@
 # Battle Royale Game Servers
 
-> URGENT
+### URGENT
 
-- Fix all the async things because I'm pretty sure thats why its crashing so much
-- The list inventory is slow
+- Players can occasionally spawn in trees
+    - Run a postliminary check
+- Team colors can occasionally occur twice
+
+### Verify FIxed
+
+- Verify primedtnt, arrows, and fireballs all work with UHCPlayerDeathEvent
+
+### Medium Urgency
+
+- /help and /member don't work in game server, looks bad
+- Chat
+    - Allow spectators to still choose between team chat and non-team chat
+        - Add a little message saying they switched to global chat when they died
+    - Team chat should switch to global when you're the only real player alive on your team
+- Ending game
+    - admin ending game chose admin as winner and gave admin a real win (Not actually a huge deal)
+    - if last real team alive dies rather than choosing to /end, it can give them a win
 - Spectators
-  - They shouldnt be able to pick up exp
-  - Can block arrows, they shouldnt be able to
-  - can open doors, shouldnt be able to
+    - Can prevent other players from placing blocks
+    - Spectators can pick up arrows from the ground
+- Game lags a lot at beginning (sometimes)
+- Does not remove spectators who leave game from list
+- When announcing scenarios add a clause for no scenarios
+- List health is fucked up
+- Allow spectators to /end game if one real player left
+- Have players spawn directly in the lobby instead of being teleported there when they first join the server
+- Sidebar
+    - When game is over it displays weird incorrect info on the sidebar
+    - Coords aren't in??
+        - Unless explicitly changed it sets to default settings, which would explain the gameover ones too.
+- Generation
+    - Consider making it so ores only spawn in exposed caves
+    - Put more flowers in map
+    - Diamonds higher up maybe
+    - New biomes
+    - Villages spawn in biomes other than plains
+- All pets should have team colors in their name tag
 
-> New features / Less Urgent
+### Low urgency
 
-- Stop cheaters in some capacity
-- Maps straight up shouldnt be able to load if the center is ocean
-  - Nothing I do appears to fix this
-- Fix all scenarios with curse of vanishing
-- Dynamically set scoreboard on scenarios
-- Make shears always able to get apples
-- The lightining when people die breaks the theyre standing in
-- Worldedit items sometimes reload as axe and compass which is annoying
+- Upon reconnection to lobby the server should relay who is online and alive (?)
+- Allow spectators to see inventories of players and chests (without opening the chest)
+- When leaving server it attaches a nickname to you
 - Announce team eliminations in non-solo games
-- Randomized Fancy lobbys
-- Border small warning should be bigger
-- Make bossbar less annoying
-- Switch events to a generalized uhcdeadplayerevent that runs before and can cancel a regular deadplayer event
-  - Verify primedtnt, arrows, and fireballs all work with this event
-  - Also move all the isActivated shit to separate event listeners
-- Change menu title for scenarios menu
-- Should show rating at all times
 - Spectators
   - make it so they can teleport to center
-  - make it so they can spectate a pllayer in first person
-  - When they die, they shouldnt be teleported to the middle, they should just become a ghost where they died
-- Should be able to sort the list by name team or by name or both
-- Have players spawn in the lobby instead of being teleported there
-- Command to see which scenarios are currently active more advertised
-- Make the subtitle bit display for as long as the title
-- Change names of command items so that it doesnt say "Right click to " yadada
-- Fix help, rules, stats, and rating command on this server make them align with lobby server
-- Rebrand everywhere that says UHC to Battle royale
-- Display somehow which scenarios are incompatible with which other ones
-- Make the wall move
-  - Give players a map of where the wall is and where they are and where teammates are
-  - Perhaps allow players to pin on map to show team
-- The game start countdown is erratic as shit
-- Should kill all mobs if the tps is low
-- Make it so you can see players on your team through walls
-- Upon reconnection to lobby the server should relay who is online and alive
-- A BUNCH of deprecation warnings on the server source
+  - make it so they can spectate a player in first person
+- Come up with way to punish players who leave while game is counting down
+- Stop cheaters in some capacity
+- Tips and tricks while waiting for game to start
+- Clan Tags
+- Should be able to sort the list by team or by name or both
 - Pretty sure that unless lukcy leaves is on, shears dont give apples at all
-- Signs drop when lobby is unloaded
-  - Not a big deal tbh
-- Slowness warnings still happen when loading in lobby
-- Nicknames and rating in tablist (?)
-- /newmap command with force and also a vote
-- Use one of your votes to downvote - patrons only
-- Advertise that shears give double apples and enderchests are consistent between games
-  - fix shears thing
-- Make enderchest consistent between games but disabled on:
-  - Lil Cheat (I cant think of a way around this one)
-  - Dont waste your time (Maybe just make it so you cant put god tools in the ender chest)
+- Actionbar api
+- Change menu title for scenarios menu (in game)
+- The lightining when people die breaks the block theyre standing in
+- Rebrand everywhere that says UHC to Battle royale
+  - I do a pretty good job of this but its not everywehere
+- Should kill all mobs if the tps is low
+- Change names of command items so that it doesnt say "Right click to " yadada
+- I would like friendly fire to be on but it needs to be clear you are committing friendly fire
 - Voting GUI
   - Make the scenario voter tell you how many votes you have left - not sure how
   - Maybe show empty voting slots
   - Rotating text in vote inventory - not sure if its possible
-- If you hit a teammate it should warn you the first time, cancel it, and warn the rest of the team if you do it again but it does damage the second time (maybe put a cooldown in) EITHER DO THIS OR DISABLE FRIENDLYFIRE
-- Clean up the plugin and get rid of shit I dont want, trim it down to the fully customized plugin that I want
+- Randomized Fancy lobbys
+- Make enderchest consistent between games but disabled on:
+  - Lil Cheat (I cant think of a way around this one)
+  - Dont waste your time (Maybe just make it so you cant put god tools in the ender chest)
+- Display somehow which scenarios are incompatible with which other ones
+- /newmap command with force and also a vote
+- Use one of your votes to downvote - patrons only
+- Signs drop when lobby is unloaded
+- A BUNCH of deprecation warnings on the server source
+- Code restructuring
+  - Also move all the isActivated shit to separate event listeners
+  - Clean up the plugin and get rid of shit I dont want, trim it down to the fully customized plugin that I want
+- Give players a map of where the wall is and where they are and where teammates are
+    - Perhaps allow players to pin on map to show team
+- Slowness warnings still happen when loading in lobby
+- Pitch not finite warnings when starting game
+- Nicknames and possibly rating in tablist, definitely with colors though, nicknames need to be done from the server level though
+- Advertise that shears give double apples and enderchests are consistent between games
+- Make it so you can see players on your team through walls

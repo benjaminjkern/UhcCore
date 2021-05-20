@@ -8,6 +8,7 @@ import com.gmail.val59000mc.configuration.VaultManager;
 import com.gmail.val59000mc.configuration.YamlFile;
 import com.gmail.val59000mc.customitems.CraftsManager;
 import com.gmail.val59000mc.customitems.KitsManager;
+import com.gmail.val59000mc.events.UhcGameEndEvent;
 import com.gmail.val59000mc.events.UhcGameStateChangedEvent;
 import com.gmail.val59000mc.events.UhcStartingEvent;
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
@@ -15,13 +16,17 @@ import com.gmail.val59000mc.events.UhcStartedEvent;
 import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.listeners.*;
 import com.gmail.val59000mc.maploader.MapLoader;
+import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.PlayersManager;
+import com.gmail.val59000mc.players.SpawnLocations;
 import com.gmail.val59000mc.players.TeamManager;
 import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.players.UhcTeam;
 import com.gmail.val59000mc.scenarios.ScenarioManager;
 import com.gmail.val59000mc.scenarios.scenariolisteners.ChickenFightListener;
+import com.gmail.val59000mc.scenarios.scenariolisteners.KingOfTheHillListener;
 import com.gmail.val59000mc.scenarios.scenariolisteners.PoliticsListener;
+import com.gmail.val59000mc.scenarios.scenariolisteners.WitherRushListener;
 import com.gmail.val59000mc.schematics.DeathmatchArena;
 import com.gmail.val59000mc.schematics.Lobby;
 import com.gmail.val59000mc.schematics.UndergroundNether;
@@ -39,8 +44,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.mcmonkey.sentinel.SentinelTrait;
@@ -93,7 +101,9 @@ public class GameManager {
 	private long elapsedTime;
 
 	private DogNameGenerator dogNames;
+	private DogNameGenerator botNames;
 	private int startPlayers;
+	private int startRealTeams;
 	private Socket lobbySocket;
 	private PrintWriter lobbyOutputStream;
 	private Set<String> loadedBits;
@@ -115,7 +125,7 @@ public class GameManager {
 		scoreboardManager = new ScoreboardManager();
 		configuration = new MainConfiguration(this);
 
-		setBotsIn(false);
+		setBotsIn(true);
 
 		mapLoader = new MapLoader();
 		worldBorder = new UhcWorldBorder();
@@ -123,7 +133,8 @@ public class GameManager {
 				BarColor.PINK, BarStyle.SOLID);
 		gameBossBar.setVisible(false);
 
-		dogNames = new DogNameGenerator();
+		dogNames = new DogNameGenerator("doggyNames.txt");
+		botNames = new DogNameGenerator("minecraftnames.txt");
 		loadedBits = new HashSet<>();
 		listInventoryHandler = new InventoryGUIListener();
 
@@ -225,7 +236,19 @@ public class GameManager {
 
 	public boolean getPvp() { return pvp; }
 
-	public void setPvp(boolean state) { pvp = state; }
+	public void setPvp(boolean state) {
+		pvp = state;
+		for (NPC npc : CitizensAPI.getNPCRegistry()) {
+			SentinelTrait sentinel = npc.getTrait(SentinelTrait.class);
+			if (pvp) {
+				new SentinelTargetLabel("players").removeFromList(sentinel.allIgnores);
+				new SentinelTargetLabel("npcs").removeFromList(sentinel.allIgnores);
+			} else {
+				new SentinelTargetLabel("players").addToList(sentinel.allIgnores);
+				new SentinelTargetLabel("npcs").addToList(sentinel.allIgnores);
+			}
+		}
+	}
 
 	public void setGameState(GameState gameState) {
 		Validate.notNull(gameState);
@@ -337,7 +360,7 @@ public class GameManager {
 			mapLoader.deleteLastWorld(configuration.getTheEndUuid());
 
 			mapLoader.createNewWorld(Environment.NORMAL);
-			while (PlayersManager
+			while (SpawnLocations
 					.verifySafe(new Location(Bukkit.getWorld(configuration.getOverworldUuid()), 0, 0, 0)) == null) {
 				Bukkit.getLogger().info("[UhcCore] \u00a7dWorld was unsafe! Creating new world.");
 				mapLoader.deleteLastWorld(configuration.getOverworldUuid());
@@ -353,7 +376,20 @@ public class GameManager {
 		if (configuration.getEnableBungeeSupport()) UhcCore.getPlugin().getServer().getMessenger()
 				.registerOutgoingPluginChannel(UhcCore.getPlugin(), "BungeeCord");
 
-		PlayersManager.createSpawnLocations(Bukkit.getMaxPlayers());
+		SpawnLocations.createSpawnLocations(Bukkit.getMaxPlayers());
+
+		// World overworld = Bukkit.getWorld(configuration.getOverworldUuid());
+		// Location skullLoc = new Location(overworld, 0.5, -1, 0.5);
+
+		// Bukkit.getLogger().info("Loading bot skins");
+
+		// for (int i = 0; i < Bukkit.getMaxPlayers(); i++) {
+		// ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+		// SkullMeta im = (SkullMeta) skull.getItemMeta();
+		// im.setOwningPlayer(Bukkit.getOfflinePlayer("Bot" + i));
+		// skull.setItemMeta(im);
+		// overworld.dropItem(skullLoc, skull);
+		// }
 
 		if (configuration.getEnablePregenerateWorld() && !configuration.getDebug()) Bukkit.getScheduler()
 				.runTaskAsynchronously(UhcCore.getPlugin(), () -> mapLoader.generateChunks(Environment.NORMAL));
@@ -423,20 +459,61 @@ public class GameManager {
 			if (!Bukkit.getOnlinePlayers().isEmpty()) {
 				spawnLoc = Bukkit.getOnlinePlayers().iterator().next().getLocation();
 			} else {
-				spawnLoc = playerManager.newRandomLocation(Bukkit.getWorld(configuration.getOverworldUuid()));
+				spawnLoc = SpawnLocations.newRandomLocation(Bukkit.getWorld(configuration.getOverworldUuid()), true);
 			}
 
 			startPlayers = Bukkit.getMaxPlayers();
 
 			for (int i = Bukkit.getOnlinePlayers().size(); i < Bukkit.getMaxPlayers(); i++) {
-				NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, "Bot" + i);
+				String name = botNames.uniqueName();
+				NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, name);
 
 				SentinelTrait sentinel = new SentinelTrait();
 				npc.addTrait(sentinel);
 
-				new SentinelTargetLabel("monsters").addToList(sentinel.allTargets);
 				new SentinelTargetLabel("players").addToList(sentinel.allTargets);
 				new SentinelTargetLabel("npcs").addToList(sentinel.allTargets);
+
+				new SentinelTargetLabel("pigs").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("cows").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("rabbits").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("sheep").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("chickens").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("mushroom_cows").addToList(sentinel.allTargets);
+				// new SentinelTargetLabel("witches").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("guardians").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("shulkers").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("skeletons").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("zombies").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("magma_cubes").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("silverfish").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("blazes").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("ghasts").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("giants").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("slimes").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("spiders").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("cave_spiders").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("endermites").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("withers").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("enderdragons").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("vexes").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("husks").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("elder_guardians").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("evokers").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("strays").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("zombie_villagers").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("wither_skeletons").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("vindicators").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("drowned").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("cod").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("salmon").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("phantoms").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("pillagers").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("ravagers").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("hoglins").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("zoglins").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("piglins").addToList(sentinel.allTargets);
+				new SentinelTargetLabel("striders").addToList(sentinel.allTargets);
 
 				sentinel.range = 50;
 				sentinel.realistic = false;
@@ -451,7 +528,9 @@ public class GameManager {
 				playerManager.playerJoinsTheGame((Player) npc.getEntity());
 			}
 
-		} else startPlayers = playerManager.getAllPlayingPlayers().size();
+		} else {
+			startPlayers = playerManager.getAllPlayingPlayers().size();
+		}
 
 		// scenario voting
 		if (configuration.getEnableScenarioVoting()) { scenarioManager.countVotes(); }
@@ -482,9 +561,19 @@ public class GameManager {
 			}
 		});
 
+		startRealTeams = 0;
+
+		teamManager.getPlayingUhcTeams().forEach(uhcTeam -> {
+			for (UhcPlayer uhcPlayer : uhcTeam.getPlayingMembers()) {
+				if (uhcPlayer.getName().equalsIgnoreCase("YEUH-BOT")) continue;
+				startRealTeams++;
+				break;
+			}
+		});
+
 		lobby.destroyBoundingBox();
 		playerManager.startWatchPlayerPlayingThread();
-		Bukkit.getScheduler().runTask(UhcCore.getPlugin(), new UpdateBotsThread());
+		Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), new UpdateBotsThread(), 20);
 
 		Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new ElapsedTimeThread());
 		Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(), new EnablePVPThread(this));
@@ -506,10 +595,20 @@ public class GameManager {
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new FinalHealThread(this, playerManager),
 					configuration.getFinalHealDelay() * 20);
 		}
-		for (UhcPlayer player : playerManager.getAllPlayingPlayers()) { scoreboardManager.updatePlayerTab(player); }
+
+		Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), () -> {
+			for (UhcPlayer uplayer : playerManager.getAllPlayingPlayers()) {
+				scoreboardManager.updatePlayerTab(uplayer);
+				// Player player = uplayer.getPlayerUnsafe();
+				// Location loc = player.getLocation();
+				// while (!loc.getBlock().isPassable() || !loc.clone().add(0, 1,
+				// 0).getBlock().isPassable())
+				// player.teleport(loc.add(0, 1, 0));
+			}
+		}, 20);
 
 		worldBorder.startBorderThread();
-		if (!scenarioManager.isActivated(Scenario.SLAYER))
+		if (!scenarioManager.isActivated(Scenario.SLAYER) && !scenarioManager.isActivated(Scenario.KINGOFTHEHILL))
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(),
 					new TimeEndGameThread(this, playerManager, true), 20 * 60 * 30);
 		else {
@@ -533,6 +632,8 @@ public class GameManager {
 	public DogNameGenerator getDogNameGenerator() { return dogNames; }
 
 	public int getStartPlayers() { return startPlayers; }
+
+	public int getStartRealTeams() { return startRealTeams; }
 
 	public void loadConfig() {
 		new Lang();
@@ -601,6 +702,8 @@ public class GameManager {
 		listeners.add(new EntityDamageListener(this));
 		listeners.add(new ArmorListener());
 		listeners.add(new CreativeListener());
+		listeners.add(new PlayerExpListener(this));
+		listeners.add(new BotListener());
 		for (Listener listener : listeners) {
 			Bukkit.getServer().getPluginManager().registerEvents(listener, UhcCore.getPlugin());
 		}
@@ -680,6 +783,7 @@ public class GameManager {
 		registerCommand("scenarios", new ScenarioCommandExecutor(scenarioManager));
 		registerCommand("teaminventory", new TeamInventoryCommandExecutor(playerManager, scenarioManager));
 		registerCommand("hub", new HubCommandExecutor(this));
+		registerCommand("end", new EndCommandExecutor(this));
 		registerCommand("iteminfo", new ItemInfoCommandExecutor());
 		registerCommand("revive", new ReviveCommandExecutor(this));
 		registerCommand("seed", new SeedCommandExecutor(configuration));
@@ -694,6 +798,7 @@ public class GameManager {
 		registerCommand("discord", new DiscordCommand());
 		registerCommand("list", new ListCommand());
 		registerCommand("stats", new StatsCommand(playerManager.getScoreKeeper()));
+		registerCommand("killbots", new KillBotsExecutor());
 	}
 
 	private void registerCommand(String commandName, CommandExecutor executor) {
@@ -706,13 +811,14 @@ public class GameManager {
 		command.setExecutor(executor);
 	}
 
-	public void endGame() {
+	public void endGame(UhcPlayer... winners) {
 		if (gameState.equals(GameState.PLAYING) || gameState.equals(GameState.DEATHMATCH)) {
 			if (!Bukkit.getOnlinePlayers().isEmpty()) {
 				setGameState(GameState.ENDED);
 				pvp = false;
 				gameIsEnding = true;
 				broadcastInfoMessage(Lang.GAME_FINISHED);
+
 				new BukkitRunnable() {
 					public void run() {
 						Bukkit.getOnlinePlayers()
@@ -722,96 +828,60 @@ public class GameManager {
 								});
 					}
 				}.runTaskTimer(UhcCore.getPlugin(), 20, 20);
-				if (scenarioManager.isActivated(Scenario.SLAYER)) {
 
-					List<UhcTeam> topTeams = new ArrayList<>();
-					int kills = 0;
-					for (UhcTeam team : teamManager.getUhcTeams()) {
-						int teamKills = team.getPlayingKills();
-						if (teamKills > kills) {
-							topTeams.clear();
-							kills = teamKills;
+				List<UhcPlayer> leaders = new ArrayList<>(Arrays.asList(winners));
+
+				if (leaders.isEmpty()) {
+					Bukkit.getServer().getPluginManager().callEvent(new UhcGameEndEvent(leaders));
+				}
+
+				if (leaders.isEmpty()) {
+					UhcTeam top = null;
+					if (teamManager.getPlayingUhcTeams().size() > 1) {
+						for (UhcTeam team : teamManager.getPlayingUhcTeams()) {
+							if (top != null) break;
+							for (UhcPlayer uhcPlayer : team.getMembers()) {
+								if (uhcPlayer.getState() != PlayerState.PLAYING) continue;
+								if (uhcPlayer.getName().equals("YEUH-BOT")) continue;
+
+								top = team;
+								break;
+							}
 						}
-						if (teamKills >= kills && kills > 0) topTeams.add(team);
 					}
-					if (topTeams.isEmpty()) {
-						broadcastInfoMessage("\u00a7c\u00a7lNobody got any kills! You guys suck!");
-					} else if (topTeams.size() == 1) {
-						UhcTeam top = topTeams.get(0);
-						if (top.isSolo()) broadcastInfoMessage(top.getMembers().get(0).getDisplayName()
-								+ " is the winner with \u00a7d" + kills + " \u00a7fkills!");
-						else broadcastInfoMessage("Team " + top.getPrefix() + "is the winner with \u00a7d" + kills
-								+ " \u00a7ftotal kills!");
-						top.getMembers().forEach(uhcPlayer -> {
-							try {
-								uhcPlayer.getPlayer().sendTitle("\u00a7dCongrats!", "\u00a75\u00a7lYou won!", 0, 400,
-										0);
-							} catch (UhcPlayerNotOnlineException ex) {}
-							sendInfoToServer("WIN:" + uhcPlayer.getName(), false);
-						});
-					} else {
-						broadcastInfoMessage("It's a tie!");
-						if (topTeams.stream().anyMatch(team -> team.getMembers().size() > 1)) {
-							broadcastInfoMessage("Teams "
-									+ topTeams.stream()
-											.map(team -> team.getPrefix().substring(0, team.getPrefix().length() - 1))
-											.collect(Collectors.joining(", "))
-									+ " are the winners with \u00a7d" + kills + " \u00a7ftotal kills each!");
-						} else {
-							broadcastInfoMessage(
-									topTeams.stream().map(team -> team.getMembers().get(0).getDisplayName())
-											.collect(Collectors.joining(", ")) + " are the winners with \u00a7d" + kills
-											+ " \u00a7fkills each!");
+					if (top == null) {
+						// this is awful
+						for (UhcTeam team : teamManager.getPlayingUhcTeams()) {
+							if (top != null) break;
+							for (UhcPlayer uhcPlayer : team.getMembers()) {
+								if (uhcPlayer.getState() != PlayerState.PLAYING) continue;
+
+								top = team;
+								break;
+							}
 						}
-						topTeams.forEach(team -> team.getMembers().forEach(uhcPlayer -> {
-							try {
-								uhcPlayer.getPlayer().sendTitle("\u00a7dCongrats!", "\u00a75\u00a7lYou won!", 0, 400,
-										0);
-							} catch (UhcPlayerNotOnlineException ex) {}
-							sendInfoToServer("WIN:" + uhcPlayer.getName(), false);
-						}));
 					}
-				} else if (scenarioManager.isActivated(Scenario.POLITICS)) {
-					UhcTeam top = teamManager.getPlayingUhcTeams().get(0);
+					if (top == null) Bukkit.getLogger().warning("No idea how this happened");
+					else {
+						if (top.isSolo())
+							broadcastInfoMessage(top.getMembers().get(0).getDisplayName() + " is the winner!");
+						else broadcastInfoMessage("Team " + top.getPrefix() + " \u00a7fis the winner!");
 
-					Set<UhcPlayer> leaders = new HashSet<>();
-					for (UhcPlayer player : top.getMembers()) {
-						if (PoliticsListener.getPlayerNode(player).isLeader()) { leaders.add(player); }
+						leaders.addAll(top.getMembers());
 					}
+				}
 
-					if (leaders.isEmpty()) {
-						Bukkit.getLogger().info("Something went wrong");
-					} else if (leaders.size() == 1) {
-						broadcastInfoMessage(
-								leaders.stream().toArray(UhcPlayer[]::new)[0].getDisplayName() + " is the winner!");
-					} else {
-						broadcastInfoMessage(leaders.stream().map(player -> player.getDisplayName())
-								.collect(Collectors.joining(", ")) + " are the winners!");
-					}
-					leaders.forEach(uhcPlayer -> {
+				leaders.forEach(uhcPlayer -> {
+					if (uhcPlayer == null) return;
+					if (startRealTeams > 1) {
 						try {
 							uhcPlayer.getPlayer().sendTitle("\u00a7dCongrats!", "\u00a75\u00a7lYou won!", 0, 400, 0);
 						} catch (UhcPlayerNotOnlineException ex) {}
 						sendInfoToServer("WIN:" + uhcPlayer.getName(), false);
-					});
-				} else {
-					UhcTeam top = teamManager.getPlayingUhcTeams().get(0);
-
-					if (top != null) {
-						if (top.isSolo())
-							broadcastInfoMessage(top.getMembers().get(0).getDisplayName() + " is the winner!");
-						else broadcastInfoMessage("Team " + top.getPrefix() + "is the winner!");
-						top.getMembers().forEach(uhcPlayer -> {
-							try {
-								uhcPlayer.getPlayer().sendTitle("\u00a7dCongrats!", "\u00a75\u00a7lYou won!", 0, 400,
-										0);
-							} catch (UhcPlayerNotOnlineException ex) {}
-							sendInfoToServer("WIN:" + uhcPlayer.getName(), false);
-						});
 					}
-
-				}
+				});
 			}
+
 			playerManager.playSoundToAll(UniversalSound.ENDERDRAGON_GROWL, 1, 2);
 			playerManager.setAllPlayersEndGame();
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new StopRestartThread(), 20 * 20);
@@ -850,6 +920,10 @@ public class GameManager {
 			// Start Enable pvp thread
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new StartDeathmatchThread(this, false),
 					20);
+			if (scenarioManager.isActivated(Scenario.WITHERRUSH) && WitherRushListener.gameWither != null)
+				WitherRushListener.gameWither
+						.teleport(Bukkit.getWorld(getGameManager().getConfiguration().getOverworldUuid())
+								.getWorldBorder().getCenter().clone().add(0, 20, 0));
 		}
 		// 0 0 DeathMach
 		else {
@@ -869,7 +943,12 @@ public class GameManager {
 			// Start Enable pvp thread
 			Bukkit.getScheduler().scheduleSyncDelayedTask(UhcCore.getPlugin(), new StartDeathmatchThread(this, true),
 					20);
+			if (scenarioManager.isActivated(Scenario.WITHERRUSH) && WitherRushListener.gameWither != null)
+				WitherRushListener.gameWither
+						.teleport(Bukkit.getWorld(getGameManager().getConfiguration().getOverworldUuid())
+								.getWorldBorder().getCenter().clone().add(0, 100, 0));
 		}
+
 	}
 
 	public void startEndGameThread() {
@@ -887,5 +966,7 @@ public class GameManager {
 	}
 
 	public Socket getLobbySocket() { return lobbySocket; }
+
+	public boolean getBotsIn() { return botsin; }
 
 }

@@ -10,6 +10,7 @@ import com.gmail.val59000mc.threads.WorldBorderShrinkThread;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class DeathmatchListener extends ScenarioListener {
@@ -27,11 +28,23 @@ public class DeathmatchListener extends ScenarioListener {
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent e) {
-        if (getPlayersManager().getAllPlayingPlayers().size() == 3
-                && getGameManager().getGameState() != GameState.DEATHMATCH) {
+        new BukkitRunnable() {
+            public void run() {
+                if (getPlayersManager().getAllPlayingPlayers().size() == 2
+                        && getGameManager().getGameState() != GameState.DEATHMATCH) {
+                    Bukkit.getScheduler().runTask(UhcCore.getPlugin(), new PreStartDeathmatchThread(10));
+                    WorldBorderShrinkThread.enabled = false;
+                }
+            }
+        }.runTaskLater(UhcCore.getPlugin(), 20);
+    }
+
+    @EventHandler
+    public void onDebugChat(PlayerChatEvent e) {
+        if (!e.getMessage().equalsIgnoreCase("deathmatch")) return;
+        if (getGameManager().getGameState() != GameState.DEATHMATCH) {
             Bukkit.getScheduler().runTask(UhcCore.getPlugin(), new PreStartDeathmatchThread(10));
             WorldBorderShrinkThread.enabled = false;
         }
-
     }
 }

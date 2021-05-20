@@ -35,26 +35,25 @@ public class PlayerStats {
         nemesis = lastKilledBy = null;
     }
 
-    public static PlayerStats newFromParse(String input) {
-        String[] fields = input.split(":");
-        if (fields.length < 2) throw new IllegalArgumentException("Requires at least 2 inputs!");
-        PlayerStats ps = new PlayerStats(fields[0]);
-        ps.rating = Double.parseDouble(fields[1]);
-        if (fields.length == 2) return ps;
-        if (fields.length < 14) throw new IllegalArgumentException("OPE");
+    public static PlayerStats newFromParse(String... fields) {
+        if (fields.length < 3) throw new IllegalArgumentException("Requires at least 2 inputs!");
+        PlayerStats ps = new PlayerStats(fields[1]);
+        ps.rating = Double.parseDouble(fields[2]);
+        if (fields.length == 3) return ps;
+        if (fields.length < 15) throw new IllegalArgumentException("OPE");
 
-        ps.playerKills = Integer.parseInt(fields[2]);
-        ps.botKills = Integer.parseInt(fields[3]);
-        ps.mobKills = Integer.parseInt(fields[4]);
-        ps.animalKills = Integer.parseInt(fields[5]);
-        ps.playerDeaths = Integer.parseInt(fields[6]);
-        ps.envDeaths = Integer.parseInt(fields[7]);
-        ps.wins = Integer.parseInt(fields[8]);
-        ps.games = Integer.parseInt(fields[9]);
-        ps.nemesis = fields[10];
-        ps.lastKilledBy = fields[11];
-        ps.nemesisKills = Integer.parseInt(fields[12]);
-        ps.lastKilledByKills = Integer.parseInt(fields[13]);
+        ps.playerKills = Integer.parseInt(fields[3]);
+        ps.botKills = Integer.parseInt(fields[4]);
+        ps.mobKills = Integer.parseInt(fields[5]);
+        ps.animalKills = Integer.parseInt(fields[6]);
+        ps.playerDeaths = Integer.parseInt(fields[7]);
+        ps.envDeaths = Integer.parseInt(fields[8]);
+        ps.wins = Integer.parseInt(fields[9]);
+        ps.games = Integer.parseInt(fields[10]);
+        ps.nemesis = fields[11];
+        ps.lastKilledBy = fields[12];
+        ps.nemesisKills = Integer.parseInt(fields[13]);
+        ps.lastKilledByKills = Integer.parseInt(fields[14]);
         return ps;
     }
 

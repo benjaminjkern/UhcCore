@@ -6,33 +6,26 @@ import java.util.List;
 import java.util.Set;
 
 import com.gmail.val59000mc.UhcCore;
-import com.gmail.val59000mc.languages.Lang;
+import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.players.UhcPlayer;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.spigotmc.event.entity.EntityMountEvent;
 
-import net.citizensnpcs.trait.CommandTrait.Hand;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 
@@ -40,7 +33,7 @@ public class HoesMadListener extends ScenarioListener {
 
     private static Set<UhcPlayer> cooldown = new HashSet<>();
 
-    private boolean isHoe(ItemStack i) {
+    public static boolean isHoe(ItemStack i) {
         if (i == null) return false;
         switch (i.getType()) {
             case GOLDEN_HOE:
@@ -55,7 +48,7 @@ public class HoesMadListener extends ScenarioListener {
         return false;
     }
 
-    private int getDist(ItemStack i) {
+    private static int getDist(ItemStack i) {
         switch (i.getType()) {
             case GOLDEN_HOE:
                 return 5;
@@ -74,7 +67,7 @@ public class HoesMadListener extends ScenarioListener {
         return 0;
     }
 
-    private int getDamage(ItemStack i) {
+    public static int getDamage(ItemStack i) {
         switch (i.getType()) {
             case GOLDEN_HOE:
                 return 21;
@@ -93,7 +86,7 @@ public class HoesMadListener extends ScenarioListener {
         return 0;
     }
 
-    private Particle getParticle(ItemStack i) {
+    private static Particle getParticle(ItemStack i) {
         switch (i.getType()) {
             case GOLDEN_HOE:
                 return Particle.DRIPPING_HONEY;
@@ -121,10 +114,11 @@ public class HoesMadListener extends ScenarioListener {
         shootLaser(e.getPlayer());
     }
 
-    private void shootLaser(Player player) {
+    public static void shootLaser(Player player) {
+        if (player == null) return;
         ItemStack hand = player.getInventory().getItemInMainHand();
         if (!isHoe(hand)) return;
-        UhcPlayer uhcPlayer = getPlayersManager().getUhcPlayer(player);
+        UhcPlayer uhcPlayer = GameManager.getGameManager().getPlayersManager().getUhcPlayer(player);
 
         if (!cooldown.contains(uhcPlayer)) {
 
@@ -158,7 +152,7 @@ public class HoesMadListener extends ScenarioListener {
         }
     }
 
-    private void createLaser(Location position, Vector dir, ItemStack hand, Player player) {
+    private static void createLaser(Location position, Vector dir, ItemStack hand, Player player) {
         Location p = position.clone();
         for (int i = 0; i < getDist(hand); i++) {
             p.add(dir);
@@ -174,7 +168,7 @@ public class HoesMadListener extends ScenarioListener {
         ((LivingEntity) hitEntity).damage(getDamage(hand), player);
     }
 
-    private List<Vector> getDirs(Location source, ItemStack hand) {
+    private static List<Vector> getDirs(Location source, ItemStack hand) {
         List<Vector> returnList = new ArrayList<>();
         Location s;
         switch (hand.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS)) {

@@ -2,7 +2,6 @@ package com.gmail.val59000mc.scenarios.scenariolisteners;
 
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.events.UhcPlayerStateChangedEvent;
-import com.gmail.val59000mc.events.UhcStartedEvent;
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.UhcPlayer;
@@ -18,7 +17,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
@@ -75,7 +73,7 @@ public class FlyHighListener extends ScenarioListener {
                             }
                         }
                     } catch (UhcPlayerNotOnlineException ex) {
-                        Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), this, 20);
+                        runTaskLater(UhcCore.getPlugin(), 20);
                     }
                 }
             }.runTask(UhcCore.getPlugin());

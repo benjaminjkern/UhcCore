@@ -6,16 +6,16 @@ public final class UhcPlayerKillEvent extends UhcEvent {
 
 	private final UhcPlayer killer, killed;
 
-	public UhcPlayerKillEvent(UhcPlayer killer, UhcPlayer killed){
+	public UhcPlayerKillEvent(UhcPlayer killed, UhcPlayer killer) {
 		this.killer = killer;
 		this.killed = killed;
 	}
 
-	public UhcPlayer getKiller(){
+	public UhcPlayer getKiller() {
 		return killer;
 	}
 
-	public UhcPlayer getKilled(){
+	public UhcPlayer getKilled() {
 		return killed;
 	}
 

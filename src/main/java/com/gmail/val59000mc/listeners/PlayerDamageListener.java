@@ -1,5 +1,6 @@
 package com.gmail.val59000mc.listeners;
 
+import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.exceptions.UhcPlayerDoesntExistException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.languages.Lang;
@@ -17,6 +18,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.mcmonkey.sentinel.SentinelTrait;
 import org.mcmonkey.sentinel.targeting.SentinelTargetLabel;
 
@@ -43,6 +46,17 @@ public class PlayerDamageListener implements Listener {
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerDamage(EntityDamageEvent event) { handleAnyDamage(event); }
 
+	@EventHandler
+	private void arrowBounceOffVanish(ProjectileHitEvent event) {
+		if (!event.getEntity().doesBounce() || !(event.getHitEntity() instanceof Player)) return;
+		Player vanishedPlayer = (Player) event.getHitEntity();
+		if (GameManager.getGameManager().getPlayersManager().getUhcPlayer(vanishedPlayer)
+				.getState() == PlayerState.PLAYING)
+			return;
+		Projectile arrow = event.getEntity();
+		arrow.teleport(arrow.getLocation().clone().add(arrow.getVelocity().clone().normalize().multiply(2)));
+	}
+
 	///////////////////////
 	// EntityDamageEvent //
 	///////////////////////
@@ -53,7 +67,9 @@ public class PlayerDamageListener implements Listener {
 			PlayersManager pm = gameManager.getPlayersManager();
 			UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
 
-			GameManager.getGameManager().getListInventoryHandler().updatePlayer(uhcPlayer);
+			new BukkitRunnable() {
+				public void run() { GameManager.getGameManager().getListInventoryHandler().updatePlayer(uhcPlayer); }
+			}.runTaskLater(UhcCore.getPlugin(), 20);
 
 			PlayerState uhcPlayerState = uhcPlayer.getState();
 			if (uhcPlayerState.equals(PlayerState.WAITING) || uhcPlayerState.equals(PlayerState.DEAD)

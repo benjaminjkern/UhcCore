@@ -452,6 +452,28 @@
             "Hoes shoot lazers."
         ]
     },
+    "KINGOFTHEHILL": {
+        "name": "King Of The Hill",
+        "description": [
+            "You respawn after death.",
+            "After the first kill, the killer is crowned King and is given strength boosts and glowing effects.",
+            "If the King is killed, the crown switches. The owner of the crown at the end of the game is the winner!",
+            "The King must continue to get kills, otherwise their title may be revoked!"
+        ]
+    },
+    "WITHERRUSH": {
+        "name": "Wither Rush",
+        "description": [
+            "After 10 minutes, a wither will spawn in the middle of the map.",
+            "Kill it to instantly win the game! (This will override other gamemode winning scenarios.)"
+        ]
+    },
+    "NOSTACK": {
+        "name": "No Stacking",
+        "description": [
+            "Items don't stack.", "Have fun!"
+        ]
+    },
     "RANDOM": {
         "name": "Randomize Scenarios",
         "description": ["Voting for this will pick random scenarios from the list!", "If a scenario gets more votes than the randomize selection, then that scenario is put in the game regardless."]
@@ -462,6 +484,6 @@
     },
     "BOTSIN": {
         "name": "Bots",
-        "description": ["Fill the rest of the game with bots!", "Use this if you want the game to be full!"]
+        "description": ["If this is enabled, then all leftover spots in the game will be filled with bots!", "(Must get at least 50% of player's votes, this is enabled by default)"]
     }
 }

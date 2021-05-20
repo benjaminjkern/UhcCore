@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
-public class DontWasteTimeListener extends ScenarioListener{
+public class DontWasteTimeListener extends ScenarioListener {
 
     List<Enchantment> dontDo;
 
@@ -20,18 +20,20 @@ public class DontWasteTimeListener extends ScenarioListener{
     }
 
     @EventHandler
-    public void onPlayerCraft(CraftItemEvent e){
+    public void onPlayerCraft(CraftItemEvent e) {
         ItemStack item = e.getCurrentItem();
 
         for (Enchantment enchant : Enchantment.values()) {
-            if (!dontDo.contains(enchant)) enchant(item, enchant);
+            if (!dontDo.contains(enchant))
+                enchant(item, enchant);
         }
     }
 
     private void enchant(ItemStack item, Enchantment e) {
         try {
             item.addEnchantment(e, e.getMaxLevel());
-        } catch (IllegalArgumentException f) {}
+        } catch (IllegalArgumentException f) {
+        }
     }
 
 }

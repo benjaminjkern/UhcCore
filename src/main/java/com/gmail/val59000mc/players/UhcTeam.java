@@ -52,7 +52,9 @@ public class UhcTeam {
 	public Inventory getTeamInventory() { return teamInventory; }
 
 	public void sendChatMessageToTeamMembers(UhcPlayer sender, String message) {
-		sendMessage(ChatColor.GREEN + "[Team] " + ChatColor.RESET + sender.getRealName() + ": " + message);
+		sendMessage(ChatColor.WHITE + "[" + getPrefix().substring(0, getPrefix().length() - 1) + ChatColor.WHITE + "] "
+				+ ChatColor.RESET + sender.getRealName() + sender.getTeam().getColor().substring(0, 2) + " >>> \u00a7f"
+				+ message);
 	}
 
 	public void sendMessage(String message) {

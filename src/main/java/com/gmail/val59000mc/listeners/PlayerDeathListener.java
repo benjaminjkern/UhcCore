@@ -2,150 +2,271 @@ package com.gmail.val59000mc.listeners;
 
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.configuration.MainConfiguration;
-import com.gmail.val59000mc.configuration.VaultManager;
 import com.gmail.val59000mc.customitems.UhcItems;
+import com.gmail.val59000mc.events.UhcPlayerDeathEvent;
 import com.gmail.val59000mc.events.UhcPlayerKillEvent;
 import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
 import com.gmail.val59000mc.game.GameManager;
 import com.gmail.val59000mc.game.GameState;
-import com.gmail.val59000mc.languages.Lang;
 import com.gmail.val59000mc.players.PlayerState;
 import com.gmail.val59000mc.players.PlayersManager;
 import com.gmail.val59000mc.players.UhcPlayer;
-import com.gmail.val59000mc.scenarios.Scenario;
-import com.gmail.val59000mc.scenarios.ScenarioManager;
-import com.gmail.val59000mc.scenarios.scenariolisteners.NineSlotsListener;
-import com.gmail.val59000mc.scenarios.scenariolisteners.SilentNightListener;
-import com.gmail.val59000mc.threads.TimeBeforeSendBungeeThread;
-import com.gmail.val59000mc.utils.UniversalMaterial;
-import com.gmail.val59000mc.utils.VersionUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.block.Skull;
-import org.bukkit.command.CommandException;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.Trident;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.mcmonkey.sentinel.SentinelTrait;
 
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.CitizensAPI;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class PlayerDeathListener implements Listener {
 
+	private static GameManager gm = GameManager.getGameManager();
+	private static PlayersManager pm = gm.getPlayersManager();
+	private static MainConfiguration cfg = gm.getConfiguration();
+
+	public static boolean dropItems;
+	public static boolean publicAnnounceDeaths;
+	public static boolean privateAnnounceDeaths;
+	public static boolean autoRespawn;
+
+	public static boolean trackKills;
+	public static boolean trackNaturalDeaths;
+
+	public static double keepInventory;
+
+	private static List<Sound> hurtSounds;
+	static {
+		hurtSounds = new ArrayList<>(Arrays.asList(Sound.values()));
+		hurtSounds.removeIf(sound -> !sound.name().contains("HURT"));
+	}
+
+	public PlayerDeathListener() {
+		dropItems = true;
+		publicAnnounceDeaths = true;
+		privateAnnounceDeaths = false;
+		autoRespawn = false;
+
+		trackKills = true;
+		trackNaturalDeaths = true;
+
+		keepInventory = 0;
+	}
+
+	public static Sound getRandomHurtSound() {
+		return hurtSounds.get((int) (Math.random() * hurtSounds.size()));
+	}
+
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		Player player = event.getEntity();
-		GameManager gm = GameManager.getGameManager();
-		PlayersManager pm = gm.getPlayersManager();
-		MainConfiguration cfg = gm.getConfiguration();
-		UhcPlayer uhcPlayer = pm.getUhcPlayer(player);
+		Player killed = event.getEntity();
+		UhcPlayer uhcKilled = pm.getUhcPlayer(killed);
 
-		// if (gm.getScenarioManager().isActivated(Scenario.SLAYER)) return;
-
-		if (!player.hasMetadata("NPC")
-				&& (gm.getGameState() == GameState.WAITING || gm.getGameState() == GameState.STARTING)) {
-			if (cfg.getEnableBungeeSupport()) {
-				pm.sendPlayerToBungeeServer(player);
-			} else {
-				player.kickPlayer("Oof");
-			}
-		} else {
-			// TODO: fix
-			Bukkit.getLogger().info(player.getLocation() + "");
+		if (gm.getGameState() == GameState.WAITING || gm.getGameState() == GameState.STARTING) {
+			if (!killed.hasMetadata("NPC"))
+				pm.sendPlayerToBungeeServer(killed);
+			return;
 		}
+		// Bukkit.getLogger().info(player.getLocation() + "");
 
-		if (uhcPlayer.getState() != PlayerState.PLAYING) {
-			Bukkit.getLogger().warning("[UhcCore] " + player.getName() + " died while already in 'DEAD' mode!");
-			// player.kickPlayer("Don't cheat!");
+		if (uhcKilled.getState() != PlayerState.PLAYING) {
+			Bukkit.getLogger().warning("[UhcCore] " + killed.getName() + " died while already in 'DEAD' mode!");
 			return;
 		}
 
-		pm.setLastDeathTime();
-		String deathMessage = event.getDeathMessage().replaceFirst(player.getName(), uhcPlayer.getDisplayName());
-
-		if (!GameManager.getGameManager().getWorldBorder().isWithinBorder(player.getLocation())) {
-			deathMessage = deathMessage.replaceFirst("suffocated in a wall", "got stuck behind the wall");
+		Player killer = killed.getKiller();
+		if (killer != null)
+			handleKill(killed, killer, event.getDeathMessage() + "");
+		else {
+			handleNaturalDeath(killed, event.getDeathMessage() + "", "Death");
 		}
 
-		// kill event
-		Player killer = player.getKiller();
-		if (killer != null) {
-			UhcPlayer uhcKiller = pm.getUhcPlayer(killer);
+		event.setDeathMessage(null);
+	}
 
-			deathMessage = replaceLast(deathMessage, killer.getName(), uhcKiller.getDisplayName());
+	public static Entity getRealDamager(EntityDamageByEntityEvent event) {
+		Entity damager = event.getDamager();
+		if (damager instanceof Trident)
+			return (Entity) ((Trident) damager).getShooter();
+		if (damager instanceof Projectile)
+			return (Entity) ((Projectile) damager).getShooter();
+		if (damager instanceof TNTPrimed)
+			return ((TNTPrimed) damager).getSource();
+		return damager;
+	}
 
-			uhcKiller.kills++;
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onPlayerDamage(EntityDamageByEntityEvent event) {
+		if (!autoRespawn || !(event.getEntity() instanceof Player) || event.isCancelled())
+			return;
 
-			gm.sendInfoToServer("KILL:" + uhcKiller.getName() + ":" + uhcPlayer.getName(), false);
+		Entity damager = getRealDamager(event);
+		if (!(event.getEntity() instanceof Player))
+			return;
 
-			// Call Bukkit event
-			UhcPlayerKillEvent killEvent = new UhcPlayerKillEvent(uhcPlayer, uhcKiller);
-			Bukkit.getServer().getPluginManager().callEvent(killEvent);
+		Player killed = (Player) event.getEntity();
 
-			if (cfg.getEnableKillEvent()) {
-				double reward = cfg.getRewardKillEvent();
-				List<String> killCommands = cfg.getKillCommands();
-				if (reward > 0) {
-					VaultManager.addMoney(killer, reward);
-					if (!Lang.EVENT_KILL_REWARD.isEmpty()) {
-						killer.sendMessage(Lang.EVENT_KILL_REWARD.replace("%money%", "" + reward));
-					}
-				}
-				// If the list is empty, this will never execute
-				killCommands.forEach(cmd -> {
-					try {
-						Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
-								cmd.replace("%name%", uhcKiller.getRealName()));
-					} catch (CommandException exception) {
-						Bukkit.getLogger().warning("[UhcCore] Failed to execute kill reward command: " + cmd);
-						exception.printStackTrace();
-					}
-				});
+		// use totem
+		if (killed.getInventory().getItemInMainHand().getType() == Material.TOTEM_OF_UNDYING
+				|| killed.getInventory().getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING)
+			return;
+
+		if (event.getDamage() < killed.getHealth())
+			return;
+
+		event.setCancelled(true);
+
+		if (damager instanceof Player) {
+			Player killer = (Player) damager;
+			handleKill(killed, killer, killed.getName() + " was slain by " + killer.getName());
+		} else {
+			handleNaturalDeath(killed, killed.getName() + " was slain by " + damager.getName(), damager.getName());
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onDeath(EntityDamageEvent event) {
+		if (!autoRespawn || !(event.getEntity() instanceof Player) || event.isCancelled())
+			return;
+		if (gm.getGameState() != GameState.PLAYING && gm.getGameState() != GameState.DEATHMATCH)
+			return;
+
+		Player killed = (Player) event.getEntity();
+
+		// use totem
+		if (killed.getInventory().getItemInMainHand().getType() == Material.TOTEM_OF_UNDYING
+				|| killed.getInventory().getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING)
+			return;
+
+		if (event.getDamage() < killed.getHealth())
+			return;
+
+		event.setCancelled(true);
+
+		EntityDamageEvent lastCause = killed.getLastDamageCause();
+		if (lastCause instanceof EntityDamageByEntityEvent) {
+			EntityDamageByEntityEvent ev = (EntityDamageByEntityEvent) lastCause;
+			if (getRealDamager(ev) instanceof Player) {
+				onPlayerDamage(ev);
+				return;
 			}
-		} else if (gm.getStartPlayers() > 1) gm.sendInfoToServer("DEATH:" + uhcPlayer.getName(), false);
-
-		// Store drops in case player gets re-spawned.
-		uhcPlayer.getStoredItems().clear();
-		uhcPlayer.getStoredItems().addAll(event.getDrops());
-
-		// eliminations
-		ScenarioManager sm = gm.getScenarioManager();
-		if (!sm.isActivated(Scenario.SILENTNIGHT)
-				|| !((SilentNightListener) sm.getScenarioListener(Scenario.SILENTNIGHT)).isNightMode()) {
-			gm.broadcastInfoMessage(deathMessage);
-			event.setDeathMessage(null);
 		}
 
-		if (sm.isActivated(Scenario.WHATSMINE) || sm.isActivated(Scenario.INHERITANCE)) event.getDrops().clear();
+		String cause = event.getCause().toString().replace("_", " ");
+		handleNaturalDeath(killed, killed.getName() + " died",
+				cause.substring(0, 1).toUpperCase() + cause.substring(1).toLowerCase());
+	}
 
-		if (!player.hasMetadata("NPC")) {
+	public static String replaceLast(String text, String regex, String replacement) {
+		return text.replaceFirst("(?s)" + regex + "(?!.*?" + regex + ")", replacement);
+	}
 
-			if (cfg.getRegenHeadDropOnPlayerDeath()) { event.getDrops().add(UhcItems.createRegenHead(uhcPlayer)); }
+	public static void handleKill(Player killed, Player killer, String deathMessage) {
+		UhcPlayer uhcKiller = pm.getUhcPlayer(killer);
+		UhcPlayer uhcKilled = pm.getUhcPlayer(killed);
 
-			if (cfg.getEnableGoldenHeads()) {
-				if (cfg.getPlaceHeadOnFence() && !gm.getScenarioManager().isActivated(Scenario.TIMEBOMB)) {
-					// place head on fence
-					Location loc = player.getLocation().clone().add(1, 0, 0);
-					loc.getBlock().setType(UniversalMaterial.OAK_FENCE.getType());
-					loc.add(0, 1, 0);
-					loc.getBlock().setType(UniversalMaterial.PLAYER_HEAD_BLOCK.getType());
+		if (uhcKiller.getTeam() == uhcKilled.getTeam()) {
+			// ignore for now
+			return;
+		}
 
-					Skull skull = (Skull) loc.getBlock().getState();
-					VersionUtils.getVersionUtils().setSkullOwner(skull, uhcPlayer);
-					skull.update();
-				} else {
-					event.getDrops().add(UhcItems.createGoldenHeadPlayerSkull(player.getName(), player.getUniqueId()));
-				}
+		deathMessage = replaceLast(deathMessage, killer.getName(), uhcKiller.getDisplayName());
+
+		if (privateAnnounceDeaths) {
+			killer.sendMessage("You slayed " + uhcKilled.getDisplayName());
+			killed.sendMessage("You were slain by " + uhcKiller.getDisplayName());
+		}
+
+		uhcKiller.kills++;
+
+		if (trackKills)
+			gm.sendInfoToServer("KILL:" + uhcKiller.getName() + ":" + uhcKilled.getName(), false);
+
+		List<ItemStack> drops = getDrops(killed);
+
+		if (killer.hasMetadata("NPC")) {
+			// player is bot, immediately absorb experience and as much of the drops as
+			// possible
+			killer.setTotalExperience(
+					killer.getTotalExperience() + killed.getTotalExperience() + cfg.getExpDropOnDeath());
+
+			HashMap<Integer, ItemStack> leftover = killer.getInventory()
+					.addItem(drops.stream().toArray(ItemStack[]::new));
+			drops.clear();
+			drops.addAll(leftover.values());
+		} else {
+			// player is not bot, drop experience normally and all drops
+			UhcItems.spawnExtraXp(killed.getLocation(), cfg.getExpDropOnDeath());
+		}
+
+		// Call Bukkit event
+		Bukkit.getServer().getPluginManager().callEvent(new UhcPlayerKillEvent(uhcKilled, uhcKiller));
+
+		handleDeath(killed, deathMessage, drops);
+	};
+
+	public static List<ItemStack> getDrops(Player killed) {
+		List<ItemStack> drops = new ArrayList<>();
+
+		if (!dropItems)
+			return drops;
+
+		for (int i = 0; i <= 40; i++) {
+			ItemStack item = killed.getInventory().getItem(i);
+			if (item == null)
+				continue;
+			if (item.containsEnchantment(Enchantment.VANISHING_CURSE)) {
+				killed.getInventory().setItem(i, null);
+				continue;
+			}
+			if (!autoRespawn || Math.random() >= keepInventory) {
+				drops.add(item);
+				killed.getInventory().setItem(i, null);
 			}
 		}
 
-		for (UhcPlayer teamMate : uhcPlayer.getTeam().getMembers()) {
+		return drops;
+	}
+
+	public static void handleNaturalDeath(Player killed, String deathMessage, String deathCause) {
+		UhcPlayer uhcKilled = pm.getUhcPlayer(killed);
+		if (trackNaturalDeaths) {
+			if (autoRespawn)
+				gm.sendInfoToServer("DEATH:" + uhcKilled.getName() + ":donttakemeoffthelist", false);
+			else
+				gm.sendInfoToServer("DEATH:" + uhcKilled.getName(), false);
+		}
+
+		if (privateAnnounceDeaths)
+			killed.sendMessage("You were killed by \u00a7d" + deathCause);
+
+		UhcItems.spawnExtraXp(killed.getLocation(), killed.getTotalExperience());
+		handleDeath(killed, deathMessage, getDrops(killed));
+	}
+
+	public static void handleDeath(Player killed, String deathMessage, List<ItemStack> drops) {
+		UhcPlayer uhcKilled = pm.getUhcPlayer(killed);
+
+		// set bots to stop guarding a player so that they don't teleport to them
+		for (UhcPlayer teamMate : uhcKilled.getTeam().getMembers()) {
 			if (teamMate.getName().equals("YEUH-BOT") && teamMate.getState().equals(PlayerState.PLAYING)) {
 				Player matePlayer;
 				try {
@@ -159,58 +280,43 @@ public class PlayerDeathListener implements Listener {
 			}
 		}
 
-		if (cfg.getEnableExpDropOnDeath()) { UhcItems.spawnExtraXp(player.getLocation(), cfg.getExpDropOnDeath()); }
+		uhcKilled.deaths++;
 
-		uhcPlayer.setState(PlayerState.DEAD);
-		GameManager.getGameManager().getListInventoryHandler().updatePlayer(uhcPlayer);
-		pm.strikeLightning(uhcPlayer);
-		// pm.playSoundPlayerDeath();
-		Bukkit.getLogger().info(UhcCore.PREFIX + "\u00a7f" + deathMessage);
+		killed.setFireTicks(0);
+		killed.setArrowsInBody(0);
+		killed.setHealth(killed.getMaxHealth());
+		killed.setFoodLevel(20);
+		killed.setLevel(0);
+		killed.setExp(0);
+		killed.getActivePotionEffects().forEach(effect -> killed.removePotionEffect(effect.getType()));
+		PlayerExpListener.lastLevel.remove(uhcKilled);
 
-		if (!player.hasMetadata("NPC")) {
+		deathMessage = deathMessage.replaceFirst(killed.getName(), uhcKilled.getDisplayName());
 
-			// handle player leaving the server
-			boolean canContinueToSpectate = player.hasPermission("uhc-core.spectate.override")
-					|| cfg.getCanSpectateAfterDeath();
+		killed.setCanPickupItems(false);
+		drops.forEach(item -> killed.getWorld().dropItemNaturally(killed.getEyeLocation(), item));
+		killed.setCanPickupItems(true);
 
-			if (!canContinueToSpectate) {
-				if (cfg.getEnableBungeeSupport()) {
-					Bukkit.getScheduler().runTaskAsynchronously(UhcCore.getPlugin(),
-							new TimeBeforeSendBungeeThread(pm, uhcPlayer, cfg.getTimeBeforeSendBungeeAfterDeath()));
-				} else {
-					player.kickPlayer(Lang.DISPLAY_MESSAGE_PREFIX + " " + Lang.KICK_DEAD);
-				}
-			}
-		} else {
-			// drop inventory when dead
-			if (!gm.getScenarioManager().isActivated(Scenario.TIMEBOMB) && !sm.isActivated(Scenario.WHATSMINE)
-					&& !sm.isActivated(Scenario.INHERITANCE)) {
-				player.getInventory().forEach((item) -> {
-					if (item != null) {
-						if (gm.getScenarioManager().isActivated(Scenario.NINESLOTS)
-								&& item.isSimilar(NineSlotsListener.fillItem))
-							return;
-						player.getWorld().dropItem(player.getLocation(), item);
-					}
-				});
-			}
+		if (!autoRespawn || (!uhcKilled.isOnline() && !uhcKilled.getName().equals("YEUH-BOT"))) {
+			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> pm.setPlayerSpectateAtLobby(uhcKilled, false),
+					1);
 		}
+
+		if (publicAnnounceDeaths) {
+			if (!GameManager.getGameManager().getWorldBorder().isWithinBorder(killed.getLocation())) {
+				deathMessage = deathMessage.replaceFirst("suffocated in a wall", "got stuck behind the wall");
+			}
+			gm.broadcastInfoMessage(deathMessage);
+			// pm.playSoundPlayerDeath();
+			Bukkit.getLogger().info(UhcCore.PREFIX + "\u00a7f" + deathMessage);
+			pm.strikeLightning(uhcKilled);
+		}
+
+		Bukkit.getServer().getPluginManager().callEvent(new UhcPlayerDeathEvent(uhcKilled, drops));
+
+		GameManager.getGameManager().getListInventoryHandler().updatePlayer(uhcKilled);
 
 		pm.checkIfRemainingPlayers();
-	}
-
-	public static String replaceLast(String text, String regex, String replacement) {
-		return text.replaceFirst("(?s)" + regex + "(?!.*?" + regex + ")", replacement);
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onPlayerRespawn(PlayerRespawnEvent event) {
-		PlayersManager pm = GameManager.getGameManager().getPlayersManager();
-		UhcPlayer uhcPlayer = pm.getUhcPlayer(event.getPlayer());
-
-		if (uhcPlayer.getState().equals(PlayerState.DEAD)) {
-			Bukkit.getScheduler().runTaskLater(UhcCore.getPlugin(), () -> pm.setPlayerSpectateAtLobby(uhcPlayer), 1);
-		}
 	}
 
 }

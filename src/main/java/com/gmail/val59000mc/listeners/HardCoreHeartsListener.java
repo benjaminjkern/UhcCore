@@ -27,12 +27,9 @@ package com.gmail.val59000mc.listeners;
  */
 
 import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.events.PacketListener;
 import org.bukkit.plugin.Plugin;
 
 /**
@@ -62,4 +59,5 @@ public class HardCoreHeartsListener extends PacketAdapter {
             event.getPacket().getBooleans().write(0, true);
         }
     }
+
 }

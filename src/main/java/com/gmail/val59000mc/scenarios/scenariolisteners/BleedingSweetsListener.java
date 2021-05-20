@@ -10,6 +10,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -46,13 +47,30 @@ public class BleedingSweetsListener extends ScenarioListener {
 
         if (e.getDamage() < killed.getHealth()) return;
 
-        PlayersManager pm = getPlayersManager();
-
         killer.setHealth(Math.min(killer.getHealth() + 2, killer.getMaxHealth()));
+
+        List<ItemStack> picker = new ArrayList<>();
+        picker.add(killer.getInventory().getItemInMainHand());
+        picker.add(killer.getInventory().getItemInOffHand());
+        picker.add(killer.getInventory().getHelmet());
+        picker.add(killer.getInventory().getChestplate());
+        picker.add(killer.getInventory().getLeggings());
+        picker.add(killer.getInventory().getBoots());
+
+        while (picker.size() > 0) {
+            int r = (int) (Math.random() * picker.size());
+            ItemStack item = picker.get(r);
+            picker.remove(r);
+            if (item == null) continue;
+            if (randomEnchant(item)) {
+                killer.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("Your \u00a7d" + item.getType() + " \u00a7fhas been enchanted!"));
+                return;
+            }
+        }
 
         // put everything into a list so I dont have to check empty items
         ItemStack[] contents = killer.getInventory().getContents();
-        List<ItemStack> picker = new ArrayList<>();
         for (int i = 0; i < contents.length; i++) { if (contents[i] != null) picker.add(contents[i]); }
 
         // purge items that cant be enchanted
@@ -70,9 +88,11 @@ public class BleedingSweetsListener extends ScenarioListener {
         // that can be enchanted
     }
 
-    private boolean randomEnchant(ItemStack item) {
+    public static boolean randomEnchant(ItemStack item) { return randomEnchant(item, false); }
+
+    public static boolean randomEnchant(ItemStack item, boolean safe) {
         List<Enchantment> allEnchants = new ArrayList<>(Arrays.asList(Enchantment.values())).stream()
-                .filter(ench -> !ench.getKey().getNamespace().contains("CURSE")).collect(Collectors.toList());
+                .filter(ench -> !ench.getKey().toString().toLowerCase().contains("curse")).collect(Collectors.toList());
 
         // purge enchantments that dont work on this item
         while (allEnchants.size() > 0) {
@@ -80,7 +100,8 @@ public class BleedingSweetsListener extends ScenarioListener {
             Enchantment e = allEnchants.get(r);
             allEnchants.remove(r);
             if (!e.canEnchantItem(item) || (item.containsEnchantment(e) && e.getMaxLevel() == 1)) continue;
-            item.addUnsafeEnchantment(e, item.getEnchantmentLevel(e) + 1);
+            if (!safe) item.addUnsafeEnchantment(e, item.getEnchantmentLevel(e) + 1);
+            else item.addEnchantment(e, item.getEnchantmentLevel(e) + 1);
             return true;
         }
         return false;

@@ -3,6 +3,7 @@ package com.gmail.val59000mc.scenarios.scenariolisteners;
 import java.util.Queue;
 
 import com.gmail.val59000mc.events.UhcPreTeleportEvent;
+import com.gmail.val59000mc.players.SpawnLocations;
 import com.gmail.val59000mc.players.UhcTeam;
 import com.gmail.val59000mc.scenarios.Scenario;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
@@ -22,7 +23,7 @@ public class NetherStartListener extends ScenarioListener {
             getScenarioManager().removeScenario(Scenario.NETHERSTART);
         }
 
-        Location portalLoc = getPlayersManager().findSafeLocationAround(
+        Location portalLoc = SpawnLocations.findSafeLocationAround(
                 new Location(Bukkit.getWorld(getGameManager().getConfiguration().getNetherUuid()), 0, 0, 0), 500);
 
         portalLoc.clone().add(0, -1, 0).getBlock().setType(Material.OBSIDIAN);
@@ -41,8 +42,8 @@ public class NetherStartListener extends ScenarioListener {
     public void onPreTeleport(UhcPreTeleportEvent e) {
         World nether = Bukkit.getWorld(getConfiguration().getNetherUuid());
         double maxDistance = 0.9 * (nether.getWorldBorder().getSize() / 2);
-        Queue<Location> randLocs = getPlayersManager().getRandomSafeLocations(nether, Bukkit.getMaxPlayers(),
-                maxDistance, 50);
+        Queue<Location> randLocs = SpawnLocations.getRandomSafeLocations(nether, Bukkit.getMaxPlayers(), maxDistance,
+                50);
 
         for (UhcTeam team : getPlayersManager().listUhcTeams()) { team.setStartingLocation(randLocs.poll()); }
     }

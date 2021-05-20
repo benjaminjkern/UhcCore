@@ -10,11 +10,9 @@ import java.util.stream.Collectors;
 import com.gmail.val59000mc.UhcCore;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.scheduler.BukkitRunnable;

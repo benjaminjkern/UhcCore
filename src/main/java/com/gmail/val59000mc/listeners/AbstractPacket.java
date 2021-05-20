@@ -26,6 +26,9 @@ import org.bukkit.entity.Player;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher.Registry;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher.Serializer;
 import com.google.common.base.Objects;
 
 public abstract class AbstractPacket {
@@ -36,15 +39,13 @@ public abstract class AbstractPacket {
 	 * Constructs a new strongly typed wrapper for the given packet.
 	 * 
 	 * @param handle - handle to the raw packet data.
-	 * @param type - the packet type.
+	 * @param type   - the packet type.
 	 */
 	protected AbstractPacket(PacketContainer handle, PacketType type) {
 		// Make sure we're given a valid packet
-		if (handle == null)
-			throw new IllegalArgumentException("Packet handle cannot be NULL.");
+		if (handle == null) throw new IllegalArgumentException("Packet handle cannot be NULL.");
 		if (!Objects.equal(handle.getType(), type))
-			throw new IllegalArgumentException(handle.getHandle()
-					+ " is not a packet of type " + type);
+			throw new IllegalArgumentException(handle.getHandle() + " is not a packet of type " + type);
 
 		this.handle = handle;
 	}
@@ -54,9 +55,7 @@ public abstract class AbstractPacket {
 	 * 
 	 * @return Raw packet data.
 	 */
-	public PacketContainer getHandle() {
-		return handle;
-	}
+	public PacketContainer getHandle() { return handle; }
 
 	/**
 	 * Send the current packet to the given receiver.
@@ -66,8 +65,7 @@ public abstract class AbstractPacket {
 	 */
 	public void sendPacket(Player receiver) {
 		try {
-			ProtocolLibrary.getProtocolManager().sendServerPacket(receiver,
-					getHandle());
+			ProtocolLibrary.getProtocolManager().sendServerPacket(receiver, getHandle());
 		} catch (InvocationTargetException e) {
 			throw new RuntimeException("Cannot send packet.", e);
 		}
@@ -76,9 +74,7 @@ public abstract class AbstractPacket {
 	/**
 	 * Send the current packet to all online players.
 	 */
-	public void broadcastPacket() {
-		ProtocolLibrary.getProtocolManager().broadcastServerPacket(getHandle());
-	}
+	public void broadcastPacket() { ProtocolLibrary.getProtocolManager().broadcastServerPacket(getHandle()); }
 
 	/**
 	 * Simulate receiving the current packet from the given sender.
@@ -91,8 +87,7 @@ public abstract class AbstractPacket {
 	@Deprecated
 	public void recievePacket(Player sender) {
 		try {
-			ProtocolLibrary.getProtocolManager().recieveClientPacket(sender,
-					getHandle());
+			ProtocolLibrary.getProtocolManager().recieveClientPacket(sender, getHandle());
 		} catch (Exception e) {
 			throw new RuntimeException("Cannot recieve packet.", e);
 		}
@@ -106,10 +101,45 @@ public abstract class AbstractPacket {
 	 */
 	public void receivePacket(Player sender) {
 		try {
-			ProtocolLibrary.getProtocolManager().recieveClientPacket(sender,
-					getHandle());
+			ProtocolLibrary.getProtocolManager().recieveClientPacket(sender, getHandle());
 		} catch (Exception e) {
 			throw new RuntimeException("Cannot receive packet.", e);
+		}
+	}
+
+	public static void addGlow(Player player) {
+		PacketContainer packet = ProtocolLibrary.getProtocolManager()
+				.createPacket(PacketType.Play.Server.ENTITY_METADATA);
+		packet.getIntegers().write(0, player.getEntityId()); // Set packet's entity id
+		// Create data watcher, the Entity Metadata packet requires this
+		WrappedDataWatcher watcher = new WrappedDataWatcher();
+		Serializer serializer = Registry.get(Byte.class); // Found this through google, needed for some stupid reason
+		watcher.setEntity(player); // Set the new data watcher's target
+		watcher.setObject(0, serializer, (byte) (0x40)); // Set status to glowing, found on protocol page
+		// Make the packet's datawatcher the one we created
+		packet.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
+		try {
+			ProtocolLibrary.getProtocolManager().sendServerPacket(player, packet);
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void removeGlow(Player player) {
+		PacketContainer packet = ProtocolLibrary.getProtocolManager()
+				.createPacket(PacketType.Play.Server.ENTITY_METADATA);
+		packet.getIntegers().write(0, player.getEntityId()); // Set packet's entity id
+		// Create data watcher, the Entity Metadata packet requires this
+		WrappedDataWatcher watcher = new WrappedDataWatcher();
+		Serializer serializer = Registry.get(Byte.class); // Found this through google, needed for some stupid reason
+		watcher.setEntity(player); // Set the new data watcher's target
+		watcher.setObject(0, serializer, (byte) (0x0)); // Set status to glowing, found on protocol page
+		// Make the packet's datawatcher the one we created
+		packet.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
+		try {
+			ProtocolLibrary.getProtocolManager().sendServerPacket(player, packet);
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
 		}
 	}
 }

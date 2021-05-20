@@ -23,6 +23,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +68,7 @@ public class BlockListener implements Listener {
 			event.setCancelled(true);
 			return;
 		}
+
 		handleMaxBuildingHeight(event);
 	}
 

@@ -78,7 +78,8 @@ public enum UniversalMaterial {
 
     RAW_BEEF("RAW_BEEF", "BEEF"), RAW_CHICKEN("RAW_CHICKEN", "CHICKEN"), RAW_MUTTON("MUTTON", "MUTTON"),
     RAW_RABBIT("RABBIT", "RABBIT"), RAW_PORK("PORK", "PORKCHOP"), LEAD, TNT, PINK_BED, APPLE, ENCHANTED_GOLDEN_APPLE,
-    COD, BEDROCK, NETHERITE_SWORD, GUNPOWDER, GOLDEN_HOE;
+    COD, BEDROCK, NETHERITE_SWORD, GUNPOWDER, GOLDEN_HOE, GOLDEN_HELMET, ACACIA_WOOD, BIRCH_WOOD, DARK_OAK_WOOD,
+    JUNGLE_WOOD, OAK_WOOD, SPRUCE_WOOD;
 
     private final String name8, name13;
     private final short id8;
@@ -120,9 +121,13 @@ public enum UniversalMaterial {
         return material;
     }
 
-    private String getTypeName() { return (UhcCore.getVersion() < 13) ? name8 : name13; }
+    private String getTypeName() {
+        return (UhcCore.getVersion() < 13) ? name8 : name13;
+    }
 
-    public short getData() { return UhcCore.getVersion() < 13 ? id8 : 0; }
+    public short getData() {
+        return UhcCore.getVersion() < 13 ? id8 : 0;
+    }
 
     @SuppressWarnings("deprecation")
     public ItemStack getStack(int amount) {
@@ -130,11 +135,15 @@ public enum UniversalMaterial {
         return new ItemStack(getType(), amount, getData());
     }
 
-    public ItemStack getStack() { return getStack(1); }
+    public ItemStack getStack() {
+        return getStack(1);
+    }
 
     public static UniversalMaterial ofType(Material material) {
         for (UniversalMaterial universalMaterial : values()) {
-            if (universalMaterial.getType() == material) { return universalMaterial; }
+            if (universalMaterial.getType() == material) {
+                return universalMaterial;
+            }
         }
         return null;
     }
@@ -145,7 +154,13 @@ public enum UniversalMaterial {
                 || material.equals(UniversalMaterial.DARK_OAK_LOG.getType())
                 || material.equals(UniversalMaterial.JUNGLE_LOG.getType())
                 || material.equals(UniversalMaterial.OAK_LOG.getType())
-                || material.equals(UniversalMaterial.SPRUCE_LOG.getType()));
+                || material.equals(UniversalMaterial.SPRUCE_LOG.getType())
+                || material.equals(UniversalMaterial.ACACIA_WOOD.getType())
+                || material.equals(UniversalMaterial.BIRCH_WOOD.getType())
+                || material.equals(UniversalMaterial.DARK_OAK_WOOD.getType())
+                || material.equals(UniversalMaterial.JUNGLE_WOOD.getType())
+                || material.equals(UniversalMaterial.OAK_WOOD.getType())
+                || material.equals(UniversalMaterial.SPRUCE_WOOD.getType()));
     }
 
     public static boolean isLeaves(Material material) {
@@ -159,26 +174,32 @@ public enum UniversalMaterial {
 
     public static boolean isCorrectTool(Material block, Material tool) {
         switch (block) {
-            case NETHER_QUARTZ_ORE:
-            case NETHER_GOLD_ORE:
-            case COAL_ORE:
-                if (tool == Material.WOODEN_PICKAXE) return true;
-            case IRON_ORE:
-            case LAPIS_ORE:
-                if (tool == Material.STONE_PICKAXE) return true;
-            case DIAMOND_ORE:
-            case GOLD_ORE:
-            case EMERALD_ORE:
-            case REDSTONE_ORE:
-                if (tool == Material.IRON_PICKAXE) return true;
-            case ANCIENT_DEBRIS:
-                if (tool == Material.DIAMOND_PICKAXE) return true;
+        case NETHER_QUARTZ_ORE:
+        case NETHER_GOLD_ORE:
+        case COAL_ORE:
+            if (tool == Material.WOODEN_PICKAXE)
+                return true;
+        case IRON_ORE:
+        case LAPIS_ORE:
+            if (tool == Material.STONE_PICKAXE)
+                return true;
+        case DIAMOND_ORE:
+        case GOLD_ORE:
+        case EMERALD_ORE:
+        case REDSTONE_ORE:
+            if (tool == Material.IRON_PICKAXE)
+                return true;
+        case ANCIENT_DEBRIS:
+            if (tool == Material.DIAMOND_PICKAXE)
+                return true;
         }
 
         return false;
     }
 
     @SuppressWarnings("deprecation")
-    public boolean equals(Block block) { return block.getType() == getType() && block.getData() == id8; }
+    public boolean equals(Block block) {
+        return block.getType() == getType() && block.getData() == id8;
+    }
 
 }

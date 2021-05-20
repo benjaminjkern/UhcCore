@@ -1,18 +1,29 @@
 package com.gmail.val59000mc.scenarios.scenariolisteners;
 
+import com.gmail.val59000mc.events.UhcPlayerKillEvent;
+import com.gmail.val59000mc.exceptions.UhcPlayerNotOnlineException;
+import com.gmail.val59000mc.listeners.PlayerDeathListener;
 import com.gmail.val59000mc.scenarios.ScenarioListener;
 
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.EventPriority;
 
 public class InheritanceListener extends ScenarioListener {
 
-    @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent e) {
-        // wasn't killed by player
-        if (e.getEntity().getKiller() == null) return;
-        e.getDrops().clear();
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEnable() {
+        PlayerDeathListener.dropItems = false;
+    }
 
-        e.getEntity().getKiller().getInventory().setContents(e.getEntity().getInventory().getContents());
+    @EventHandler
+    public void onPlayerDeath(UhcPlayerKillEvent e) {
+        try {
+            Bukkit.getLogger().info("Inheritance player death!");
+            e.getKiller().getPlayer().getInventory()
+                    .setContents(e.getKilled().getPlayer().getInventory().getContents());
+        } catch (UhcPlayerNotOnlineException ex) {
+            // no idea how we got here;
+        }
     }
 }
